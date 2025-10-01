@@ -4,12 +4,8 @@ import { ChipProps } from '@mui/material/Chip';
 
 export const roleMap: Record<UserRole, string> = {
   [UserRole.Admin]: 'Admin',
-  [UserRole.Student]: 'Student',
-  [UserRole.Teacher]: 'Teacher',
-  [UserRole.AdmissionsVerifier]: 'Admissions Verifier',
-  [UserRole.Auditor]: 'Auditor',
-  [UserRole.Moderator]: 'Moderator',
-  [UserRole.Parent]: 'Parent',
+  [UserRole.Trainee]: 'Trainee',
+  [UserRole.Instructor]: 'Instructor',
   [UserRole.PlatformAdmin]: 'Platform Admin',
 };
 
@@ -18,19 +14,15 @@ export const routeLabels: Record<string, string> = {
   '': 'Dashboard',
   management: 'Management',
   institutions: 'Institutions',
-  'manage-classes': 'Manage classes',
-  classes: 'My classes',
+  'manage-courses': 'Manage courses',
+  courses: 'My courses',
   settings: 'Settings',
 };
 
 export const roleOptions = [
   { value: UserRole.Admin, label: 'Admin' },
-  { value: UserRole.Student, label: 'Student' },
-  { value: UserRole.Teacher, label: 'Teacher' },
-  { value: UserRole.AdmissionsVerifier, label: 'Admissions Verifier' },
-  { value: UserRole.Auditor, label: 'Auditor' },
-  { value: UserRole.Moderator, label: 'Moderator' },
-  { value: UserRole.Parent, label: 'Parent' },
+  { value: UserRole.Trainee, label: 'Trainee' },
+  { value: UserRole.Instructor, label: 'Instructor' },
   { value: UserRole.PlatformAdmin, label: 'Platform Admin' },
 ];
 
@@ -38,15 +30,6 @@ export function getAllowedRoles(editorRole: UserRole, targetRow: UserDto) {
   if (editorRole == UserRole.Admin) {
     if (targetRow.role == UserRole.Admin) return [];
     return roleOptions.filter((r) => r.value !== UserRole.Admin);
-  } else if (editorRole == UserRole.Moderator) {
-    if (
-      targetRow.role == UserRole.Admin ||
-      targetRow.role === UserRole.Moderator
-    )
-      return [];
-    return roleOptions.filter(
-      (r) => r.value !== UserRole.Admin && r.value !== UserRole.Moderator
-    );
   }
   return [];
 }
@@ -60,18 +43,10 @@ export function getRoleChipConfig(role: UserRole): RoleChipConfig {
   switch (role) {
     case UserRole.Admin:
       return { label: 'Admin', color: 'error' };
-    case UserRole.Student:
-      return { label: 'Student', color: 'primary' };
-    case UserRole.Teacher:
-      return { label: 'Teacher', color: 'success' };
-    case UserRole.AdmissionsVerifier:
-      return { label: 'Admissions Verifier', color: 'info' };
-    case UserRole.Auditor:
-      return { label: 'Auditor', color: 'secondary' };
-    case UserRole.Moderator:
-      return { label: 'Moderator', color: 'warning' };
-    case UserRole.Parent:
-      return { label: 'Parent', color: 'default' };
+    case UserRole.Trainee:
+      return { label: 'Trainee', color: 'primary' };
+    case UserRole.Instructor:
+      return { label: 'Instructor', color: 'success' };
     case UserRole.PlatformAdmin:
       return { label: 'Platform Admin', color: 'default' };
     default:

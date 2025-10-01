@@ -19,7 +19,7 @@ type PageViewsBarChartProps = {
 };
 
 export default function PageViewsBarChart({
-  title = 'Student Performance Distribution',
+  title = 'Trainee Performance Distribution',
   total = '',
   trend,
   average,
@@ -120,8 +120,8 @@ export default function PageViewsBarChart({
             <Chip size="small" color={trend} label={average} />
           </Stack>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Breakdown of average student performance by grade range (last 6
-            months)
+            Breakdown of average trainee performance by grade range in the last
+            6 months
           </Typography>
         </Stack>
 
@@ -135,14 +135,22 @@ export default function PageViewsBarChart({
               data: months,
             },
           ]}
+          yAxis={[
+            {
+              min: 0,
+              max: 1,
+              valueFormatter: (value: number) =>
+                Math.round(value * 100).toString(),
+            },
+          ]}
           series={series.map((s, index) => ({
             id: `series-${index}`,
             label: s.label,
             data: s.data,
             stack: 'A',
           }))}
-          height={250}
-          margin={{ left: 50, right: 0, top: 20, bottom: 20 }}
+          height={550}
+          margin={{ left: -20, right: 0, top: 0, bottom: 0 }}
           grid={{ horizontal: true }}
         />
       </CardContent>

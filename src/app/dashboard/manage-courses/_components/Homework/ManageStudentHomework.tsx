@@ -32,7 +32,7 @@ import { GradeCell } from '../../../../_lib/components/homework/GradeCell';
 import EDataGrid from '../../../_components/EDataGrid';
 import ReviewAndGradeHomework from './ReviewAndGradeHomework';
 import { getStatusChipConfig } from '@/app/_lib/common/functions';
-import HomeworkReview from '@/app/dashboard/classes/_components/Homework/HomeworkReview';
+import HomeworkReview from '@/app/dashboard/courses/_components/Homework/HomeworkReview';
 
 interface ManageStudentHomeworkProps {
   student: UserDto | null;

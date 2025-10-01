@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const classroomSchema = z.object({
   name: z.string().nonempty('Class name is required'),
-  teacherId: z.string().nonempty('Teacher is required'),
+  teacherId: z.string().nonempty('Instructor is required'),
   academicLevelId: z.string().nonempty('Grade level is required'),
   subjectId: z.string().nonempty('Subject is required'),
 });
@@ -15,12 +15,8 @@ export const registrationSchema = z.object({
   role: z
     .enum([
       String(UserRole.Admin),
-      String(UserRole.Student),
-      String(UserRole.Teacher),
-      String(UserRole.AdmissionsVerifier),
-      String(UserRole.Auditor),
-      String(UserRole.Moderator),
-      String(UserRole.Parent),
+      String(UserRole.Trainee),
+      String(UserRole.Instructor),
     ])
     .transform(Number), // Transform the string to a number
 });

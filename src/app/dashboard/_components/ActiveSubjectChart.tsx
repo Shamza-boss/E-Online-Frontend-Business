@@ -60,7 +60,7 @@ export default function ActiveSubjectsChart({
       >
         <CardContent>
           <Typography component="h2" variant="subtitle2" gutterBottom>
-            Most Active Classes
+            Most active courses
           </Typography>
           <Stack sx={{ justifyContent: 'space-between' }}>
             <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
@@ -114,7 +114,7 @@ export default function ActiveSubjectsChart({
     <Card variant="outlined" sx={{ width: '100%' }}>
       <CardContent>
         <Typography component="h2" variant="subtitle2" gutterBottom>
-          Most Active Classes
+          Most active courses
         </Typography>
         <Stack sx={{ justifyContent: 'space-between' }}>
           <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
@@ -127,7 +127,7 @@ export default function ActiveSubjectsChart({
             <Chip size="small" color="success" label="Last 30 days" />
           </Stack>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Daily homework submissions by subject (last 30 days)
+            Daily module submissions by course in the last 30 days
           </Typography>
         </Stack>
 
@@ -150,8 +150,8 @@ export default function ActiveSubjectsChart({
             stackOrder: 'ascending',
             area: true,
           }))}
-          height={250}
-          margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+          height={575}
+          margin={{ left: -40, right: 0, top: 0, bottom: 0 }}
           grid={{ horizontal: true }}
           sx={{
             '& .MuiAreaElement-series-0': { fill: "url('#subject0')" },

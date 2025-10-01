@@ -5,22 +5,9 @@ import { auth } from '@/auth';
 // Map dashboard sub-paths to allowed roles
 const accessRules: Record<string, UserRole[]> = {
   '/dashboard/institutions': [UserRole.PlatformAdmin],
-  '/dashboard/management': [
-    UserRole.Admin,
-    UserRole.Moderator,
-    UserRole.Teacher,
-  ],
-  '/dashboard/manage-classes': [
-    UserRole.Admin,
-    UserRole.Moderator,
-    UserRole.Teacher,
-  ],
-  '/dashboard/classes': [
-    UserRole.Admin,
-    UserRole.Moderator,
-    UserRole.Teacher,
-    UserRole.Student,
-  ],
+  '/dashboard/management': [UserRole.Admin, UserRole.Instructor],
+  '/dashboard/manage-courses': [UserRole.Admin, UserRole.Instructor],
+  '/dashboard/courses': [UserRole.Admin, UserRole.Instructor, UserRole.Trainee],
   '/dashboard/settings': [UserRole.PlatformAdmin],
 };
 

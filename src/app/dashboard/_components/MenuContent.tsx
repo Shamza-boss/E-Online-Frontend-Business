@@ -26,20 +26,16 @@ const platformOwnerRole = UserRole.PlatformAdmin;
 const platformOnlyRoutes = ['institutions'];
 
 // numeric roles with full access (Admin, Trainer(Teacher), Moderator)
-const fullAccessRoles: UserRole[] = [
-  UserRole.Admin,
-  UserRole.Teacher,
-  UserRole.Moderator,
-];
+const fullAccessRoles: UserRole[] = [UserRole.Admin, UserRole.Instructor];
 // student allowed routes
-const studentAllowed = ['', 'classes'];
+const studentAllowed = ['', 'courses'];
 
 const mainListItems = [
   { route: '', icon: <TimelineIcon /> }, // Dashboard root route
   { route: 'institutions', icon: <DomainAddIcon /> }, // Institutions route
   { route: 'management', icon: <ManageAccountsIcon /> },
-  { route: 'manage-classes', icon: <AssignmentIcon /> },
-  { route: 'classes', icon: <SchoolIcon /> },
+  { route: 'manage-courses', icon: <AssignmentIcon /> },
+  { route: 'courses', icon: <SchoolIcon /> },
 ];
 
 const secondaryListItems = [
@@ -88,7 +84,7 @@ export default function MenuContent() {
     const disabled =
       (isPlatformOnly && roleValue !== platformOwnerRole) ||
       (!isPlatformOnly && !hasFullAccess && !studentAllowed.includes(route)) ||
-      (route === 'classes' && roleValue === platformOwnerRole);
+      (route === 'courses' && roleValue === platformOwnerRole);
 
     // ❗️If route is platform-only and user isn't platform owner, skip rendering
     if (isPlatformOnly && roleValue !== platformOwnerRole) {

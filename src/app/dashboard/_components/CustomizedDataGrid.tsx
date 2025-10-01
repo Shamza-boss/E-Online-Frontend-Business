@@ -17,7 +17,7 @@ export default function CustomizedDataGrid({
   const columns: GridColDef[] = [
     {
       field: 'classroomName',
-      headerName: 'Classroom Name',
+      headerName: 'Course name',
       flex: 1,
       minWidth: 150,
     },
@@ -29,13 +29,13 @@ export default function CustomizedDataGrid({
     },
     {
       field: 'homeworkTitle',
-      headerName: 'Homework Title',
+      headerName: 'Module title',
       flex: 1,
       minWidth: 200,
     },
     {
       field: 'dueDate',
-      headerName: 'Due Date',
+      headerName: 'Due date',
       flex: 1,
       minWidth: 120,
       renderCell: (params) => {
@@ -45,7 +45,7 @@ export default function CustomizedDataGrid({
     },
     {
       field: 'studentsAssigned',
-      headerName: 'Students Assigned',
+      headerName: 'Trainees assigned',
       flex: 1,
       minWidth: 150,
     },
@@ -57,7 +57,7 @@ export default function CustomizedDataGrid({
     },
     {
       field: 'submissionRate',
-      headerName: 'Submission Rate',
+      headerName: 'Submission rate',
       flex: 1,
       minWidth: 150,
       renderCell: (params) => {
@@ -75,7 +75,7 @@ export default function CustomizedDataGrid({
     },
     {
       field: 'averageGrade',
-      headerName: 'Average Grade',
+      headerName: 'Average grade',
       flex: 1,
       minWidth: 150,
       renderCell: (params) => {

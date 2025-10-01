@@ -36,7 +36,7 @@ export default function MainGrid() {
 
   const institutionStats: StatCardProps[] = [
     {
-      title: 'Teachers',
+      title: 'Instructors',
       value: `${institutionData?.teachers?.total}`,
       interval: 'Last 30 days',
       trend:
@@ -49,7 +49,7 @@ export default function MainGrid() {
       loading: isLoading,
     },
     {
-      title: 'Students',
+      title: 'Trainees',
       value: `${institutionData?.students?.total}`,
       interval: 'Last 30 days',
       trend:
@@ -75,7 +75,7 @@ export default function MainGrid() {
       loading: isLoading,
     },
     {
-      title: 'Homework created',
+      title: 'Modules created',
       value: `${institutionData?.homeworkCreated?.total}`,
       interval: 'Last 30 days',
       trend:
@@ -127,9 +127,6 @@ export default function MainGrid() {
           />
         </Grid>
       </Grid>
-      <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        Details
-      </Typography>
       <Grid container spacing={2} columns={12}>
         <Grid size={{ xs: 12, lg: 12 }}>
           <CustomizedDataGrid
