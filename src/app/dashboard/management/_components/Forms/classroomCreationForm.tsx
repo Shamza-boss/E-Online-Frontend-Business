@@ -85,7 +85,7 @@ export default function ClassroomCreationStepper() {
   const [textbookPresignedGet, setTextbookPresignedGet] = useState('');
 
   // Filter only trainers
-  const teachers = users?.filter((u) => u.role === UserRole.Teacher) ?? [];
+  const teachers = users?.filter((u) => u.role === UserRole.Instructor) ?? [];
 
   // handle file selection & upload
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,7 +161,7 @@ export default function ClassroomCreationStepper() {
 
           {/* Classroom Name */}
           <TextField
-            placeholder="Class Name"
+            placeholder="Course Name"
             key={name.key}
             name={name.name}
             defaultValue={name.initialValue}
@@ -173,7 +173,7 @@ export default function ClassroomCreationStepper() {
 
           {/* Teacher Select */}
           <FormControl fullWidth error={!teacherId.valid} margin="normal">
-            <InputLabel>Teacher</InputLabel>
+            <InputLabel>Instructor</InputLabel>
             <Select
               key={teacherId.key}
               name={teacherId.name}
@@ -181,7 +181,7 @@ export default function ClassroomCreationStepper() {
               disabled={usersLoading}
             >
               {usersLoading ? (
-                <MenuItem disabled>Loading teachers…</MenuItem>
+                <MenuItem disabled>Getting instructors…</MenuItem>
               ) : teachers.length > 0 ? (
                 teachers.map((t) => (
                   <MenuItem key={t.userId} value={t.userId}>
@@ -189,7 +189,7 @@ export default function ClassroomCreationStepper() {
                   </MenuItem>
                 ))
               ) : (
-                <MenuItem disabled>No teachers available</MenuItem>
+                <MenuItem disabled>No instructors found</MenuItem>
               )}
             </Select>
             <FormHelperText>{teacherId.errors?.[0] ?? ''}</FormHelperText>
@@ -229,7 +229,7 @@ export default function ClassroomCreationStepper() {
               disabled={subjectsLoading}
             >
               {subjectsLoading ? (
-                <MenuItem disabled>Loading…</MenuItem>
+                <MenuItem disabled>Getting subjects...</MenuItem>
               ) : subjects && subjects.length > 0 ? (
                 subjects.map((s) => (
                   <MenuItem key={s.id} value={s.id}>
@@ -237,7 +237,7 @@ export default function ClassroomCreationStepper() {
                   </MenuItem>
                 ))
               ) : (
-                <MenuItem disabled>No subjects available</MenuItem>
+                <MenuItem disabled>No subjects found</MenuItem>
               )}
             </Select>
             <FormHelperText>{subjectId.errors?.[0] ?? ''}</FormHelperText>
@@ -253,7 +253,7 @@ export default function ClassroomCreationStepper() {
           >
             <Button onClick={() => setActiveStep(0)}>Back</Button>
             <Button type="submit" variant="contained" disabled={pending}>
-              {pending ? 'Saving…' : 'Save Classroom'}
+              {pending ? 'Saving…' : 'Save course'}
             </Button>
           </Box>
         </Box>

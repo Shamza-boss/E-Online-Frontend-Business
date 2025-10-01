@@ -18,8 +18,7 @@ import CreateAcademicsModal from './_components/Modals/CreateAcademicsModal';
 const ClassesManagement = () => {
   const { data: session } = useSession();
   const userRole = Number(session?.user?.role);
-  const isElevated =
-    userRole === UserRole.Admin || userRole === UserRole.Moderator;
+  const isElevated = userRole === UserRole.Admin;
 
   const [openRegisterPerson, setOpenRegisterPerson] = useState<boolean>(false);
   const [openClassCreator, setOpnClassCreator] = useState<boolean>(false);
@@ -90,7 +89,7 @@ const ClassesManagement = () => {
                     onClick={handleClickOpenClass}
                     disabled={!isElevated}
                   >
-                    Create class
+                    Create course
                   </Button>
                 </span>
               </Tooltip>

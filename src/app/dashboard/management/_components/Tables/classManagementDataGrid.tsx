@@ -21,8 +21,7 @@ import { useSession } from 'next-auth/react';
 export default function ClassManagementDataGrid() {
   const { data: session } = useSession();
   const userRole = Number(session?.user?.role);
-  const isElevated =
-    userRole === UserRole.Admin || userRole === UserRole.Moderator;
+  const isElevated = userRole === UserRole.Admin;
 
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
   const {
@@ -52,21 +51,21 @@ export default function ClassManagementDataGrid() {
   const columns: GridColDef[] = [
     {
       field: 'classroomName',
-      headerName: 'Class name',
+      headerName: 'Course name',
       flex: 1,
       minWidth: 150,
       editable: isElevated,
     },
     {
       field: 'teacherFirstName',
-      headerName: 'Teacher name',
+      headerName: 'Instructor name',
       flex: 1,
       minWidth: 120,
       editable: isElevated,
     },
     {
       field: 'teacherLastName',
-      headerName: 'Teacher last name',
+      headerName: 'Instructor surname',
       flex: 1,
       minWidth: 120,
       editable: isElevated,

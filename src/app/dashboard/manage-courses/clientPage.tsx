@@ -22,7 +22,7 @@ export default function StudentClassesManagementClient() {
             variant="outlined"
             onClick={() => setOpen(true)}
           >
-            Manage students
+            Manage trainees
           </Button>
         </Stack>
         <Suspense fallback={<StudentClassCardSkeleton count={4} />}>

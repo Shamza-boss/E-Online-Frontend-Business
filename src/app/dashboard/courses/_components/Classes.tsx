@@ -22,8 +22,8 @@ export default function ClassroomClasses() {
     return (
       <ErrorLayout
         icon={<SchoolRounded sx={{ fontSize: 80 }} />}
-        title="No Classes Found"
-        description="You are not enrolled into any classes yet. Please contact your teacher or institution for access."
+        title="No courses Found"
+        description="You are not enrolled into any courses yet. Please contact your instructor or institution for access."
         actionLabel="Back to Dashboard"
         actionHref="/dashboard"
         tone="info"
@@ -53,7 +53,7 @@ export default function ClassroomClasses() {
         >
           <Link
             style={{ textDecoration: 'none' }}
-            href={`/dashboard/classes/${encodeURIComponent(`${classItem.classroomName}~${classItem.classroomId}`)}`}
+            href={`/dashboard/courses/${encodeURIComponent(`${classItem.classroomName}~${classItem.classroomId}`)}`}
           >
             <ClassCard
               className={classItem.classroomName}

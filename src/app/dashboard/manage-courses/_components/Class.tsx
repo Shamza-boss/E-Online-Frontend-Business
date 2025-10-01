@@ -29,7 +29,7 @@ export default function StudentManagementComponent({
   const { data: session } = useSession();
   const params = useParams();
   const userRole = Number(session?.user?.role);
-  const isElevated = userRole === UserRole.Teacher;
+  const isElevated = userRole === UserRole.Instructor;
   const slug = params.slug as string;
 
   // Decode and extract the classroomId
@@ -100,7 +100,7 @@ export default function StudentManagementComponent({
                 sx={{ mr: 2 }}
                 disabled={!isElevated}
               >
-                Create assignment
+                Create module
               </Button>
             </span>
           </Tooltip>
@@ -129,21 +129,21 @@ export default function StudentManagementComponent({
 
           <TabContext value={value}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <TabList onChange={handleChange} aria-label="review students">
-                <Tab label="Students" value="1" />
+              <TabList onChange={handleChange} aria-label="review trainees">
+                <Tab label="Trainees" value="1" />
                 <Tab
                   label={
                     selectedStudent == null ? (
                       <Stack direction="row" spacing={0.5} alignItems="center">
-                        <span>Review students</span>
-                        <Tooltip title="Please select a student to review">
+                        <span>Review trainees</span>
+                        <Tooltip title="Please select a trainee to review">
                           <InfoOutlinedIcon
                             sx={{ fontSize: 16, opacity: 0.8 }}
                           />
                         </Tooltip>
                       </Stack>
                     ) : (
-                      'Review students'
+                      'Review trainees'
                     )
                   }
                   value="2"
@@ -179,7 +179,7 @@ export default function StudentManagementComponent({
                 >
                   <InfoOutlinedIcon color="info" sx={{ fontSize: 48 }} />
                   <Typography variant="subtitle1" color="text.secondary">
-                    Please select a student from the Students tab to review.
+                    Please select a trainee from the trainees tab to review.
                   </Typography>
                 </Stack>
               ) : (

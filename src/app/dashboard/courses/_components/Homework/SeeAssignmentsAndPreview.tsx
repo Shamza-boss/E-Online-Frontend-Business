@@ -156,7 +156,7 @@ export default function SeeAssignmentsAndPreview({
           <Typography sx={{ flex: 1 }} variant="h6">
             {selectedAssignment
               ? selectedAssignment.homework.title
-              : 'Your Assignments'}
+              : 'Your modules'}
           </Typography>
           {selectedAssignment && (
             <Button color="inherit" onClick={handleBack} startIcon={<Close />}>

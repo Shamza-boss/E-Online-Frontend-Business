@@ -21,8 +21,8 @@ export default function StudentClassesCards() {
     return (
       <ErrorLayout
         icon={<SchoolRounded sx={{ fontSize: 80 }} />}
-        title="No Classes Found"
-        description="You are not enrolled into any classes yet. Please contact your administrator or institution for access."
+        title="No courses Found"
+        description="You are not enrolled into any courses yet. Please contact your administrator or institution for access."
         actionLabel="Go to management?"
         actionHref="/management"
         tone="info"
@@ -52,7 +52,7 @@ export default function StudentClassesCards() {
         >
           <Link
             style={{ textDecoration: 'none' }}
-            href={`/dashboard/manage-classes/${encodeURIComponent(`${classItem.classroomName}~${classItem.classroomId}`)}`}
+            href={`/dashboard/manage-courses/${encodeURIComponent(`${classItem.classroomName}~${classItem.classroomId}`)}`}
           >
             <ClassCard
               className={classItem.classroomName}

@@ -51,7 +51,7 @@ interface Props {
 export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
   const DIVIDER = '<hr data-type="day-divider" />';
   const { data: session } = useSession();
-  const isElevated = Number(session?.user?.role) === UserRole.Student;
+  const isElevated = Number(session?.user?.role) === UserRole.Trainee;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [tabVal, setTab] = useState('1');
@@ -295,8 +295,8 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                   <TabContext value={tabVal}>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                       <TabList onChange={(_e, v) => setTab(v)}>
-                        <Tab label="Class notes" value="1" />
-                        <Tab label="Assignments" value="2" />
+                        <Tab label="Course notes" value="1" />
+                        <Tab label="Modules" value="2" />
                       </TabList>
                     </Box>
 
@@ -376,12 +376,28 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                   <TabContext value={tabVal}>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                       <TabList onChange={(_e, v) => setTab(v)}>
-                        <Tab label="Class notes" value="1" />
-                        <Tab label="Assignments" value="2" />
+                        <Tab label="Modules" value="1" />
+                        <Tab label="Course notes" value="2" />
                       </TabList>
                     </Box>
-
                     <ConditionalTabPanel value={tabVal} index="1">
+                      <Box
+                        sx={{
+                          flex: 1,
+                          overflow: 'auto',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          minHeight: 0,
+                        }}
+                      >
+                        <SeeAssignmentsAndPreview
+                          classId={classId}
+                          canEdit={!isElevated}
+                        />
+                      </Box>
+                    </ConditionalTabPanel>
+
+                    <ConditionalTabPanel value={tabVal} index="2">
                       <Box
                         sx={{
                           flex: 1,
@@ -402,22 +418,6 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                           loading={isLoading || continueLoading || yLoading}
                           onSave={handleSave}
                           chain={chain}
-                        />
-                      </Box>
-                    </ConditionalTabPanel>
-                    <ConditionalTabPanel value={tabVal} index="2">
-                      <Box
-                        sx={{
-                          flex: 1,
-                          overflow: 'auto',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 0,
-                        }}
-                      >
-                        <SeeAssignmentsAndPreview
-                          classId={classId}
-                          canEdit={!isElevated}
                         />
                       </Box>
                     </ConditionalTabPanel>

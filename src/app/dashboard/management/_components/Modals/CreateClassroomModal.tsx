@@ -24,7 +24,7 @@ const CreateClassroomModal: NextPage<CreateClassroomModalProps> = ({
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth={'md'}>
       <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
-        Create classroom
+        Create course
       </DialogTitle>
       <IconButton
         aria-label="close"

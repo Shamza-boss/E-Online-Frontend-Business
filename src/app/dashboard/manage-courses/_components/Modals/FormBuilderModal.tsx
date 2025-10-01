@@ -245,10 +245,10 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             <CloseIcon />
           </IconButton>
           <Typography sx={{ flex: 1 }} variant="h6">
-            Create Assignment
+            Create module
           </Typography>
           <Button autoFocus color="inherit" onClick={handlePublish}>
-            Publish
+            Publish module
           </Button>
         </Toolbar>
       </AppBar>
