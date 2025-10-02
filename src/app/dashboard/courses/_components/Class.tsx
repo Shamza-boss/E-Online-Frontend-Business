@@ -173,83 +173,8 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
             </Tooltip>
 
             <Button variant="outlined" onClick={() => setOpenBook((o) => !o)}>
-              {openBook ? 'Hide' : 'Show'} textbook
+              {openBook ? 'Hide' : 'Show'} notes
             </Button>
-            {!baseDateIso && (
-              <Tooltip
-                title={'Append work from yesterdays notes into todays note'}
-              >
-                <Button
-                  variant="outlined"
-                  disabled={isLoading || !todayNote}
-                  onClick={handleContinueYesterday}
-                >
-                  Continue yesterday
-                </Button>
-              </Tooltip>
-            )}
-            {/* {!baseDateIso && yesterdayNote && (
-              <Button
-                variant="outlined"
-                disabled={isLoading || yLoading}
-                onClick={handleInsertYesterdayLink}
-              >
-                Link yesterday
-              </Button>
-            )} */}
-
-            {baseDateIso && baseDateIso !== todayIso && (
-              <Tooltip
-                title={
-                  'Append work from the current selected note into todays note'
-                }
-              >
-                <Button
-                  variant="outlined"
-                  onClick={handleContinuePastDay}
-                  disabled={continueLoading}
-                >
-                  Continue this day
-                </Button>
-              </Tooltip>
-            )}
-
-            <Tooltip title={'Choose some a date to see work from past note'}>
-              <DatePicker
-                open={pickerOpen}
-                onClose={() => setPOpen(false)}
-                value={baseDateIso ? dayjs(baseDateIso) : null}
-                onChange={(d) => {
-                  if (!d) return;
-                  setBase(d.format('YYYY-MM-DD'));
-                  setPOpen(false);
-                }}
-                disableHighlightToday
-                slots={{
-                  field: (props) => (
-                    <Button
-                      variant="outlined"
-                      onClick={() => setPOpen(true)}
-                      startIcon={<CalendarTodayRoundedIcon fontSize="small" />}
-                      sx={{ minWidth: 'fit-content' }}
-                    >
-                      {props.value
-                        ? dayjs(props.value).format('MMM D YYYY')
-                        : 'Pick a date'}
-                    </Button>
-                  ),
-                  day: (props) => {
-                    const iso = props.day.format('YYYY-MM-DD');
-                    const enabled = enabledDates?.includes(iso);
-                    return <PickersDay {...props} disabled={!enabled} />;
-                  },
-                }}
-                slotProps={{
-                  nextIconButton: { size: 'small' },
-                  previousIconButton: { size: 'small' },
-                }}
-              />
-            </Tooltip>
           </Stack>
         </Box>
         <Box
@@ -269,18 +194,20 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
           >
             {isMobile ? (
               openBook ? (
-                <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                  <PDFViewer
-                    key={`pdf-${currentPage}-${pdfKey}`}
-                    fileUrl={textbookUrl}
-                    initialPage={currentPage}
-                    initialZoom={zoom}
-                    showOutline={outline}
-                    onPageChange={setPg}
-                    onZoomChange={setZoom}
-                    onOutlineChange={setOutline}
+                <OutlinedWrapper sx={{ flex: 1, overflow: 'hidden' }}>
+                  <Editor
+                    ref={editorRef}
+                    note={
+                      todayNote && {
+                        ...todayNote,
+                        content: mergedContent ?? todayNote.content,
+                      }
+                    }
+                    loading={isLoading || continueLoading || yLoading}
+                    onSave={handleSave}
+                    chain={chain}
                   />
-                </Box>
+                </OutlinedWrapper>
               ) : (
                 <OutlinedWrapper
                   sx={{
@@ -295,12 +222,18 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                   <TabContext value={tabVal}>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                       <TabList onChange={(_e, v) => setTab(v)}>
-                        <Tab label="Course notes" value="1" />
-                        <Tab label="Modules" value="2" />
+                        <Tab label="Modules" value="1" />
+                        <Tab label="Resources" value="2" />
                       </TabList>
                     </Box>
 
                     <ConditionalTabPanel value={tabVal} index="1">
+                      <SeeAssignmentsAndPreview
+                        classId={classId}
+                        canEdit={!isElevated}
+                      />
+                    </ConditionalTabPanel>
+                    <ConditionalTabPanel value={tabVal} index="2">
                       <Box
                         sx={{
                           flex: 1,
@@ -310,26 +243,17 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                           minHeight: 0,
                         }}
                       >
-                        <Editor
-                          ref={editorRef}
-                          note={
-                            todayNote && {
-                              ...todayNote,
-                              content: mergedContent ?? todayNote.content,
-                            }
-                          }
-                          loading={isLoading || continueLoading || yLoading}
-                          onSave={handleSave}
-                          chain={chain}
+                        <PDFViewer
+                          key={`pdf-${currentPage}-${pdfKey}`}
+                          fileUrl={textbookUrl}
+                          initialPage={currentPage}
+                          initialZoom={zoom}
+                          showOutline={outline}
+                          onPageChange={setPg}
+                          onZoomChange={setZoom}
+                          onOutlineChange={setOutline}
                         />
                       </Box>
-                    </ConditionalTabPanel>
-
-                    <ConditionalTabPanel value={tabVal} index="2">
-                      <SeeAssignmentsAndPreview
-                        classId={classId}
-                        canEdit={!isElevated}
-                      />
                     </ConditionalTabPanel>
                   </TabContext>
                 </OutlinedWrapper>
@@ -341,7 +265,7 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                 draggerClassName="custom-dragger-horizontal"
               >
                 {openBook && (
-                  <Box
+                  <OutlinedWrapper
                     sx={{
                       flex: 1,
                       display: 'flex',
@@ -350,17 +274,19 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                       overflow: 'hidden',
                     }}
                   >
-                    <PDFViewer
-                      key={`pdf-${currentPage}-${pdfKey}`}
-                      fileUrl={textbookUrl}
-                      initialPage={currentPage}
-                      initialZoom={zoom}
-                      showOutline={outline}
-                      onPageChange={setPg}
-                      onZoomChange={setZoom}
-                      onOutlineChange={setOutline}
+                    <Editor
+                      ref={editorRef}
+                      note={
+                        todayNote && {
+                          ...todayNote,
+                          content: mergedContent ?? todayNote.content,
+                        }
+                      }
+                      loading={isLoading || continueLoading || yLoading}
+                      onSave={handleSave}
+                      chain={chain}
                     />
-                  </Box>
+                  </OutlinedWrapper>
                 )}
 
                 <OutlinedWrapper
@@ -377,7 +303,7 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                       <TabList onChange={(_e, v) => setTab(v)}>
                         <Tab label="Modules" value="1" />
-                        <Tab label="Course notes" value="2" />
+                        <Tab label="Resources" value="2" />
                       </TabList>
                     </Box>
                     <ConditionalTabPanel value={tabVal} index="1">
@@ -396,30 +322,17 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                         />
                       </Box>
                     </ConditionalTabPanel>
-
                     <ConditionalTabPanel value={tabVal} index="2">
-                      <Box
-                        sx={{
-                          flex: 1,
-                          overflow: 'auto',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 0,
-                        }}
-                      >
-                        <Editor
-                          ref={editorRef}
-                          note={
-                            todayNote && {
-                              ...todayNote,
-                              content: mergedContent ?? todayNote.content,
-                            }
-                          }
-                          loading={isLoading || continueLoading || yLoading}
-                          onSave={handleSave}
-                          chain={chain}
-                        />
-                      </Box>
+                      <PDFViewer
+                        key={`pdf-${currentPage}-${pdfKey}`}
+                        fileUrl={textbookUrl}
+                        initialPage={currentPage}
+                        initialZoom={zoom}
+                        showOutline={outline}
+                        onPageChange={setPg}
+                        onZoomChange={setZoom}
+                        onOutlineChange={setOutline}
+                      />
                     </ConditionalTabPanel>
                   </TabContext>
                 </OutlinedWrapper>

@@ -149,7 +149,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
         {isMobile ? (
           // Mobile layout - toggle between textbook and content based on switch
           showTextbook ? (
-            <Box
+            <OutlinedWrapper
               sx={{
                 flex: 1,
                 display: 'flex',
@@ -158,17 +158,13 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 overflow: 'hidden',
               }}
             >
-              <PDFViewer
-                key={`pdf-${pdfState.currentPage}`}
-                fileUrl={fileUrl}
-                initialPage={pdfState.currentPage}
-                initialZoom={pdfState.zoom}
-                showOutline={pdfState.outline}
-                onPageChange={pdfState.onPageChange}
-                onZoomChange={pdfState.onZoomChange}
-                onOutlineChange={pdfState.onOutlineChange}
+              <Editor
+                note={note}
+                loading={isLoading}
+                onSave={handleSaveNote}
+                chain={chain}
               />
-            </Box>
+            </OutlinedWrapper>
           ) : (
             <OutlinedWrapper
               sx={{
@@ -186,8 +182,8 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                     onChange={handleChange}
                     aria-label="lab API tabs example"
                   >
-                    <Tab label="Class notes" value="1" />
-                    <Tab label="Assignements" value="2" />
+                    <Tab label="Modules" value="1" />
+                    <Tab label="Resources" value="2" />
                   </TabList>
                 </Box>
                 <ConditionalTabPanel value={value} index="1">
@@ -200,28 +196,23 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                       minHeight: 0,
                     }}
                   >
-                    <Editor
-                      note={note}
-                      loading={isLoading}
-                      onSave={handleSaveNote}
-                      chain={chain}
-                    />
-                  </Box>
-                </ConditionalTabPanel>
-                <ConditionalTabPanel value={value} index="2">
-                  <Box
-                    sx={{
-                      flex: 1,
-                      overflow: 'auto',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
                     <SeeAssignmentsAndPreview
                       classId={classId}
                       canEdit={canEdit}
                     />
                   </Box>
+                </ConditionalTabPanel>
+                <ConditionalTabPanel value={value} index="2">
+                  <PDFViewer
+                    key={`pdf-${pdfState.currentPage}`}
+                    fileUrl={fileUrl}
+                    initialPage={pdfState.currentPage}
+                    initialZoom={pdfState.zoom}
+                    showOutline={pdfState.outline}
+                    onPageChange={pdfState.onPageChange}
+                    onZoomChange={pdfState.onZoomChange}
+                    onOutlineChange={pdfState.onOutlineChange}
+                  />
                 </ConditionalTabPanel>
               </TabContext>
             </OutlinedWrapper>
@@ -233,7 +224,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
             draggerClassName="custom-dragger-horizontal"
             initialSizes={value === '2' ? [30, 70] : [50, 50]} // Give homework more space
           >
-            <Box
+            <OutlinedWrapper
               sx={{
                 flex: 1,
                 display: 'flex',
@@ -242,16 +233,13 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 overflow: 'hidden',
               }}
             >
-              <PDFViewer
-                fileUrl={fileUrl}
-                initialPage={pdfState.currentPage}
-                initialZoom={pdfState.zoom}
-                showOutline={pdfState.outline}
-                onPageChange={pdfState.onPageChange}
-                onZoomChange={pdfState.onZoomChange}
-                onOutlineChange={pdfState.onOutlineChange}
+              <Editor
+                note={note}
+                loading={isLoading}
+                onSave={handleSaveNote}
+                chain={chain}
               />
-            </Box>
+            </OutlinedWrapper>
 
             <OutlinedWrapper
               sx={{
@@ -266,29 +254,11 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
               <TabContext value={value}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <TabList onChange={handleChange} aria-label="classroom tabs">
-                    <Tab label="Class notes" value="1" />
-                    <Tab label="Assignements" value="2" />
+                    <Tab label="Modules" value="1" />
+                    <Tab label="Resources" value="2" />
                   </TabList>
                 </Box>
                 <ConditionalTabPanel value={value} index="1">
-                  <Box
-                    sx={{
-                      flex: 1,
-                      overflow: 'auto',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      minHeight: 0,
-                    }}
-                  >
-                    <Editor
-                      note={note}
-                      loading={isLoading}
-                      onSave={handleSaveNote}
-                      chain={chain}
-                    />
-                  </Box>
-                </ConditionalTabPanel>
-                <ConditionalTabPanel value={value} index="2">
                   <Box
                     sx={{
                       flex: 1,
@@ -303,6 +273,17 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                       canEdit={canEdit ?? false}
                     />
                   </Box>
+                </ConditionalTabPanel>
+                <ConditionalTabPanel value={value} index="2">
+                  <PDFViewer
+                    fileUrl={fileUrl}
+                    initialPage={pdfState.currentPage}
+                    initialZoom={pdfState.zoom}
+                    showOutline={pdfState.outline}
+                    onPageChange={pdfState.onPageChange}
+                    onZoomChange={pdfState.onZoomChange}
+                    onOutlineChange={pdfState.onOutlineChange}
+                  />
                 </ConditionalTabPanel>
               </TabContext>
             </OutlinedWrapper>

@@ -400,7 +400,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
           <PDFOutline outline={outline} onNavigate={handleItemClick} />
         </Box>
       )}
-      <OutlinedWrapper
+      <Box
         display="flex"
         flexDirection="column"
         height="100%" // Take full height of parent
@@ -532,7 +532,6 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
                     renderAnnotationLayer={true}
                     renderTextLayer={true}
                     onLoadSuccess={() => {
-                      // Slight delay to ensure page is fully rendered before hiding loading
                       setTimeout(() => {
                         setIsPageLoading(false);
                         setTimeout(() => scrollToTop(), 50);
@@ -566,7 +565,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
             </Box>
           </Box>
         </Box>
-      </OutlinedWrapper>
+      </Box>
     </Box>
   );
 };
