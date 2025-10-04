@@ -5,8 +5,6 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Slide,
-  TextField,
   Paper,
   Radio,
   RadioGroup,
@@ -14,42 +12,13 @@ import {
   Checkbox,
   Box,
 } from '@mui/material';
-import { TransitionProps } from '@mui/material/transitions';
 import { SubmittedHomework, Question } from '../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
-import dynamic from 'next/dynamic';
-import { MathJaxContext } from 'better-react-mathjax';
-import { RichTextAnswer } from '@/app/_lib/components/homework/RichTextAnswer';
-
-const mathJaxConfig = {
-  tex: {
-    inlineMath: [
-      ['$', '$'],
-      ['\\(', '\\)'],
-    ],
-    displayMath: [
-      ['$$', '$$'],
-      ['\\[', '\\]'],
-    ],
-  },
-  loader: { load: ['input/tex', 'output/chtml'] },
-};
-// ✅ Dynamically import MathJax for client-only rendering
-const MathJax = dynamic(
-  () => import('better-react-mathjax').then((mod) => mod.MathJax),
-  { ssr: false }
-);
+import { VideoPlayer } from '../../../../_lib/components/video/VideoPlayer';
 
 interface HomeworkReviewProps {
   submittedHomework: SubmittedHomework;
 }
-
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & { children: React.ReactElement<any> },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
 
 const HomeworkReview: React.FC<HomeworkReviewProps> = ({
   submittedHomework,
@@ -74,6 +43,17 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
           <Typography variant={textVariant}>
             {numbering}. {question.questionText} (Total Weight: {totalWeight})
           </Typography>
+          {question.type === 'video' && (
+            <Box sx={{ mt: 2 }}>
+              {question.video ? (
+                <VideoPlayer video={question.video} />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Video unavailable
+                </Typography>
+              )}
+            </Box>
+          )}
           {question.subquestions.map((sub, idx) =>
             renderQuestion(sub, `${numbering}.${idx + 1}`, depth + 1)
           )}
@@ -85,14 +65,8 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
       <Box key={question.id} sx={{ my: 2, ml: indent }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Typography variant={textVariant}>
-            {numbering}.{' '}
-            {question.type !== 'math-block' && question.questionText}
+            {numbering}. {question.questionText}
           </Typography>
-          {question.type === 'math-block' && (
-            <Box sx={{ ml: 2 }}>
-              <MathJax dynamic>{question.questionText}</MathJax>
-            </Box>
-          )}
           <Typography variant="caption" color="text.secondary">
             (Weight: {question.weight})
           </Typography>
@@ -125,7 +99,11 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
                         control={
                           <Checkbox
                             disabled
-                            checked={answer ? answer.includes(option) : false}
+                            checked={
+                              Array.isArray(answer)
+                                ? answer.includes(option)
+                                : false
+                            }
                           />
                         }
                         label={option}
@@ -133,28 +111,20 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
                     ))}
                   </Box>
                 );
-
-              case 'rich-text':
-                return (
-                  <RichTextAnswer
-                    value={answer || ''}
-                    onChange={() => {}}
-                    readOnly={true}
-                  />
+              case 'video':
+                return question.video ? (
+                  <VideoPlayer video={question.video} />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Video unavailable
+                  </Typography>
                 );
-
-              case 'math-block':
-                return (
-                  <RichTextAnswer
-                    value={answer || ''}
-                    onChange={() => {}}
-                    readOnly={true}
-                  />
-                );
-
-              case 'text':
               default:
-                return <TextField fullWidth disabled value={answer || ''} />;
+                return (
+                  <Typography variant="body2" color="text.secondary">
+                    Unsupported question type
+                  </Typography>
+                );
             }
           })()}
         </Box>
@@ -163,7 +133,7 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
   };
 
   return (
-    <MathJaxContext version={3} config={mathJaxConfig}>
+    <React.Fragment>
       <AppBar sx={{ position: 'relative' }}>
         <Toolbar>
           <Typography sx={{ flex: '1 1 auto' }} variant="h6">
@@ -180,7 +150,7 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
           renderQuestion(question, (idx + 1).toString())
         )}
       </Paper>
-    </MathJaxContext>
+    </React.Fragment>
   );
 };
 

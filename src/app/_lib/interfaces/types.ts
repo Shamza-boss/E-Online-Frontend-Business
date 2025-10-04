@@ -1,13 +1,42 @@
 import { UserRole } from '../Enums/UserRole';
 
 //Homework
+export interface VideoMeta {
+  provider: string;
+  uid: string;
+  playbackId?: string;
+  status: string;
+  posterUrl?: string;
+  durationSeconds?: number;
+  sizeBytes?: number;
+}
+
+export interface VideoUploadResponse {
+  uploadURL: string;
+  uid: string;
+  posterProbeUrl?: string;
+}
+
+export interface VideoMetaResponse {
+  status: string;
+  posterUrl?: string;
+  durationSeconds?: number;
+  playbackId?: string;
+}
+
+export interface CreateUploadDto {
+  filename?: string;
+  size?: number;
+}
+
 export interface Question {
   id: string;
   questionText: string;
-  type: 'text' | 'radio' | 'multi-select' | 'rich-text' | 'math-block';
+  type: 'video' | 'radio' | 'multi-select';
   options?: string[];
   required: boolean;
   weight: number; // Each question must have a weight.
+  video?: VideoMeta; // Video metadata for video type questions
   subquestions?: Question[]; // Optional subquestions for nested question structure.
 }
 

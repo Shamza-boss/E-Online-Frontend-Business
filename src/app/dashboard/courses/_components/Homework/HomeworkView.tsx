@@ -6,7 +6,6 @@ import {
   Toolbar,
   Typography,
   Button,
-  TextField,
   Paper,
   Radio,
   RadioGroup,
@@ -20,28 +19,7 @@ import {
   Question,
 } from '../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
-import dynamic from 'next/dynamic';
-import { MathJaxContext } from 'better-react-mathjax';
-import { RichTextAnswer } from '@/app/_lib/components/homework/RichTextAnswer';
-
-const MathJax = dynamic(
-  () => import('better-react-mathjax').then((mod) => mod.MathJax),
-  { ssr: false }
-);
-
-const mathJaxConfig = {
-  tex: {
-    inlineMath: [
-      ['$', '$'],
-      ['\\(', '\\)'],
-    ],
-    displayMath: [
-      ['$$', '$$'],
-      ['\\[', '\\]'],
-    ],
-  },
-  loader: { load: ['input/tex', 'output/chtml'] },
-};
+import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 
 interface HomeworkViewProps {
   homework: Homework;
@@ -88,6 +66,17 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
           <Typography variant={textVariant}>
             {numbering}. {question.questionText} (Total Weight: {totalWeight})
           </Typography>
+          {question.type === 'video' && (
+            <Box sx={{ mt: 2 }}>
+              {question.video ? (
+                <VideoPlayer video={question.video} />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Video unavailable
+                </Typography>
+              )}
+            </Box>
+          )}
           {question.subquestions.map((sub, idx) =>
             renderQuestion(sub, `${numbering}.${idx + 1}`, depth + 1)
           )}
@@ -99,14 +88,8 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
       <Box key={question.id} sx={{ my: 2, ml: indent }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Typography variant={textVariant}>
-            {numbering}.{' '}
-            {question.type !== 'math-block' && question.questionText}
+            {numbering}. {question.questionText}
           </Typography>
-          {question.type === 'math-block' && (
-            <Box sx={{ ml: 2 }}>
-              <MathJax dynamic>{question.questionText}</MathJax>
-            </Box>
-          )}
           <Typography variant="caption" color="text.secondary">
             (Weight: {question.weight})
           </Typography>
@@ -141,22 +124,25 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
                           <Checkbox
                             disabled={readOnly}
                             checked={
-                              answers[question.id]
-                                ? answers[question.id].includes(option)
+                              Array.isArray(answers[question.id])
+                                ? (answers[question.id] as string[]).includes(
+                                    option
+                                  )
                                 : false
                             }
                             onChange={(e) => {
-                              let newAnswer = answers[question.id]
-                                ? [...answers[question.id]]
+                              if (readOnly) return;
+                              const previousAnswers = Array.isArray(
+                                answers[question.id]
+                              )
+                                ? (answers[question.id] as string[])
                                 : [];
-                              if (e.target.checked) {
-                                newAnswer.push(option);
-                              } else {
-                                newAnswer = newAnswer.filter(
-                                  (item: string) => item !== option
-                                );
-                              }
-                              handleChange(question.id, newAnswer);
+                              const updatedAnswers = e.target.checked
+                                ? [...previousAnswers, option]
+                                : previousAnswers.filter(
+                                    (item: string) => item !== option
+                                  );
+                              handleChange(question.id, updatedAnswers);
                             }}
                           />
                         }
@@ -165,31 +151,19 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
                     ))}
                   </Box>
                 );
-              case 'rich-text':
-                return (
-                  <RichTextAnswer
-                    value={answers[question.id] || ''}
-                    onChange={(content) => handleChange(question.id, content)}
-                    readOnly={readOnly}
-                  />
+              case 'video':
+                return question.video ? (
+                  <VideoPlayer video={question.video} />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Video unavailable
+                  </Typography>
                 );
-              case 'math-block':
-                return (
-                  <RichTextAnswer
-                    value={answers[question.id] || ''}
-                    onChange={(content) => handleChange(question.id, content)}
-                    readOnly={readOnly}
-                  />
-                );
-              case 'text':
               default:
                 return (
-                  <TextField
-                    fullWidth
-                    disabled={readOnly}
-                    value={answers[question.id] || ''}
-                    onChange={(e) => handleChange(question.id, e.target.value)}
-                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Unsupported question type
+                  </Typography>
                 );
             }
           })()}
@@ -199,7 +173,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
   };
 
   return (
-    <MathJaxContext version={3} config={mathJaxConfig}>
+    <React.Fragment>
       <AppBar sx={{ position: 'relative' }}>
         <Toolbar>
           <Typography sx={{ flex: '1 1 auto' }} variant="h6">
@@ -223,7 +197,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
           )}
         </form>
       </Paper>
-    </MathJaxContext>
+    </React.Fragment>
   );
 };
 

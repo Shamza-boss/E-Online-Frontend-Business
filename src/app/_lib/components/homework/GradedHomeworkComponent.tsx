@@ -19,14 +19,8 @@ import {
   computeQuestionTotals,
   calculateHomeworkTotals,
 } from '../../utils/gradeCalculator';
-import dynamic from 'next/dynamic';
 import { MathJaxContext } from 'better-react-mathjax';
-import { RichTextAnswer } from './RichTextAnswer';
-
-const MathJax = dynamic(
-  () => import('better-react-mathjax').then((mod) => mod.MathJax),
-  { ssr: false }
-);
+import { VideoPlayer } from '../video/VideoPlayer';
 
 const mathJaxConfig = {
   tex: {
@@ -76,6 +70,17 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
           <Typography variant={textVariant}>
             {numbering}. {question.questionText} (Est: {question.weight})
           </Typography>
+          {question.type === 'video' && (
+            <Box sx={{ mt: 2 }}>
+              {question.video ? (
+                <VideoPlayer video={question.video} />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Video unavailable
+                </Typography>
+              )}
+            </Box>
+          )}
           {grading[question.id]?.comment && (
             <Box sx={{ mt: 1, ml: 16 }}>
               <Typography
@@ -121,14 +126,8 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
       <Box key={question.id} sx={{ ml: indent, my: 2 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Typography variant={textVariant}>
-            {numbering}.{' '}
-            {question.type !== 'math-block' && question.questionText}
+            {numbering}. {question.questionText}
           </Typography>
-          {question.type === 'math-block' && (
-            <Box sx={{ ml: 2 }}>
-              <MathJax dynamic>{question.questionText}</MathJax>
-            </Box>
-          )}
           <Typography variant="caption" color="text.secondary">
             (Weight: {question.weight})
           </Typography>
@@ -160,7 +159,11 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
                           control={
                             <Checkbox
                               disabled
-                              checked={answer ? answer.includes(option) : false}
+                              checked={
+                                Array.isArray(answer)
+                                  ? answer.includes(option)
+                                  : false
+                              }
                             />
                           }
                           label={option}
@@ -168,26 +171,19 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
                       ))}
                     </Box>
                   );
-                case 'rich-text':
-                  return (
-                    <RichTextAnswer
-                      value={answer || ''}
-                      onChange={() => {}}
-                      readOnly={true}
-                    />
+                case 'video':
+                  return question.video ? (
+                    <VideoPlayer video={question.video} />
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Video unavailable
+                    </Typography>
                   );
-                case 'math-block':
-                  return (
-                    <RichTextAnswer
-                      value={answer || ''}
-                      onChange={() => {}}
-                      readOnly={true}
-                    />
-                  );
-                case 'text':
                 default:
                   return (
-                    <Typography variant="body2">{answer || ''}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Unsupported question type
+                    </Typography>
                   );
               }
             })()}

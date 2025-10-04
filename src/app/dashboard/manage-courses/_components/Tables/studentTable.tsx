@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   GridActionsCellItem,
   GridColDef,
@@ -9,7 +9,6 @@ import {
   GridRowModesModel,
   GridRowModel,
 } from '@mui/x-data-grid';
-import { useSession } from 'next-auth/react';
 import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 import { UserRole } from '../../../../_lib/Enums/UserRole';
 import { useAlert } from '../../../../_lib/components/alert/AlertProvider';
@@ -18,9 +17,10 @@ import {
   roleOptions,
 } from '../../../../_lib/common/functions';
 import { RoleChip } from '../../../../_lib/components/role/roleChip';
-import useSWR, { mutate } from 'swr';
+import { mutate } from 'swr';
 import { UserDto } from '../../../../_lib/interfaces/types';
 import EDataGrid from '../../../_components/EDataGrid';
+import { useSession } from 'next-auth/react';
 
 interface ManagementDataGridProps {
   userData: UserDto[] | undefined;
@@ -36,23 +36,13 @@ export default function StudentDatagridTable({
   const { data: session } = useSession();
   const { showAlert } = useAlert();
   const userRole = Number(session?.user?.role);
-  const isElevated = userRole === UserRole.Teacher;
+  const isElevated = userRole === UserRole.Instructor;
 
-  const [rows, setRows] = React.useState(userData);
-  const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
-    {}
-  );
-  const [isLoading, setIsloading] = React.useState<boolean>(usersLoading);
+  const rows = useMemo(() => userData ?? [], [userData]);
+  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+  const isLoading = usersLoading;
 
-  const currentUserRole = session?.user?.role as UserRole;
-
-  useEffect(() => {
-    setRows(userData);
-  }, [userData]);
-
-  useEffect(() => {
-    setIsloading(usersLoading);
-  }, [usersLoading]);
+  const currentUserRole = session?.user?.role as UserRole | undefined;
   const columns: GridColDef[] = [
     { field: 'firstName', headerName: 'First Name', flex: 1, editable: false },
     { field: 'lastName', headerName: 'Last Name', flex: 1, editable: false },
@@ -64,7 +54,9 @@ export default function StudentDatagridTable({
       editable: false,
       type: 'singleSelect',
       valueOptions: (params) => {
-        const allowedRoles = getAllowedRoles(currentUserRole, params.row);
+        const allowedRoles = currentUserRole
+          ? getAllowedRoles(currentUserRole, params.row)
+          : [];
         const currentRole = roleOptions.find(
           (r) => r.value === params.row.role
         );

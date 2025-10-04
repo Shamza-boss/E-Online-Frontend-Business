@@ -1,15 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Typography } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import { RichTextAnswer } from './RichTextAnswer';
 import { Question } from '../../interfaces/types';
-import dynamic from 'next/dynamic';
-
-const MathJax = dynamic(
-  () => import('better-react-mathjax').then((mod) => mod.MathJax),
-  { ssr: false }
-);
+import { VideoPlayer } from '../video/VideoPlayer';
 
 interface RenderAnswerProps {
   question: Question;
@@ -18,21 +13,21 @@ interface RenderAnswerProps {
 
 const RenderAnswer: React.FC<RenderAnswerProps> = ({ question, answer }) => {
   switch (question.type) {
-    case 'math-block':
+    case 'video':
       return (
-        <RichTextAnswer
-          value={answer || ''}
-          onChange={() => {}}
-          readOnly={true}
-        />
-      );
-    case 'rich-text':
-      return (
-        <RichTextAnswer
-          value={answer || ''}
-          onChange={() => {}}
-          readOnly={true}
-        />
+        <Box>
+          {/* Always render video, regardless of context */}
+          {question.video && (
+            <VideoPlayer video={question.video} title={question.questionText} />
+          )}
+          {/* Video questions don't have direct answers - they contain subquestions */}
+          {question.subquestions && question.subquestions.length > 0 && (
+            <Typography variant="body2" color="text.secondary">
+              This video section contains {question.subquestions.length}{' '}
+              questions
+            </Typography>
+          )}
+        </Box>
       );
     case 'radio':
       return <Typography variant="body2">{answer || ''}</Typography>;
@@ -42,39 +37,12 @@ const RenderAnswer: React.FC<RenderAnswerProps> = ({ question, answer }) => {
           {Array.isArray(answer) ? answer.join(', ') : answer}
         </Typography>
       );
-    case 'text':
     default:
-      // Determine whether the answer contains HTML tags.
-      const isHTML = /<\/?[a-z][\s\S]*>/i.test(answer || '');
-      if (isHTML) {
-        // Render the HTML answer, preserving its HTML properties.
-        return (
-          <div
-            dangerouslySetInnerHTML={{ __html: answer }}
-            style={{
-              pointerEvents: 'none',
-              padding: '8px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        );
-      } else {
-        // Render pure text wrapped in a disabled paragraph block.
-        return (
-          <p
-            style={{
-              pointerEvents: 'none',
-              margin: 0,
-              padding: '8px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          >
-            {answer}
-          </p>
-        );
-      }
+      return (
+        <Typography variant="body2">
+          {answer || 'No answer provided'}
+        </Typography>
+      );
   }
 };
 

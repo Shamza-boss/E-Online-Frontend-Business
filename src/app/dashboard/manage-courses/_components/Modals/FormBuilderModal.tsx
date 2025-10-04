@@ -1,4 +1,3 @@
-// pages/teacher/FormBuilderModal.tsx
 import React, { useState } from 'react';
 import { NextPage } from 'next';
 import {
@@ -23,7 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { TransitionProps } from '@mui/material/transitions';
 import { Homework, Question } from '../../../../_lib/interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
-import { MathBlockQuestionField } from '@/app/_lib/components/mathbuilder/MathblockQuestionField';
+import { VideoUploadField } from '@/app/_lib/components/video/VideoUploadField';
 
 interface FormBuilderModalProps {
   open: boolean;
@@ -32,11 +31,9 @@ interface FormBuilderModalProps {
 }
 
 const QUESTION_TYPES = [
-  { value: 'text', label: 'Text' },
+  { value: 'video', label: 'Video Section' },
   { value: 'radio', label: 'Single Choice' },
   { value: 'multi-select', label: 'Multiple Choice' },
-  { value: 'rich-text', label: 'Rich Text' },
-  { value: 'math-block', label: 'Math Block' },
 ];
 
 const Transition = React.forwardRef(function Transition(
@@ -73,7 +70,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     const newQuestion: Question = {
       id: uuidv4(),
       questionText: '',
-      type: 'text',
+      type: 'video',
       options: [],
       required: false,
       weight: 0,
@@ -124,7 +121,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           const newSubquestion: Question = {
             id: uuidv4(),
             questionText: '',
-            type: 'text',
+            type: 'radio',
             options: [],
             required: false,
             weight: 0,
@@ -295,11 +292,22 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                 ? `Section ${qIdx + 1} (Total Weight: ${computeTotalWeight(q)})`
                 : `Question ${qIdx + 1}`}
             </Typography>
-            {q.type === 'math-block' ? (
-              <MathBlockQuestionField
-                value={q.questionText}
-                onChange={(val) => updateQuestion(q.id, 'questionText', val)}
-              />
+            {q.type === 'video' ? (
+              <Box>
+                <TextField
+                  label="Section Title"
+                  fullWidth
+                  margin="normal"
+                  value={q.questionText}
+                  onChange={(e) =>
+                    updateQuestion(q.id, 'questionText', e.target.value)
+                  }
+                />
+                <VideoUploadField
+                  value={q.video}
+                  onChange={(video) => updateQuestion(q.id, 'video', video)}
+                />
+              </Box>
             ) : (
               <TextField
                 label="Question Text"
@@ -311,7 +319,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                 }
               />
             )}
-            {!(q.subquestions && q.subquestions.length > 0) && (
+            {/* Only show type and weight controls for non-video questions or video questions without subquestions */}
+            {q.type !== 'video' ||
+            !(q.subquestions && q.subquestions.length > 0) ? (
               <>
                 <Stack direction={'row'} spacing={1}>
                   <FormControl fullWidth margin="normal">
@@ -330,16 +340,18 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                       ))}
                     </Select>
                   </FormControl>
-                  <TextField
-                    label="Weight"
-                    type="number"
-                    fullWidth
-                    margin="normal"
-                    value={q.weight}
-                    onChange={(e) =>
-                      updateQuestion(q.id, 'weight', Number(e.target.value))
-                    }
-                  />
+                  {q.type !== 'video' && (
+                    <TextField
+                      label="Weight"
+                      type="number"
+                      fullWidth
+                      margin="normal"
+                      value={q.weight}
+                      onChange={(e) =>
+                        updateQuestion(q.id, 'weight', Number(e.target.value))
+                      }
+                    />
+                  )}
                 </Stack>
                 {['radio', 'multi-select'].includes(q.type) && (
                   <Box sx={{ mt: 1 }}>
@@ -362,20 +374,31 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                   </Box>
                 )}
                 <Stack mt={2} spacing={1} direction={'row'}>
-                  <Button
-                    variant="outlined"
-                    sx={{ mt: 1 }}
-                    onClick={() => addSubquestion(q.id)}
-                  >
-                    Change to subquestion
-                  </Button>
+                  {q.type === 'video' && (
+                    <Button
+                      variant="outlined"
+                      sx={{ mt: 1 }}
+                      onClick={() => addSubquestion(q.id)}
+                    >
+                      Add Question to Video Section
+                    </Button>
+                  )}
+                  {q.type !== 'video' && (
+                    <Button
+                      variant="outlined"
+                      sx={{ mt: 1 }}
+                      onClick={() => addSubquestion(q.id)}
+                    >
+                      Change to subquestion
+                    </Button>
+                  )}
                   <Box flexGrow={1} />
                   <IconButton onClick={() => removeQuestion(q.id)}>
                     <DeleteIcon />
                   </IconButton>
                 </Stack>
               </>
-            )}
+            ) : null}
             {q.subquestions && q.subquestions.length > 0 && (
               <Box sx={{ ml: 0.5, borderLeft: '2px solid #ccc', pl: 1 }}>
                 {q.subquestions.map((sub, subIdx) => (
@@ -420,7 +443,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                           }
                           label="Type"
                         >
-                          {QUESTION_TYPES.map((type) => (
+                          {QUESTION_TYPES.filter(
+                            (type) => type.value !== 'video'
+                          ).map((type) => (
                             <MenuItem key={type.value} value={type.value}>
                               {type.label}
                             </MenuItem>

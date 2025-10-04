@@ -15,6 +15,7 @@ import {
   Divider,
 } from '@mui/material';
 import { RichTextAnswer } from '../../../../_lib/components/homework/RichTextAnswer';
+import { VideoPlayer } from '../../../../_lib/components/video/VideoPlayer';
 import {
   SubmittedHomework,
   Question,
@@ -141,12 +142,14 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
         <Box key={question.id} sx={{ my: 2, ml: indent }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant={textVariant}>
-              {numbering}.{' '}
-              {question.type !== 'math-block' && question.questionText}
+              {numbering}. {question.questionText}
             </Typography>
-            {question.type === 'math-block' && (
+            {question.type === 'video' && question.video && (
               <Box sx={{ ml: 2 }}>
-                <MathJax dynamic>{question.questionText}</MathJax>
+                <VideoPlayer
+                  video={question.video}
+                  title={question.questionText}
+                />
               </Box>
             )}
             <Typography variant="caption" color="text.secondary">
@@ -159,6 +162,10 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
             {(() => {
               const answer = answers[question.id];
               switch (question.type) {
+                case 'video':
+                  // For video questions, the answer would be from subquestions
+                  // so we don't render anything here as subquestions handle their own answers
+                  return null;
                 case 'radio':
                   return (
                     <RadioGroup value={answer || ''} row>
@@ -189,31 +196,8 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
                       ))}
                     </Box>
                   );
-                case 'rich-text':
-                  return (
-                    <RichTextAnswer
-                      value={answer || ''}
-                      onChange={() => {}}
-                      readOnly={true}
-                    />
-                  );
-                case 'math-block':
-                  return (
-                    <RichTextAnswer
-                      value={answer || ''}
-                      onChange={() => {}}
-                      readOnly={true}
-                    />
-                  );
-                case 'text':
                 default:
-                  return (
-                    <TextField
-                      fullWidth
-                      disabled
-                      value={answers[question.id] || ''}
-                    />
-                  );
+                  return null;
               }
             })()}
           </Box>
