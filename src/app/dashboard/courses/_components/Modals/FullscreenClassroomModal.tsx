@@ -35,7 +35,7 @@ interface FullScreenClassroomModalProps {
   fileUrl: string;
   isLoading: boolean;
   note: NoteDto | undefined;
-  handleSaveNote: (noteContent: string) => void;
+  handleSaveNote: (noteContent: string) => void | Promise<void>;
   handleClose: () => void;
   currentTab?: string;
   onTabChange?: (tab: string) => void;
@@ -48,7 +48,6 @@ interface FullScreenClassroomModalProps {
     onZoomChange: (zoom: number) => void;
     onOutlineChange: (show: boolean) => void;
   };
-  chain?: NoteDto[];
 }
 
 const Transition = React.forwardRef(function Transition(
@@ -70,7 +69,6 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
   onTabChange,
   classId,
   pdfState,
-  chain,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -158,12 +156,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 overflow: 'hidden',
               }}
             >
-              <Editor
-                note={note}
-                loading={isLoading}
-                onSave={handleSaveNote}
-                chain={chain}
-              />
+              <Editor note={note} loading={isLoading} onSave={handleSaveNote} />
             </OutlinedWrapper>
           ) : (
             <OutlinedWrapper
@@ -233,12 +226,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 overflow: 'hidden',
               }}
             >
-              <Editor
-                note={note}
-                loading={isLoading}
-                onSave={handleSaveNote}
-                chain={chain}
-              />
+              <Editor note={note} loading={isLoading} onSave={handleSaveNote} />
             </OutlinedWrapper>
 
             <OutlinedWrapper

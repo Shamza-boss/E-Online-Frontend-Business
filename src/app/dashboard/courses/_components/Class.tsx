@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -10,31 +10,19 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import { DatePicker, PickersDay } from '@mui/x-date-pickers';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-dayjs.extend(utc);
 
 import Splitter from '@devbookhq/splitter';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
-import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
 
 import { useSession } from 'next-auth/react';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 
-import {
-  useNoteChain,
-  useNoteDates,
-  useNoteSlice,
-} from '../../../_lib/hooks/useNotes';
-import { NoteDto } from '../../../_lib/interfaces/types';
+import { useClassroomNote } from '../../../_lib/hooks/useNotes';
 
 import PDFViewer from '../../../_lib/components/PDFViewer/PDFViewer';
 import FullScreenClassroomModal from './Modals/FullscreenClassroomModal';
-import Editor, {
-  EditorHandle,
-} from '@/app/_lib/components/TipTapEditor/Editor';
+import Editor from '@/app/_lib/components/TipTapEditor/Editor';
 import SeeAssignmentsAndPreview from './Homework/SeeAssignmentsAndPreview';
 import ConditionalTabPanel from '@/app/_lib/components/conditionalTabPanel';
 
@@ -49,7 +37,6 @@ interface Props {
 }
 
 export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
-  const DIVIDER = '<hr data-type="day-divider" />';
   const { data: session } = useSession();
   const isElevated = Number(session?.user?.role) === UserRole.Trainee;
   const theme = useTheme();
@@ -61,67 +48,10 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
   const [currentPage, setPg] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [outline, setOutline] = useState(false);
-  const todayIso = dayjs().format('YYYY-MM-DD');
-  const yesterdayIso = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
-  const [baseDateIso, setBase] = useState<string | undefined>(undefined);
-  const [pickerOpen, setPOpen] = useState(false);
-  const [mergedContent, setMergedContent] = useState<string | undefined>();
-  const [continueLoading, setContinueLoading] = useState(false);
-  const [yLoading, setYLoading] = useState(false);
-
-  const {
-    data: chain,
-    isLoading,
-    updateSlice,
-  } = useNoteChain(classId, baseDateIso);
-  const { data: enabledDates } = useNoteDates(classId);
-  const { data: yesterdayNote } = useNoteSlice(classId, yesterdayIso);
-
-  const todayNote: NoteDto | undefined =
-    chain && chain.length ? chain[chain.length - 1] : undefined;
-  const { data: pastNote } = useNoteSlice(classId, baseDateIso);
-
-  const editorRef = useRef<EditorHandle | null>(null);
+  const { data: note, isLoading, saveNote } = useClassroomNote(classId);
 
   const handleSave = async (html: string) => {
-    if (!todayNote) return;
-    setMergedContent(html);
-    await updateSlice({ ...todayNote, content: html });
-  };
-
-  const handleInsertYesterdayLink = () => {
-    if (!yesterdayNote || !editorRef.current) return;
-
-    const prettyDate = dayjs(yesterdayNote.noteDate).format('MMM DD');
-    const linkHtml = `<a href="#" data-note-id="${yesterdayNote.id}" class="note-link">Yesterday’s note (${prettyDate})</a>`;
-
-    editorRef.current.insertHtml(linkHtml);
-  };
-
-  const handleContinueYesterday = async () => {
-    if (!yesterdayNote || !todayNote) return;
-    setYLoading(true);
-
-    try {
-      const merged = `${(mergedContent ?? todayNote.content) || ''}${DIVIDER}${yesterdayNote.content}`;
-      setMergedContent(merged);
-      await updateSlice({ ...todayNote, content: merged });
-    } finally {
-      setYLoading(false);
-    }
-  };
-
-  const handleContinuePastDay = async () => {
-    if (!pastNote || !todayNote) return;
-    setContinueLoading(true);
-    const merged = `${(mergedContent ?? todayNote.content) || ''}${DIVIDER}${pastNote.content}`;
-    try {
-      setMergedContent(merged);
-      await updateSlice({ ...todayNote, content: merged });
-      setBase(undefined);
-    } finally {
-      setContinueLoading(false);
-    }
+    await saveNote({ content: html });
   };
 
   const toggleFs = () => {
@@ -130,16 +60,19 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
     else !openBook && setOpenBook(true);
   };
 
+  const editorLoading = isLoading && !note;
+  const noteData = note ?? undefined;
+
   return (
     <>
       <FullScreenClassroomModal
         open={isFs}
         canEdit={!isElevated}
         fileUrl={textbookUrl}
-        isLoading={isLoading}
+  isLoading={editorLoading}
         handleClose={() => setFs(false)}
         handleSaveNote={handleSave}
-        note={todayNote}
+        note={noteData}
         currentTab={tabVal}
         onTabChange={setTab}
         classId={classId}
@@ -151,7 +84,6 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
           onZoomChange: setZoom,
           onOutlineChange: setOutline,
         }}
-        chain={chain}
       />
 
       <Box
@@ -196,16 +128,9 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
               openBook ? (
                 <OutlinedWrapper sx={{ flex: 1, overflow: 'hidden' }}>
                   <Editor
-                    ref={editorRef}
-                    note={
-                      todayNote && {
-                        ...todayNote,
-                        content: mergedContent ?? todayNote.content,
-                      }
-                    }
-                    loading={isLoading || continueLoading || yLoading}
+                    note={noteData}
+                    loading={editorLoading}
                     onSave={handleSave}
-                    chain={chain}
                   />
                 </OutlinedWrapper>
               ) : (
@@ -275,16 +200,9 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                     }}
                   >
                     <Editor
-                      ref={editorRef}
-                      note={
-                        todayNote && {
-                          ...todayNote,
-                          content: mergedContent ?? todayNote.content,
-                        }
-                      }
-                      loading={isLoading || continueLoading || yLoading}
+                      note={noteData}
+                      loading={editorLoading}
                       onSave={handleSave}
-                      chain={chain}
                     />
                   </OutlinedWrapper>
                 )}

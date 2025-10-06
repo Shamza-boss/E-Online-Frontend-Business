@@ -4,9 +4,9 @@ import { NoteDto } from '../interfaces/types';
 import { serverFetch } from '../serverFetch';
 import { auth } from '@/auth';
 
-interface GetNoteByClassroomProps {
-  classId: string;
-  noteDate: string;
+export interface UpdateNotePayload {
+  title?: string;
+  content?: string;
 }
 
 async function requireSession() {
@@ -15,64 +15,46 @@ async function requireSession() {
   return session;
 }
 
-export async function getNoteByClassroomId({
-  classId,
-  noteDate,
-}: GetNoteByClassroomProps): Promise<NoteDto> {
-  const session = await auth();
-
-  if (session?.user.id === undefined) {
-    redirect('/signin');
-  }
-
+export async function getOrCreateNoteByClassroomId(
+  classId: string
+): Promise<NoteDto> {
+  const session = await requireSession();
   return serverFetch(
-    `/Note/${classId}?userId=${encodeURIComponent(session.user.id)}&noteDate=${encodeURIComponent(noteDate)}`,
+    `/Note/${classId}?userId=${encodeURIComponent(session.user.id)}`,
     {
       method: 'GET',
     }
   );
 }
 
-export async function updateNoteById(note: NoteDto) {
-  return serverFetch(`/Note/${note.id}`, {
+export async function updateNoteById(
+  noteId: string,
+  payload: UpdateNotePayload
+): Promise<NoteDto> {
+  return serverFetch(`/Note/${noteId}`, {
     method: 'PUT',
-    body: note,
+    body: payload,
   });
 }
 
-export async function getNoteChain(
-  classId: string,
-  baseDate?: string // yyyy-MM-dd (UTC) or undefined ⇒ today
+export async function getNotesForClassroom(
+  classId: string
 ): Promise<NoteDto[]> {
   const session = await requireSession();
-  const qs =
-    `classroomId=${encodeURIComponent(classId)}` +
-    `&userId=${encodeURIComponent(session.user.id)}` +
-    (baseDate ? `&baseDate=${baseDate}` : '');
-  return serverFetch(`/Note/chain?${qs}`, { method: 'GET' });
+  return serverFetch(
+    `/Note/${classId}/teacher/notes?teacherId=${encodeURIComponent(session.user.id)}`,
+    {
+      method: 'GET',
+    }
+  );
 }
 
-// 1-C  – list of existing note dates for the student --------------------
-export async function getNoteDatesForStudent(
-  classId: string
-): Promise<string[]> {
+export async function deleteNoteById(noteId: string): Promise<void> {
   const session = await requireSession();
-  return serverFetch(`/Note/${classId}/dates?userId=${session.user.id}`, {
-    method: 'GET',
-  });
-}
-
-// 1-D  – continue a chosen slice ---------------------------------------
-export async function continueNote(noteId: string): Promise<NoteDto[]> {
-  return serverFetch(`/Note/${noteId}/continue`, { method: 'POST' });
-}
-
-// lib/actions/note.ts
-export async function getNoteSlice(
-  classId: string,
-  dateIso: string
-): Promise<NoteDto | null> {
-  const session = await requireSession();
-  const qs = `classroomId=${classId}&userId=${session.user.id}&date=${dateIso}`;
-  return serverFetch(`/Note/slice?${qs}`, { method: 'GET' });
+  await serverFetch(
+    `/Note/${noteId}?userId=${encodeURIComponent(session.user.id)}`,
+    {
+      method: 'DELETE',
+    }
+  );
 }

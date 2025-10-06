@@ -6,7 +6,6 @@ import React, {
   useCallback,
   useRef,
   forwardRef,
-  MutableRefObject,
   RefObject,
 } from 'react';
 import { useEditor } from '@tiptap/react';
@@ -19,13 +18,12 @@ import {
   TableBubbleMenu,
   insertImages,
 } from 'mui-tiptap';
-import { Box, Fade, Typography, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Fade, Typography } from '@mui/material';
 import { Lock, LockOpen, TextFields } from '@mui/icons-material';
 import useExtensions from './useExtensions';
 import EditorMenuControls from './EditorMenuControls';
 import type { EditorOptions } from '@tiptap/core';
 import type { NoteDto } from '../../interfaces/types';
-import { useSWRConfig } from 'swr';
 import { debounce } from 'es-toolkit';
 import TextFragmentLoader from '@/app/dashboard/_components/_skeletonLoaders/TextSkeleton';
 
@@ -34,31 +32,23 @@ const fileListToImageFiles = (fl: FileList): File[] =>
     (f.type || '').toLowerCase().startsWith('image/')
   );
 
-const pretty = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
 interface EditorProps {
   note?: NoteDto;
-  chain?: NoteDto[];
   loading: boolean;
-  onSave: (content: string) => void;
+  onSave: (content: string) => void | Promise<void>;
 }
 export interface EditorHandle {
   insertHtml: (html: string) => void;
 }
 
 const Editor = forwardRef<EditorHandle, EditorProps>(
-  ({ note, chain, loading, onSave }: EditorProps, ref) => {
+  ({ note, loading, onSave }: EditorProps, ref) => {
     const [editable, setEditable] = useState(true);
     const [showMenuBar, setShowMenuBar] = useState(true);
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | null>(
       null
     );
     const [pendingSave, setPendingSave] = useState(false);
-    const { mutate } = useSWRConfig();
 
     const extensions = useExtensions({
       placeholder: `Add your own content here...`,
@@ -148,17 +138,8 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
         try {
           setPendingSave(true);
           setSaveStatus('saving');
-          onSave(content);
+          await onSave(content);
           setSaveStatus('saved');
-          await mutate(
-            'note',
-            {
-              ...note,
-              content,
-              updatedAt: new Date().toISOString(),
-            },
-            false
-          );
           setTimeout(() => setSaveStatus(null), 2000);
         } catch (error) {
           setSaveStatus(null);
@@ -166,7 +147,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
           setPendingSave(false);
         }
       },
-      [pendingSave, onSave, mutate, note]
+      [pendingSave, onSave]
     );
 
     const debouncedSaveRef = useRef(
@@ -197,8 +178,6 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
 
     if (!editor) return null;
 
-    const previousSlices =
-      chain && chain.length > 1 ? chain.slice(0, chain.length - 1) : [];
     return (
       <RichTextEditorProvider editor={editor}>
         <Box
@@ -231,33 +210,6 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
               <TextFragmentLoader />
             ) : (
               <Box m={2}>
-                {previousSlices.map((s) => (
-                  <Box key={s.id} mb={4}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: 'block',
-                        textAlign: 'center',
-                        color: 'text.secondary',
-                        mb: 1,
-                        '&::before, &::after': {
-                          content: '""',
-                          display: 'inline-block',
-                          width: '40%',
-                          borderBottom: (t) => `1px solid ${t.palette.divider}`,
-                        },
-                        '&::before': { mr: 1 },
-                        '&::after': { ml: 1 },
-                      }}
-                    >
-                      {pretty(s.noteDate)}
-                    </Typography>
-                    <Box
-                      sx={{ opacity: 0.55 }}
-                      dangerouslySetInnerHTML={{ __html: s.content }}
-                    />
-                  </Box>
-                ))}
                 <RichTextContent />
               </Box>
             )}

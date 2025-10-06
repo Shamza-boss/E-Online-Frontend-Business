@@ -132,15 +132,14 @@ export interface EnrollStudentsDto {
 }
 
 export interface NoteDto {
-  id?: string;
-  chainId?: string; // For chaining notes
-  continueId?: string; // For continuing a note
+  id: string;
   title: string;
   content: string;
-  noteDate: string;
-  createAt: string;
-  classroomId?: string;
-  useId?: string;
+  noteDate?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  classroomId: string;
+  userId: string;
 }
 
 export interface SubjectDto {
