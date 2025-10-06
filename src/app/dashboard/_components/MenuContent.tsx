@@ -25,7 +25,7 @@ const platformOwnerRole = UserRole.PlatformAdmin;
 
 const platformOnlyRoutes = ['institutions'];
 
-// numeric roles with full access (Admin, Trainer(Teacher), Moderator)
+// numeric roles with full access (Admin, Trainer(Teacher))
 const fullAccessRoles: UserRole[] = [UserRole.Admin, UserRole.Instructor];
 // student allowed routes
 const studentAllowed = ['', 'courses'];

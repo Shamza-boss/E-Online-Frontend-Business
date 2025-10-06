@@ -16,7 +16,6 @@ import {
   MenuButton,
   LinkBubbleMenu,
   TableBubbleMenu,
-  insertImages,
 } from 'mui-tiptap';
 import { Box, Fade, Typography } from '@mui/material';
 import { Lock, LockOpen, TextFields } from '@mui/icons-material';
@@ -26,11 +25,6 @@ import type { EditorOptions } from '@tiptap/core';
 import type { NoteDto } from '../../interfaces/types';
 import { debounce } from 'es-toolkit';
 import TextFragmentLoader from '@/app/dashboard/_components/_skeletonLoaders/TextSkeleton';
-
-const fileListToImageFiles = (fl: FileList): File[] =>
-  Array.from(fl).filter((f) =>
-    (f.type || '').toLowerCase().startsWith('image/')
-  );
 
 interface EditorProps {
   note?: NoteDto;
@@ -68,51 +62,36 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
       },
     });
 
-    const handleNewImageFiles = useCallback(
-      (files: File[], insertPosition?: number) => {
-        if (!editor) return;
-        const imgs = files.map((file) => ({
-          src: URL.createObjectURL(file),
-          alt: file.name,
-        }));
-        insertImages({ images: imgs, editor, position: insertPosition });
-      },
-      [editor]
-    );
-
     const handleDrop: NonNullable<EditorOptions['editorProps']['handleDrop']> =
-      useCallback(
-        (view, event) => {
-          if (!(event instanceof DragEvent) || !event.dataTransfer)
-            return false;
-          const files = fileListToImageFiles(event.dataTransfer.files);
-          if (files.length) {
-            const pos = view.posAtCoords({
-              left: event.clientX,
-              top: event.clientY,
-            })?.pos;
-            handleNewImageFiles(files, pos);
-            event.preventDefault();
-            return true;
-          }
+      useCallback((view, event) => {
+        if (!(event instanceof DragEvent) || !event.dataTransfer?.files)
           return false;
-        },
-        [handleNewImageFiles]
-      );
+
+        const hasImage = Array.from(event.dataTransfer.files).some((file) =>
+          (file.type || '').toLowerCase().startsWith('image/')
+        );
+
+        if (hasImage) {
+          event.preventDefault();
+          return true;
+        }
+        return false;
+      }, []);
 
     const handlePaste: NonNullable<
       EditorOptions['editorProps']['handlePaste']
-    > = useCallback(
-      (_view, event) => {
-        if (!event.clipboardData) return false;
-        const files = fileListToImageFiles(event.clipboardData.files);
-        if (files.length) {
-          handleNewImageFiles(files);
-          return true;
-        }
-      },
-      [handleNewImageFiles]
-    );
+    > = useCallback((_view, event) => {
+      if (!event.clipboardData) return false;
+
+      const hasImage = Array.from(event.clipboardData.files || []).some(
+        (file) => (file.type || '').toLowerCase().startsWith('image/')
+      );
+
+      if (hasImage) {
+        event.preventDefault();
+        return true;
+      }
+    }, []);
 
     if (ref) {
       (ref as RefObject<EditorHandle | null>).current = {

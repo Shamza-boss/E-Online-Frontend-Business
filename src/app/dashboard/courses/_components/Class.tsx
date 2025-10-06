@@ -69,7 +69,7 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
         open={isFs}
         canEdit={!isElevated}
         fileUrl={textbookUrl}
-  isLoading={editorLoading}
+        isLoading={editorLoading}
         handleClose={() => setFs(false)}
         handleSaveNote={handleSave}
         note={noteData}

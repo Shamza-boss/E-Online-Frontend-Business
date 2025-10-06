@@ -39,8 +39,7 @@ export default function UserManagementDataGrid() {
   const currentUserRole = session?.user?.role as UserRole;
 
   const userRole = Number(currentUserRole);
-  const isElevated =
-    userRole === UserRole.Admin || userRole === UserRole.Moderator;
+  const isElevated = userRole === UserRole.Admin;
 
   const handleEditClick = (id: GridRowId) => () => {
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });

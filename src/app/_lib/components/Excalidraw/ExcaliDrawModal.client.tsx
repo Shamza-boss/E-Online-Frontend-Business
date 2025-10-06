@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Dialog,
@@ -20,6 +20,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { TransitionProps } from '@mui/material/transitions';
 import '@excalidraw/excalidraw/index.css';
+import { sanitizeExcalidrawElements } from './sanitizeElements';
 
 const Excalidraw = dynamic(
   () => import('@excalidraw/excalidraw').then((m) => m.Excalidraw),
