@@ -12,7 +12,10 @@ import {
   FormControlLabel,
   Checkbox,
   Box,
+  Stack,
+  Pagination,
 } from '@mui/material';
+import PaginationItem from '@mui/material/PaginationItem';
 import {
   Homework,
   SubmittedHomework,
@@ -33,6 +36,10 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
   readOnly = false,
 }) => {
   const [answers, setAnswers] = useState<{ [questionId: string]: any }>({});
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  const questionCount = homework.questions.length;
+  const currentQuestion = homework.questions[currentQuestionIndex];
 
   const handleChange = (questionId: string, value: any) => {
     if (!readOnly) {
@@ -192,8 +199,36 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
           {homework.description}
         </Typography>
         <form onSubmit={handleSubmit}>
-          {homework.questions.map((question, idx) =>
-            renderQuestion(question, (idx + 1).toString())
+          {questionCount > 0 ? (
+            <>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ mb: 2 }}
+              >
+                <Typography variant="subtitle1">
+                  Viewing Question {currentQuestionIndex + 1} of {questionCount}
+                </Typography>
+                <Pagination
+                  count={questionCount}
+                  page={currentQuestionIndex + 1}
+                  onChange={(_, page) => setCurrentQuestionIndex(page - 1)}
+                  renderItem={(item) => (
+                    <PaginationItem {...item} page={`Question ${item.page}`} />
+                  )}
+                />
+              </Stack>
+              {currentQuestion &&
+                renderQuestion(
+                  currentQuestion,
+                  (currentQuestionIndex + 1).toString()
+                )}
+            </>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No questions to display.
+            </Typography>
           )}
         </form>
       </Paper>

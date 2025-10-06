@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -11,7 +11,10 @@ import {
   FormControlLabel,
   Checkbox,
   Box,
+  Stack,
+  Pagination,
 } from '@mui/material';
+import PaginationItem from '@mui/material/PaginationItem';
 import { SubmittedHomework, Question } from '../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
 import { VideoPlayer } from '../../../../_lib/components/video/VideoPlayer';
@@ -24,6 +27,10 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
   submittedHomework,
 }) => {
   const { homework, answers } = submittedHomework;
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  const questionCount = homework.questions.length;
+  const currentQuestion = homework.questions[currentQuestionIndex];
 
   const renderQuestion = (
     question: Question,
@@ -146,8 +153,36 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
         <Typography variant="subtitle1" gutterBottom>
           {homework.description}
         </Typography>
-        {homework.questions.map((question, idx) =>
-          renderQuestion(question, (idx + 1).toString())
+        {questionCount > 0 ? (
+          <>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 2 }}
+            >
+              <Typography variant="subtitle1">
+                Viewing Question {currentQuestionIndex + 1} of {questionCount}
+              </Typography>
+              <Pagination
+                count={questionCount}
+                page={currentQuestionIndex + 1}
+                onChange={(_, page) => setCurrentQuestionIndex(page - 1)}
+                renderItem={(item) => (
+                  <PaginationItem {...item} page={`Question ${item.page}`} />
+                )}
+              />
+            </Stack>
+            {currentQuestion &&
+              renderQuestion(
+                currentQuestion,
+                (currentQuestionIndex + 1).toString()
+              )}
+          </>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            No questions to display.
+          </Typography>
         )}
       </Paper>
     </React.Fragment>

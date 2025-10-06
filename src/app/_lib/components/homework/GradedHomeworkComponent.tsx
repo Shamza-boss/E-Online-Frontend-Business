@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -12,7 +12,10 @@ import {
   FormControlLabel,
   Radio,
   Checkbox,
+  Stack,
+  Pagination,
 } from '@mui/material';
+import PaginationItem from '@mui/material/PaginationItem';
 import { GradedHomework, Question } from '../../interfaces/types';
 import { format } from 'date-fns';
 import {
@@ -51,7 +54,15 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
   gradedHomework,
 }) => {
   const { homework, answers, grading, overallComment } = gradedHomework;
-  const overallTotals = calculateHomeworkTotals(homework.questions, grading);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  const questionCount = homework.questions.length;
+  const currentQuestion = homework.questions[currentQuestionIndex];
+
+  const overallTotals = useMemo(
+    () => calculateHomeworkTotals(homework.questions, grading),
+    [homework.questions, grading]
+  );
 
   const renderQuestion = (
     question: Question,
@@ -237,8 +248,36 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
         </Toolbar>
       </AppBar>
       <Paper sx={{ p: 2, m: 2 }}>
-        {homework.questions.map((q, idx) =>
-          renderQuestion(q, (idx + 1).toString())
+        {questionCount > 0 ? (
+          <>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 2 }}
+            >
+              <Typography variant="subtitle1">
+                Viewing Question {currentQuestionIndex + 1} of {questionCount}
+              </Typography>
+              <Pagination
+                count={questionCount}
+                page={currentQuestionIndex + 1}
+                onChange={(_, page) => setCurrentQuestionIndex(page - 1)}
+                renderItem={(item) => (
+                  <PaginationItem {...item} page={`Question ${item.page}`} />
+                )}
+              />
+            </Stack>
+            {currentQuestion &&
+              renderQuestion(
+                currentQuestion,
+                (currentQuestionIndex + 1).toString()
+              )}
+          </>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            No questions to display.
+          </Typography>
         )}
         <Divider sx={{ my: 2 }} />
         <Box sx={{ mt: 2 }}>

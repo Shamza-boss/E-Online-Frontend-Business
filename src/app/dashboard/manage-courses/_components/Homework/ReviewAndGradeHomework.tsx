@@ -13,7 +13,10 @@ import {
   Checkbox,
   Box,
   Divider,
+  Stack,
+  Pagination,
 } from '@mui/material';
+import PaginationItem from '@mui/material/PaginationItem';
 import { RichTextAnswer } from '../../../../_lib/components/homework/RichTextAnswer';
 import { VideoPlayer } from '../../../../_lib/components/video/VideoPlayer';
 import {
@@ -70,6 +73,10 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
 
   // Optional overall comment.
   const [overallComment, setOverallComment] = useState<string>('');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  const questionCount = homework.questions.length;
+  const currentQuestion = homework.questions[currentQuestionIndex];
 
   // Helper: update grading for a question’s ID.
   const updateGrading = (
@@ -306,8 +313,36 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
         <Typography variant="subtitle1" gutterBottom>
           {homework.description}
         </Typography>
-        {homework.questions.map((question, idx) =>
-          renderQuestion(question, (idx + 1).toString())
+        {questionCount > 0 ? (
+          <>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 2 }}
+            >
+              <Typography variant="subtitle1">
+                Viewing Question {currentQuestionIndex + 1} of {questionCount}
+              </Typography>
+              <Pagination
+                count={questionCount}
+                page={currentQuestionIndex + 1}
+                onChange={(_, page) => setCurrentQuestionIndex(page - 1)}
+                renderItem={(item) => (
+                  <PaginationItem {...item} page={`Question ${item.page}`} />
+                )}
+              />
+            </Stack>
+            {currentQuestion &&
+              renderQuestion(
+                currentQuestion,
+                (currentQuestionIndex + 1).toString()
+              )}
+          </>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            No questions to review.
+          </Typography>
         )}
         <Divider sx={{ my: 2 }} />
         <TextField

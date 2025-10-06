@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { NextPage } from 'next';
 import {
   Dialog,
@@ -10,19 +12,25 @@ import {
   Slide,
   TextField,
   Paper,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Box,
   Stack,
 } from '@mui/material';
+import Alert from '@mui/material/Alert';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { TransitionProps } from '@mui/material/transitions';
 import { Homework, Question } from '../../../../_lib/interfaces/types';
-import { v4 as uuidv4 } from 'uuid';
-import { VideoUploadField } from '@/app/_lib/components/video/VideoUploadField';
+import Splitter from '@devbookhq/splitter';
+import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
+import QuestionEditorPanel from '../FormBuilder/QuestionEditorPanel';
+import QuestionPreviewPanel from '../FormBuilder/QuestionPreviewPanel';
+import {
+  buildValidatedHomework,
+  createLeafQuestion,
+  createVideoQuestion,
+  findQuestionMeta,
+  isChoiceType,
+  updateQuestionTree,
+} from '../FormBuilder/questionUtils';
 
 interface FormBuilderModalProps {
   open: boolean;
@@ -34,7 +42,9 @@ const QUESTION_TYPES = [
   { value: 'video', label: 'Video Section' },
   { value: 'radio', label: 'Single Choice' },
   { value: 'multi-select', label: 'Multiple Choice' },
-];
+] as const;
+
+const FORM_STORAGE_KEY = 'form_builder_modal_state_v1';
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & { children: React.ReactElement<any> },
@@ -53,176 +63,387 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const [publishDate, setPublishDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
-  // Compute total weight from subquestions (if any)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem(FORM_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setFormTitle(parsed.formTitle ?? '');
+        setDescription(parsed.description ?? '');
+        setPublishDate(parsed.publishDate ?? '');
+        setDueDate(parsed.dueDate ?? '');
+        const storedQuestions: Question[] = Array.isArray(parsed.questions)
+          ? parsed.questions
+          : [];
+        setQuestions(storedQuestions);
+        if (storedQuestions.length > 0) {
+          const index = Math.min(
+            parsed.currentQuestionIndex ?? 0,
+            storedQuestions.length - 1
+          );
+          setCurrentQuestionIndex(index);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore form builder draft', error);
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === 'undefined') return;
+
+    const isEmpty =
+      !formTitle &&
+      !description &&
+      !publishDate &&
+      !dueDate &&
+      questions.length === 0;
+
+    if (isEmpty) {
+      localStorage.removeItem(FORM_STORAGE_KEY);
+      return;
+    }
+
+    const payload = {
+      formTitle,
+      description,
+      publishDate,
+      dueDate,
+      questions,
+      currentQuestionIndex,
+    };
+
+    localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(payload));
+  }, [
+    hydrated,
+    formTitle,
+    description,
+    publishDate,
+    dueDate,
+    questions,
+    currentQuestionIndex,
+  ]);
+
+  useEffect(() => {
+    setCurrentQuestionIndex((idx) => {
+      if (questions.length === 0) {
+        return 0;
+      }
+      return Math.min(idx, questions.length - 1);
+    });
+  }, [questions.length]);
+
+  const resetForm = () => {
+    setFormTitle('');
+    setDescription('');
+    setPublishDate('');
+    setDueDate('');
+    setQuestions([]);
+    setCurrentQuestionIndex(0);
+    setValidationErrors([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(FORM_STORAGE_KEY);
+    }
+  };
+
+  const handleQuestionFieldChange = (
+    questionId: string,
+    key: keyof Question,
+    value: any
+  ) => {
+    setQuestions((prev) => {
+      const { updated, changed } = updateQuestionTree(
+        prev,
+        questionId,
+        (q) => ({
+          ...q,
+          [key]: value,
+        })
+      );
+      return changed ? updated : prev;
+    });
+  };
+
+  const handleQuestionTypeChange = (
+    questionId: string,
+    newType: Question['type']
+  ) => {
+    setQuestions((prev) => {
+      const meta = findQuestionMeta(prev, questionId);
+      if (!meta) return prev;
+
+      if (meta.depth > 0 && newType === 'video') {
+        return prev;
+      }
+
+      const { updated, changed } = updateQuestionTree(prev, questionId, (q) => {
+        if (newType === 'video') {
+          return {
+            ...q,
+            type: 'video',
+            required: false,
+            weight: 0,
+            options: undefined,
+            subquestions: q.subquestions ?? [],
+          };
+        }
+
+        const hasChildren = (q.subquestions ?? []).length > 0;
+        const fallbackOptions =
+          q.options && q.options.length > 0 ? [...q.options] : ['', ''];
+
+        if (meta.depth === 0) {
+          return {
+            ...q,
+            type: newType,
+            video: undefined,
+            subquestions: [],
+            options: fallbackOptions,
+          };
+        }
+
+        return {
+          ...q,
+          type: newType,
+          video: undefined,
+          options: hasChildren ? undefined : fallbackOptions,
+        };
+      });
+
+      return changed ? updated : prev;
+    });
+  };
+
+  const handleQuestionWeightChange = (questionId: string, value: string) => {
+    const numeric = Number(value);
+    handleQuestionFieldChange(
+      questionId,
+      'weight',
+      Number.isFinite(numeric) ? numeric : 0
+    );
+  };
+
+  const addOption = (questionId: string) => {
+    setQuestions((prev) => {
+      const { updated, changed } = updateQuestionTree(prev, questionId, (q) => {
+        if (q.subquestions && q.subquestions.length > 0) {
+          return q;
+        }
+        const options = [...(q.options ?? [])];
+        options.push('');
+        return {
+          ...q,
+          options,
+        };
+      });
+      return changed ? updated : prev;
+    });
+  };
+
+  const handleOptionChange = (
+    questionId: string,
+    index: number,
+    value: string
+  ) => {
+    setQuestions((prev) => {
+      const { updated, changed } = updateQuestionTree(prev, questionId, (q) => {
+        const options = [...(q.options ?? [])];
+        options[index] = value;
+        return {
+          ...q,
+          options,
+        };
+      });
+      return changed ? updated : prev;
+    });
+  };
+
+  const addSubquestion = (parentId: string) => {
+    setQuestions((prev) => {
+      const meta = findQuestionMeta(prev, parentId);
+      if (!meta) return prev;
+
+      if (meta.depth === 0 && meta.question.type !== 'video') {
+        return prev;
+      }
+
+      if (meta.depth >= 2) {
+        return prev;
+      }
+
+      const newSub = createLeafQuestion();
+
+      const { updated, changed } = updateQuestionTree(prev, parentId, (q) => {
+        const existing = q.subquestions ?? [];
+        const updatedSubquestions = [...existing, newSub];
+        const base: Question = {
+          ...q,
+          subquestions: updatedSubquestions,
+        };
+        if (meta.depth === 1) {
+          return {
+            ...base,
+            options: undefined,
+          };
+        }
+        return base;
+      });
+
+      return changed ? updated : prev;
+    });
+  };
+
+  const removeSubquestion = (parentId: string, subId: string) => {
+    setQuestions((prev) => {
+      const meta = findQuestionMeta(prev, parentId);
+      if (!meta) return prev;
+
+      const { updated, changed } = updateQuestionTree(
+        prev,
+        parentId,
+        (parent) => {
+          const filtered = (parent.subquestions ?? []).filter(
+            (sub) => sub.id !== subId
+          );
+          const base: Question = {
+            ...parent,
+            subquestions: filtered,
+          };
+
+          if (
+            meta.depth > 0 &&
+            filtered.length === 0 &&
+            isChoiceType(parent.type)
+          ) {
+            return {
+              ...base,
+              options:
+                parent.options && parent.options.length > 0
+                  ? [...parent.options]
+                  : ['', ''],
+            };
+          }
+
+          return base;
+        }
+      );
+
+      return changed ? updated : prev;
+    });
+  };
+
+  const removeQuestion = (questionId: string) => {
+    setQuestions((prev) => {
+      const updated = prev.filter((q) => q.id !== questionId);
+      setCurrentQuestionIndex((idx) => {
+        if (updated.length === 0) return 0;
+        return Math.min(idx, updated.length - 1);
+      });
+      return updated;
+    });
+  };
+
+  const addQuestion = () => {
+    const newQuestion = createVideoQuestion();
+    setQuestions((prev) => {
+      const updated = [...prev, newQuestion];
+      setCurrentQuestionIndex(updated.length - 1);
+      return updated;
+    });
+  };
+
+  const handlePublish = () => {
+    const { homework, errors } = buildValidatedHomework(
+      formTitle,
+      description,
+      publishDate,
+      dueDate,
+      questions
+    );
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    setValidationErrors([]);
+    onPublish(homework);
+    resetForm();
+    onClose();
+  };
+
   const computeTotalWeight = (question: Question): number => {
     if (question.subquestions && question.subquestions.length > 0) {
       return question.subquestions.reduce(
-        (total, sub) => total + sub.weight,
+        (total, sub) => total + computeTotalWeight(sub),
         0
       );
     }
     return question.weight;
   };
 
-  // Create a new top-level question.
-  const addQuestion = () => {
-    const newQuestion: Question = {
-      id: uuidv4(),
-      questionText: '',
-      type: 'video',
-      options: [],
-      required: false,
-      weight: 0,
-      subquestions: [],
-    };
-    setQuestions([...questions, newQuestion]);
-  };
+  const questionEditor = (
+    question: Question,
+    index: number
+  ): React.ReactNode => (
+    <QuestionEditorPanel
+      question={question}
+      questionIndex={index}
+      questionTypeOptions={QUESTION_TYPES}
+      computeTotalWeight={computeTotalWeight}
+      onFieldChange={handleQuestionFieldChange}
+      onTypeChange={handleQuestionTypeChange}
+      onWeightChange={handleQuestionWeightChange}
+      onAddOption={addOption}
+      onOptionChange={handleOptionChange}
+      onAddSubquestion={addSubquestion}
+      onRemoveSubquestion={removeSubquestion}
+      onRemoveQuestion={removeQuestion}
+    />
+  );
 
-  const updateQuestion = (id: string, key: keyof Question, value: any) => {
-    setQuestions(
-      questions.map((q) => (q.id === id ? { ...q, [key]: value } : q))
-    );
-  };
+  const emptyEditor = (
+    <QuestionEditorPanel
+      question={undefined}
+      questionIndex={0}
+      questionTypeOptions={QUESTION_TYPES}
+      computeTotalWeight={computeTotalWeight}
+      onFieldChange={handleQuestionFieldChange}
+      onTypeChange={handleQuestionTypeChange}
+      onWeightChange={handleQuestionWeightChange}
+      onAddOption={addOption}
+      onOptionChange={handleOptionChange}
+      onAddSubquestion={addSubquestion}
+      onRemoveSubquestion={removeSubquestion}
+      onRemoveQuestion={removeQuestion}
+    />
+  );
 
-  const addOptionToQuestion = (questionId: string) => {
-    setQuestions(
-      questions.map((q) => {
-        if (q.id === questionId) {
-          return { ...q, options: q.options ? [...q.options, ''] : [''] };
-        }
-        return q;
-      })
-    );
-  };
+  const questionPreview = (
+    question: Question,
+    index: number
+  ): React.ReactNode => (
+    <QuestionPreviewPanel
+      question={question}
+      questionIndex={index}
+      computeTotalWeight={computeTotalWeight}
+    />
+  );
 
-  const updateOption = (questionId: string, index: number, value: string) => {
-    setQuestions(
-      questions.map((q) => {
-        if (q.id === questionId && q.options) {
-          const newOptions = [...q.options];
-          newOptions[index] = value;
-          return { ...q, options: newOptions };
-        }
-        return q;
-      })
-    );
-  };
-
-  const removeQuestion = (id: string) => {
-    setQuestions(questions.filter((q) => q.id !== id));
-  };
-
-  // Subquestion functions
-  const addSubquestion = (parentId: string) => {
-    setQuestions(
-      questions.map((q) => {
-        if (q.id === parentId) {
-          const newSubquestion: Question = {
-            id: uuidv4(),
-            questionText: '',
-            type: 'radio',
-            options: [],
-            required: false,
-            weight: 0,
-            subquestions: [],
-          };
-          const updatedSubquestions = q.subquestions
-            ? [...q.subquestions, newSubquestion]
-            : [newSubquestion];
-          return { ...q, subquestions: updatedSubquestions };
-        }
-        return q;
-      })
-    );
-  };
-
-  const updateSubquestion = (
-    parentId: string,
-    subId: string,
-    key: keyof Question,
-    value: any
-  ) => {
-    setQuestions(
-      questions.map((q) => {
-        if (q.id === parentId && q.subquestions) {
-          const updatedSubs = q.subquestions.map((sub) =>
-            sub.id === subId ? { ...sub, [key]: value } : sub
-          );
-          return { ...q, subquestions: updatedSubs };
-        }
-        return q;
-      })
-    );
-  };
-
-  const removeSubquestion = (parentId: string, subId: string) => {
-    setQuestions(
-      questions.map((q) => {
-        if (q.id === parentId && q.subquestions) {
-          const updatedSubs = q.subquestions.filter((sub) => sub.id !== subId);
-          return { ...q, subquestions: updatedSubs };
-        }
-        return q;
-      })
-    );
-  };
-
-  const addOptionToSubquestion = (parentId: string, subId: string) => {
-    setQuestions(
-      questions.map((q) => {
-        if (q.id === parentId && q.subquestions) {
-          const updatedSubs = q.subquestions.map((sub) => {
-            if (sub.id === subId) {
-              return {
-                ...sub,
-                options: sub.options ? [...sub.options, ''] : [''],
-              };
-            }
-            return sub;
-          });
-          return { ...q, subquestions: updatedSubs };
-        }
-        return q;
-      })
-    );
-  };
-
-  const updateSubquestionOption = (
-    parentId: string,
-    subId: string,
-    index: number,
-    value: string
-  ) => {
-    setQuestions(
-      questions.map((q) => {
-        if (q.id === parentId && q.subquestions) {
-          const updatedSubs = q.subquestions.map((sub) => {
-            if (sub.id === subId && sub.options) {
-              const newOptions = [...sub.options];
-              newOptions[index] = value;
-              return { ...sub, options: newOptions };
-            }
-            return sub;
-          });
-          return { ...q, subquestions: updatedSubs };
-        }
-        return q;
-      })
-    );
-  };
-
-  const handlePublish = () => {
-    const homework: Homework = {
-      title: formTitle,
-      description,
-      publishDate,
-      dueDate,
-      questions,
-    };
-    onPublish(homework);
-    onClose();
-  };
+  const emptyPreview = (
+    <QuestionPreviewPanel
+      question={undefined}
+      questionIndex={0}
+      computeTotalWeight={computeTotalWeight}
+    />
+  );
 
   return (
     <Dialog
@@ -233,23 +454,30 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     >
       <AppBar sx={{ position: 'relative' }}>
         <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={onClose}
-            aria-label="close"
-          >
+          <IconButton edge="start" color="inherit" onClick={onClose}>
             <CloseIcon />
           </IconButton>
           <Typography sx={{ flex: 1 }} variant="h6">
             Create module
           </Typography>
-          <Button autoFocus color="inherit" onClick={handlePublish}>
+          <Button color="inherit" onClick={resetForm} sx={{ mr: 1 }}>
+            Reset draft
+          </Button>
+          <Button color="inherit" onClick={handlePublish}>
             Publish module
           </Button>
         </Toolbar>
       </AppBar>
       <Box sx={{ p: 2, m: 2 }}>
+        {validationErrors.length > 0 && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            <Box component="ul" sx={{ pl: 2, m: 0 }}>
+              {validationErrors.map((error, idx) => (
+                <li key={idx}>{error}</li>
+              ))}
+            </Box>
+          </Alert>
+        )}
         <TextField
           label="Title"
           fullWidth
@@ -285,241 +513,77 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
         <Paper sx={{ p: 1, mt: 2, mb: 2 }}>
           <Typography variant="h6">Create questions below</Typography>
         </Paper>
-        {questions.map((q, qIdx) => (
-          <Paper key={q.id} sx={{ p: 2, mb: 1 }}>
-            <Typography variant="subtitle1">
-              {q.subquestions && q.subquestions.length > 0
-                ? `Section ${qIdx + 1} (Total Weight: ${computeTotalWeight(q)})`
-                : `Question ${qIdx + 1}`}
-            </Typography>
-            {q.type === 'video' ? (
-              <Box>
-                <TextField
-                  label="Section Title"
-                  fullWidth
-                  margin="normal"
-                  value={q.questionText}
-                  onChange={(e) =>
-                    updateQuestion(q.id, 'questionText', e.target.value)
+
+        <Box
+          sx={{
+            mt: 2,
+            minHeight: { xs: 420, md: 540 },
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <Splitter
+            gutterClassName="custom-gutter-horizontal"
+            draggerClassName="custom-dragger-horizontal"
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                pr: { xs: 0, md: 2 },
+              }}
+            >
+              <Box sx={{ flex: 1, overflow: 'auto' }}>
+                <PaginatedQuestionLayout
+                  questions={questions}
+                  currentIndex={currentQuestionIndex}
+                  onIndexChange={setCurrentQuestionIndex}
+                  renderQuestion={(question, _numbering, index) =>
+                    questionEditor(question, index)
                   }
-                />
-                <VideoUploadField
-                  value={q.video}
-                  onChange={(video) => updateQuestion(q.id, 'video', video)}
+                  emptyState={emptyEditor}
+                  paginationLabel="Question"
+                  topSpacing={0}
                 />
               </Box>
-            ) : (
-              <TextField
-                label="Question Text"
-                fullWidth
-                margin="normal"
-                value={q.questionText}
-                onChange={(e) =>
-                  updateQuestion(q.id, 'questionText', e.target.value)
-                }
-              />
-            )}
-            {/* Only show type and weight controls for non-video questions or video questions without subquestions */}
-            {q.type !== 'video' ||
-            !(q.subquestions && q.subquestions.length > 0) ? (
-              <>
-                <Stack direction={'row'} spacing={1}>
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>Type</InputLabel>
-                    <Select
-                      value={q.type}
-                      onChange={(e) =>
-                        updateQuestion(q.id, 'type', e.target.value)
-                      }
-                      label="Type"
-                    >
-                      {QUESTION_TYPES.map((type) => (
-                        <MenuItem key={type.value} value={type.value}>
-                          {type.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  {q.type !== 'video' && (
-                    <TextField
-                      label="Weight"
-                      type="number"
-                      fullWidth
-                      margin="normal"
-                      value={q.weight}
-                      onChange={(e) =>
-                        updateQuestion(q.id, 'weight', Number(e.target.value))
-                      }
-                    />
+              <Stack direction="row" spacing={1} mt={2}>
+                <Button variant="contained" onClick={addQuestion}>
+                  Add Question
+                </Button>
+              </Stack>
+            </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                overflow: 'auto',
+                pl: { xs: 0, md: 2 },
+              }}
+            >
+              <Paper sx={{ p: 2, flex: 1 }}>
+                <PaginatedQuestionLayout
+                  questions={questions}
+                  currentIndex={currentQuestionIndex}
+                  onIndexChange={setCurrentQuestionIndex}
+                  renderQuestion={(question, _numbering, index) =>
+                    questionPreview(question, index)
+                  }
+                  emptyState={emptyPreview}
+                  paginationLabel="Question"
+                  summaryLabel={(index, total) => (
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      Student preview — Question {index + 1} of {total}
+                    </Typography>
                   )}
-                </Stack>
-                {['radio', 'multi-select'].includes(q.type) && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="subtitle1">Options</Typography>
-                    {q.options?.map((option, optIdx) => (
-                      <TextField
-                        key={optIdx}
-                        label={`Option ${optIdx + 1}`}
-                        fullWidth
-                        margin="normal"
-                        value={option}
-                        onChange={(e) =>
-                          updateOption(q.id, optIdx, e.target.value)
-                        }
-                      />
-                    ))}
-                    <Button onClick={() => addOptionToQuestion(q.id)}>
-                      Add Option
-                    </Button>
-                  </Box>
-                )}
-                <Stack mt={2} spacing={1} direction={'row'}>
-                  {q.type === 'video' && (
-                    <Button
-                      variant="outlined"
-                      sx={{ mt: 1 }}
-                      onClick={() => addSubquestion(q.id)}
-                    >
-                      Add Question to Video Section
-                    </Button>
-                  )}
-                  {q.type !== 'video' && (
-                    <Button
-                      variant="outlined"
-                      sx={{ mt: 1 }}
-                      onClick={() => addSubquestion(q.id)}
-                    >
-                      Change to subquestion
-                    </Button>
-                  )}
-                  <Box flexGrow={1} />
-                  <IconButton onClick={() => removeQuestion(q.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Stack>
-              </>
-            ) : null}
-            {q.subquestions && q.subquestions.length > 0 && (
-              <Box sx={{ ml: 0.5, borderLeft: '2px solid #ccc', pl: 1 }}>
-                {q.subquestions.map((sub, subIdx) => (
-                  <Paper key={sub.id} sx={{ mb: 1 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Typography variant="subtitle2">
-                        Question {qIdx + 1}.{subIdx + 1}
-                      </Typography>
-                    </Box>
-                    <TextField
-                      label="Subquestion Text"
-                      fullWidth
-                      margin="normal"
-                      value={sub.questionText}
-                      onChange={(e) =>
-                        updateSubquestion(
-                          q.id,
-                          sub.id,
-                          'questionText',
-                          e.target.value
-                        )
-                      }
-                    />
-                    <Stack spacing={2} direction={'row'}>
-                      <FormControl fullWidth margin="normal">
-                        <InputLabel>Type</InputLabel>
-                        <Select
-                          value={sub.type}
-                          onChange={(e) =>
-                            updateSubquestion(
-                              q.id,
-                              sub.id,
-                              'type',
-                              e.target.value
-                            )
-                          }
-                          label="Type"
-                        >
-                          {QUESTION_TYPES.filter(
-                            (type) => type.value !== 'video'
-                          ).map((type) => (
-                            <MenuItem key={type.value} value={type.value}>
-                              {type.label}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <TextField
-                        label="Weight"
-                        type="number"
-                        fullWidth
-                        margin="normal"
-                        value={sub.weight}
-                        onChange={(e) =>
-                          updateSubquestion(
-                            q.id,
-                            sub.id,
-                            'weight',
-                            Number(e.target.value)
-                          )
-                        }
-                      />
-                    </Stack>
-
-                    {['radio', 'multi-select'].includes(sub.type) && (
-                      <Box sx={{ mt: 1 }}>
-                        <Typography variant="subtitle1">Options</Typography>
-                        {sub.options?.map((option, optIdx) => (
-                          <TextField
-                            key={optIdx}
-                            label={`Option ${optIdx + 1}`}
-                            fullWidth
-                            margin="normal"
-                            value={option}
-                            onChange={(e) =>
-                              updateSubquestionOption(
-                                q.id,
-                                sub.id,
-                                optIdx,
-                                e.target.value
-                              )
-                            }
-                          />
-                        ))}
-                        <Button
-                          onClick={() => addOptionToSubquestion(q.id, sub.id)}
-                        >
-                          Add Option
-                        </Button>
-                      </Box>
-                    )}
-
-                    <Stack direction={'row'} spacing={1} mt={2.5}>
-                      <Button
-                        variant="outlined"
-                        onClick={() => addSubquestion(q.id)}
-                      >
-                        Add Subquestion
-                      </Button>
-                      <Box flexGrow={1} />
-                      <IconButton
-                        onClick={() => removeSubquestion(q.id, sub.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  </Paper>
-                ))}
-              </Box>
-            )}
-          </Paper>
-        ))}
-        <Button variant="contained" onClick={addQuestion} sx={{ mr: 1 }}>
-          Add Question
-        </Button>
+                  topSpacing={0}
+                />
+              </Paper>
+            </Box>
+          </Splitter>
+        </Box>
       </Box>
     </Dialog>
   );
