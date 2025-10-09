@@ -79,13 +79,21 @@ const QuestionPreviewPanel: React.FC<QuestionPreviewPanelProps> = ({
           {(() => {
             if (node.type === 'radio') {
               return (
-                <RadioGroup value="" row>
+                <RadioGroup value={node.correctAnswer ?? ''} row>
                   {options.length > 0 ? (
                     options.map((option, idx) => (
                       <FormControlLabel
                         key={idx}
                         value={option}
                         control={<Radio disabled />}
+                        sx={{
+                          '.MuiFormControlLabel-label': {
+                            fontWeight:
+                              (node.correctAnswer ?? '') === option
+                                ? 600
+                                : undefined,
+                          },
+                        }}
                         label={option || `Option ${idx + 1}`}
                       />
                     ))
@@ -104,7 +112,24 @@ const QuestionPreviewPanel: React.FC<QuestionPreviewPanelProps> = ({
                   {options.map((option, idx) => (
                     <FormControlLabel
                       key={idx}
-                      control={<Checkbox disabled />}
+                      control={
+                        <Checkbox
+                          disabled
+                          checked={
+                            Array.isArray(node.correctAnswers) &&
+                            node.correctAnswers.includes(option)
+                          }
+                        />
+                      }
+                      sx={{
+                        '.MuiFormControlLabel-label': {
+                          fontWeight:
+                            Array.isArray(node.correctAnswers) &&
+                            node.correctAnswers.includes(option)
+                              ? 600
+                              : undefined,
+                        },
+                      }}
                       label={option || `Option ${idx + 1}`}
                     />
                   ))}

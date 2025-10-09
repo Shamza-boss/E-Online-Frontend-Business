@@ -1,9 +1,4 @@
-import {
-  Question,
-  HomeworkAssignmentDto,
-  AssignmentDetailsDto,
-} from '../interfaces/types';
-import { getAssignmentById } from '../actions/homework';
+import { Question } from '../interfaces/types';
 
 /**
  * Utility functions for calculating homework grades and percentages
@@ -61,36 +56,6 @@ export const calculateHomeworkTotals = (
 };
 
 /**
- * Calculates the percentage score for a homework assignment
- * @param assignment The homework assignment to calculate percentage for
- * @returns Promise resolving to the percentage score (0-100)
- */
-export const calculatePercentageFromAssignment = async (
-  assignment: HomeworkAssignmentDto
-): Promise<number> => {
-  if (!assignment.isGraded) return 0;
-
-  try {
-    // Fetch the full assignment details to get homework structure and grading
-    const assignmentDetails = await getAssignmentById(assignment.assignmentId);
-
-    // Calculate overall totals
-    const overallTotals = calculateHomeworkTotals(
-      assignmentDetails.homework.questions,
-      assignmentDetails.grading || {}
-    );
-
-    // Calculate percentage
-    return overallTotals.estimated > 0
-      ? (overallTotals.awarded / overallTotals.estimated) * 100
-      : 0;
-  } catch (error) {
-    console.error('Error calculating percentage:', error);
-    return 0;
-  }
-};
-
-/**
  * Gets the appropriate color for displaying a percentage score
  * @param percentage The percentage score (0-100)
  * @returns MUI color name for the chip
@@ -102,34 +67,4 @@ export const getPercentageColor = (
   if (percentage >= 80) return 'primary';
   if (percentage >= 70) return 'warning';
   return 'error';
-};
-
-/**
- * Calculates the total weight and awarded score for displaying in "Grade/Total Weight" format
- * @param assignment The homework assignment to calculate totals for
- * @returns Promise resolving to an object with awarded and total weight
- */
-export const calculateGradeDisplay = async (
-  assignment: HomeworkAssignmentDto
-): Promise<{ awarded: number; totalWeight: number } | null> => {
-  if (!assignment.isGraded) return null;
-
-  try {
-    // Fetch the full assignment details to get homework structure and grading
-    const assignmentDetails = await getAssignmentById(assignment.assignmentId);
-
-    // Calculate overall totals
-    const totals = calculateHomeworkTotals(
-      assignmentDetails.homework.questions,
-      assignmentDetails.grading || {}
-    );
-
-    return {
-      awarded: totals.awarded,
-      totalWeight: totals.estimated,
-    };
-  } catch (error) {
-    console.error('Error calculating grade display:', error);
-    return null;
-  }
 };

@@ -168,7 +168,7 @@ const ManageStudentHomework: React.FC<ManageStudentHomeworkProps> = ({
 
       {!selectedAssignment ? (
         <EDataGrid
-          rows={data}
+          rows={data || []}
           columns={columns}
           getRowId={(r) => r.assignmentId}
           onRowClick={handleRowClick}

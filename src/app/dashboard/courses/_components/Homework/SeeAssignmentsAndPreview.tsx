@@ -8,7 +8,7 @@ import {
   Button,
   Chip,
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import EDataGrid from '../../../_components/EDataGrid';
 import { GridColDef } from '@mui/x-data-grid';
 import { Close } from '@mui/icons-material';
@@ -124,7 +124,7 @@ export default function SeeAssignmentsAndPreview({
       },
     },
     {
-      field: 'percentage',
+      field: 'studentPercentage',
       headerName: 'Percentage',
       flex: 1,
       minWidth: 120,

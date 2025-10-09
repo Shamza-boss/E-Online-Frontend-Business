@@ -38,6 +38,8 @@ export interface Question {
   weight: number; // Each question must have a weight.
   video?: VideoMeta; // Video metadata for video type questions
   subquestions?: Question[]; // Optional subquestions for nested question structure.
+  correctAnswer?: string; // For single-choice questions
+  correctAnswers?: string[]; // For multi-select questions
 }
 
 export interface UploadResult {
@@ -48,11 +50,41 @@ export interface UploadResult {
 }
 
 export interface Homework {
+  id?: string;
+  homeworkId?: string;
   title: string;
   description: string;
-  publishDate: string; // ISO date string
   dueDate: string; // ISO date string
+  hasExpiry: boolean;
+  expiryDate?: string | null; // ISO date string when hasExpiry is true
+  isPublished?: boolean;
+  isActive?: boolean;
+  completions?: number;
+  totalStudents?: number;
+  studentScore?: number | null;
+  studentTotalWeight?: number | null;
+  studentPercentage?: number | null;
   questions: Question[];
+}
+
+export type HomeworkPayload = Pick<
+  Homework,
+  'title' | 'description' | 'dueDate' | 'hasExpiry' | 'expiryDate' | 'questions'
+>;
+
+export interface HomeworkSummaryDto {
+  homeworkId: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  hasExpiry: boolean;
+  expiryDate?: string | null;
+  isPublished: boolean;
+  isActive: boolean;
+  completions: number;
+  totalStudents: number;
+  classroomId?: string;
+  questions?: Question[];
 }
 
 export interface HomeworkAssignmentDto {
@@ -62,10 +94,20 @@ export interface HomeworkAssignmentDto {
   dueDate: string; // ISO string format
   isSubmitted: boolean;
   submittedAt: string | null;
-  totalScore: number;
+  totalScore: number | null;
+  totalWeight?: number | null;
+  percentage?: number | null;
+  studentScore?: number | null;
+  studentTotalWeight?: number | null;
+  studentPercentage?: number | null;
   isGraded: boolean;
   overallComment: string;
   classroomId: string;
+  gradeSummary?: {
+    awarded: number | null;
+    totalWeight: number | null;
+    percentage: number | null;
+  };
 }
 
 export interface SubmitHomeworkDto {
