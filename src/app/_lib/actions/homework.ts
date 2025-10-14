@@ -131,11 +131,20 @@ export async function listTeacherClassroomModules(
   teacherId: string,
   classroomId: string
 ): Promise<Homework[]> {
-  return serverFetch(
-    `/homework/teacher/${encodeURIComponent(
-      teacherId
-    )}/classroom/${encodeURIComponent(classroomId)}/homeworks`
-  );
+  const path = `/homework/teacher/${encodeURIComponent(teacherId)}/classroom/${encodeURIComponent(classroomId)}/homeworks`;
+
+  const summaries = await serverFetch<HomeworkSummaryDto[]>(path);
+
+  if (!summaries) {
+    return [];
+  }
+
+  return summaries.map((summary) => ({
+    ...summary,
+    id: summary.homeworkId,
+    homeworkId: summary.homeworkId,
+    questions: summary.questions ?? [],
+  }));
 }
 
 export async function getTeacherStudentAssignments(

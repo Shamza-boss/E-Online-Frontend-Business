@@ -52,6 +52,7 @@ export interface UploadResult {
 export interface Homework {
   id?: string;
   homeworkId?: string;
+  classroomId?: string;
   title: string;
   description: string;
   dueDate: string; // ISO date string
