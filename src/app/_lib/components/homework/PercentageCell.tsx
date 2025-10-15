@@ -1,31 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { Chip } from '@mui/material';
-import { HomeworkAssignmentDto } from '../../interfaces/types';
-import {
-  calculatePercentageFromAssignment,
-  getPercentageColor,
-} from '../../utils/gradeCalculator';
+import type { HomeworkAssignmentDto } from '../../interfaces/types';
+import { getPercentageColor } from '../../utils/gradeCalculator';
 
 interface PercentageCellProps {
   assignment: HomeworkAssignmentDto;
 }
 
-/**
- * Reusable component for displaying homework assignment percentage in a table cell
- */
 export const PercentageCell: React.FC<PercentageCellProps> = ({
   assignment,
 }) => {
-  const [percentage, setPercentage] = useState<number | null>(null);
+  const percentage = useMemo(() => {
+    const supplied = assignment.studentPercentage;
 
-  useEffect(() => {
-    if (assignment.isGraded) {
-      calculatePercentageFromAssignment(assignment).then(setPercentage);
+    if (supplied !== null && supplied !== undefined) {
+      return Number(supplied);
     }
-  }, [assignment]);
 
-  if (!assignment.isGraded) return <>N/A</>;
-  if (percentage === null) return <>Loading...</>;
+    return null;
+  }, [assignment]);
+  if (percentage === null || !Number.isFinite(percentage)) return <>Pending</>;
 
   return (
     <Chip

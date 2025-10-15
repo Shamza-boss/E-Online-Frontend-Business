@@ -14,11 +14,17 @@ import {
   Paper,
   Box,
   Stack,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import Alert from '@mui/material/Alert';
 import CloseIcon from '@mui/icons-material/Close';
 import { TransitionProps } from '@mui/material/transitions';
-import { Homework, Question } from '../../../../_lib/interfaces/types';
+import {
+  Homework,
+  HomeworkPayload,
+  Question,
+} from '../../../../_lib/interfaces/types';
 import Splitter from '@devbookhq/splitter';
 import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
 import QuestionEditorPanel from '../FormBuilder/QuestionEditorPanel';
@@ -35,7 +41,11 @@ import {
 interface FormBuilderModalProps {
   open: boolean;
   onClose: () => void;
-  onPublish: (homework: Homework) => void;
+  onSubmit: (
+    homework: HomeworkPayload,
+    options: { isDraft: boolean; homeworkId?: string }
+  ) => void;
+  initialHomework?: Homework | null;
 }
 
 const QUESTION_TYPES = [
@@ -44,7 +54,7 @@ const QUESTION_TYPES = [
   { value: 'multi-select', label: 'Multiple Choice' },
 ] as const;
 
-const FORM_STORAGE_KEY = 'form_builder_modal_state_v1';
+const FORM_STORAGE_KEY = 'form_builder_modal_state_v2';
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & { children: React.ReactElement<any> },
@@ -56,16 +66,20 @@ const Transition = React.forwardRef(function Transition(
 const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   open,
   onClose,
-  onPublish,
+  onSubmit,
+  initialHomework = null,
 }) => {
   const [formTitle, setFormTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [publishDate, setPublishDate] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [hasExpiry, setHasExpiry] = useState(false);
+  const [expiryDate, setExpiryDate] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [activeHomeworkId, setActiveHomeworkId] = useState<string | null>(null);
+  const [prefillSource, setPrefillSource] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -75,8 +89,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
         const parsed = JSON.parse(stored);
         setFormTitle(parsed.formTitle ?? '');
         setDescription(parsed.description ?? '');
-        setPublishDate(parsed.publishDate ?? '');
         setDueDate(parsed.dueDate ?? '');
+        setHasExpiry(Boolean(parsed.hasExpiry));
+        setExpiryDate(parsed.expiryDate ?? '');
         const storedQuestions: Question[] = Array.isArray(parsed.questions)
           ? parsed.questions
           : [];
@@ -98,12 +113,13 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
 
   useEffect(() => {
     if (!hydrated || typeof window === 'undefined') return;
+    if (activeHomeworkId) return;
 
     const isEmpty =
       !formTitle &&
       !description &&
-      !publishDate &&
       !dueDate &&
+      !hasExpiry &&
       questions.length === 0;
 
     if (isEmpty) {
@@ -114,8 +130,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     const payload = {
       formTitle,
       description,
-      publishDate,
       dueDate,
+      hasExpiry,
+      expiryDate,
       questions,
       currentQuestionIndex,
     };
@@ -125,11 +142,52 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     hydrated,
     formTitle,
     description,
-    publishDate,
     dueDate,
+    hasExpiry,
+    expiryDate,
     questions,
     currentQuestionIndex,
+    activeHomeworkId,
   ]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (initialHomework) {
+      const resolvedId =
+        initialHomework.id ?? initialHomework.homeworkId ?? null;
+      const sourceKey = resolvedId ?? 'unknown';
+      if (prefillSource !== sourceKey) {
+        setActiveHomeworkId(resolvedId);
+        setFormTitle(initialHomework.title ?? '');
+        setDescription(initialHomework.description ?? '');
+        setDueDate(initialHomework.dueDate ?? '');
+        const enableExpiry = Boolean(initialHomework.hasExpiry);
+        setHasExpiry(enableExpiry);
+        setExpiryDate(
+          enableExpiry && initialHomework.expiryDate
+            ? initialHomework.expiryDate
+            : ''
+        );
+        const clonedQuestions: Question[] = initialHomework.questions
+          ? JSON.parse(JSON.stringify(initialHomework.questions))
+          : [];
+        setQuestions(clonedQuestions);
+        setCurrentQuestionIndex(0);
+        setValidationErrors([]);
+        setPrefillSource(sourceKey);
+      }
+    } else if (prefillSource !== 'create') {
+      setActiveHomeworkId(null);
+      setPrefillSource('create');
+    }
+  }, [open, initialHomework, prefillSource]);
+
+  useEffect(() => {
+    if (!open) {
+      setPrefillSource(null);
+    }
+  }, [open]);
 
   useEffect(() => {
     setCurrentQuestionIndex((idx) => {
@@ -143,11 +201,14 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const resetForm = () => {
     setFormTitle('');
     setDescription('');
-    setPublishDate('');
     setDueDate('');
+    setHasExpiry(false);
+    setExpiryDate('');
     setQuestions([]);
     setCurrentQuestionIndex(0);
     setValidationErrors([]);
+    setActiveHomeworkId(null);
+    setPrefillSource(null);
     if (typeof window !== 'undefined') {
       localStorage.removeItem(FORM_STORAGE_KEY);
     }
@@ -192,6 +253,8 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             weight: 0,
             options: undefined,
             subquestions: q.subquestions ?? [],
+            correctAnswer: undefined,
+            correctAnswers: undefined,
           };
         }
 
@@ -206,6 +269,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             video: undefined,
             subquestions: [],
             options: fallbackOptions,
+            correctAnswer: newType === 'radio' ? '' : undefined,
+            correctAnswers: newType === 'multi-select' ? [] : undefined,
+            weight: Math.max(q.weight || 1, 1),
           };
         }
 
@@ -214,6 +280,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           type: newType,
           video: undefined,
           options: hasChildren ? undefined : fallbackOptions,
+          correctAnswer: newType === 'radio' ? '' : undefined,
+          correctAnswers: newType === 'multi-select' ? [] : undefined,
+          weight: Math.max(q.weight || 1, 1),
         };
       });
 
@@ -226,7 +295,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     handleQuestionFieldChange(
       questionId,
       'weight',
-      Number.isFinite(numeric) ? numeric : 0
+      Number.isFinite(numeric) ? Math.max(numeric, 0) : 0
     );
   };
 
@@ -255,10 +324,26 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     setQuestions((prev) => {
       const { updated, changed } = updateQuestionTree(prev, questionId, (q) => {
         const options = [...(q.options ?? [])];
+        const previous = options[index];
         options[index] = value;
+        let correctAnswer = q.correctAnswer;
+        let correctAnswers = q.correctAnswers;
+
+        if (q.type === 'radio' && previous === q.correctAnswer) {
+          correctAnswer = value;
+        }
+
+        if (q.type === 'multi-select' && Array.isArray(correctAnswers)) {
+          correctAnswers = correctAnswers.map((answer) =>
+            answer === previous ? value : answer
+          );
+        }
+
         return {
           ...q,
           options,
+          correctAnswer,
+          correctAnswers,
         };
       });
       return changed ? updated : prev;
@@ -328,6 +413,14 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                 parent.options && parent.options.length > 0
                   ? [...parent.options]
                   : ['', ''],
+              correctAnswer:
+                parent.type === 'radio'
+                  ? (parent.correctAnswer ?? '')
+                  : undefined,
+              correctAnswers:
+                parent.type === 'multi-select'
+                  ? (parent.correctAnswers ?? [])
+                  : undefined,
             };
           }
 
@@ -359,12 +452,13 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     });
   };
 
-  const handlePublish = () => {
+  const handleSubmit = (isDraft: boolean) => {
     const { homework, errors } = buildValidatedHomework(
       formTitle,
       description,
-      publishDate,
       dueDate,
+      hasExpiry,
+      hasExpiry ? expiryDate : '',
       questions
     );
 
@@ -374,7 +468,13 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     }
 
     setValidationErrors([]);
-    onPublish(homework);
+    const submissionHomeworkId =
+      activeHomeworkId ?? initialHomework?.id ?? initialHomework?.homeworkId;
+
+    onSubmit(homework, {
+      isDraft,
+      homeworkId: submissionHomeworkId ?? undefined,
+    });
     resetForm();
     onClose();
   };
@@ -445,6 +545,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     />
   );
 
+  const isEditing = Boolean(activeHomeworkId);
+  const modalTitle = isEditing ? 'Edit module' : 'Create module';
+
   return (
     <Dialog
       fullScreen
@@ -458,12 +561,23 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             <CloseIcon />
           </IconButton>
           <Typography sx={{ flex: 1 }} variant="h6">
-            Create module
+            {modalTitle}
           </Typography>
           <Button color="inherit" onClick={resetForm} sx={{ mr: 1 }}>
-            Reset draft
+            Reset {isEditing ? 'form' : 'draft'}
           </Button>
-          <Button color="inherit" onClick={handlePublish}>
+          <Button
+            color="inherit"
+            onClick={() => handleSubmit(true)}
+            sx={{ mr: 1 }}
+          >
+            Save draft
+          </Button>
+          <Button
+            color="inherit"
+            variant="outlined"
+            onClick={() => handleSubmit(false)}
+          >
             Publish module
           </Button>
         </Toolbar>
@@ -493,15 +607,6 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           onChange={(e) => setDescription(e.target.value)}
         />
         <TextField
-          label="Publish Date"
-          type="date"
-          fullWidth
-          margin="normal"
-          slotProps={{ inputLabel: { shrink: true } }}
-          value={publishDate}
-          onChange={(e) => setPublishDate(e.target.value)}
-        />
-        <TextField
           label="Due Date"
           type="date"
           fullWidth
@@ -510,6 +615,34 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
         />
+        <FormControlLabel
+          sx={{ mt: 1 }}
+          control={
+            <Switch
+              checked={hasExpiry}
+              onChange={(event) => {
+                const enabled = event.target.checked;
+                setHasExpiry(enabled);
+                if (!enabled) {
+                  setExpiryDate('');
+                }
+              }}
+            />
+          }
+          label="Module expires"
+        />
+        {hasExpiry && (
+          <TextField
+            label="Expiry Date"
+            type="date"
+            fullWidth
+            margin="normal"
+            slotProps={{ inputLabel: { shrink: true } }}
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+            helperText="When the module expires it will move back to draft."
+          />
+        )}
         <Paper sx={{ p: 1, mt: 2, mb: 2 }}>
           <Typography variant="h6">Create questions below</Typography>
         </Paper>

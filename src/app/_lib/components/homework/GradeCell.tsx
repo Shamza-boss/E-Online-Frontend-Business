@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { Typography } from '@mui/material';
-import { HomeworkAssignmentDto } from '../../interfaces/types';
-import { calculateGradeDisplay } from '../../utils/gradeCalculator';
+import type { HomeworkAssignmentDto, Homework } from '../../interfaces/types';
 
 interface GradeCellProps {
   assignment: HomeworkAssignmentDto;
@@ -11,28 +10,34 @@ interface GradeCellProps {
  * Reusable component for displaying homework assignment grade in "Grade/Total Weight" format
  */
 export const GradeCell: React.FC<GradeCellProps> = ({ assignment }) => {
-  const [gradeData, setGradeData] = useState<{
-    awarded: number;
-    totalWeight: number;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const derivedGrade = useMemo(() => {
+    const awarded = assignment.studentScore ?? null;
 
-  useEffect(() => {
-    if (assignment.isGraded) {
-      setIsLoading(true);
-      calculateGradeDisplay(assignment)
-        .then(setGradeData)
-        .finally(() => setIsLoading(false));
-    }
+    const total = assignment.studentTotalWeight ?? null;
+
+    return {
+      awarded,
+      total,
+    };
   }, [assignment]);
 
-  if (!assignment.isGraded) return <>N/A</>;
-  if (isLoading) return <>Loading...</>;
-  if (!gradeData) return <>Error</>;
+  if (derivedGrade.awarded === null || derivedGrade.total === null)
+    return <>Pending</>;
+
+  const awarded = Number(derivedGrade.awarded);
+  const total = Number(derivedGrade.total);
+
+  if (!Number.isFinite(awarded) || !Number.isFinite(total) || total === 0) {
+    return (
+      <Typography variant="body2" component="span">
+        Pending
+      </Typography>
+    );
+  }
 
   return (
     <Typography variant="body2" component="span">
-      {gradeData.awarded.toFixed(2)}/{gradeData.totalWeight.toFixed(2)}
+      {awarded}/{total}
     </Typography>
   );
 };

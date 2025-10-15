@@ -32,28 +32,37 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
   const questionCount = homework.questions.length;
   const currentQuestion = homework.questions[currentQuestionIndex];
 
-  const renderQuestion = (
-    question: Question,
-    numbering: string,
-    depth: number = 1
-  ) => {
-    const indent = depth > 1 ? (depth - 1) * 2 : 0;
-    const textVariant = depth === 1 ? 'h6' : 'body2';
-
-    if (question.subquestions && question.subquestions.length > 0) {
-      const totalWeight = question.subquestions.reduce(
-        (sum, sub) => sum + sub.weight,
+  const computeTotalWeight = (node: Question): number => {
+    if (node.subquestions && node.subquestions.length > 0) {
+      return node.subquestions.reduce(
+        (sum, sub) => sum + computeTotalWeight(sub),
         0
       );
+    }
+
+    return Number.isFinite(node.weight) ? node.weight : 0;
+  };
+
+  const renderQuestion = (
+    node: Question,
+    numbering: string,
+    depth: number = 1
+  ): React.ReactNode => {
+    const indent = depth > 1 ? (depth - 1) * 2 : 0;
+    const textVariant = depth === 1 ? 'h6' : 'subtitle1';
+
+    if (node.subquestions && node.subquestions.length > 0) {
+      const sectionWeight = computeTotalWeight(node);
       return (
-        <Box key={question.id} sx={{ my: 2, ml: indent }}>
-          <Typography variant={textVariant}>
-            {numbering}. {question.questionText} (Total Weight: {totalWeight})
+        <Box key={node.id} sx={{ my: 2, ml: indent }}>
+          <Typography variant={textVariant} sx={{ fontWeight: 600 }}>
+            {numbering}. {node.questionText || 'Untitled section'}
+            {sectionWeight > 0 ? ` (Total Weight: ${sectionWeight})` : ''}
           </Typography>
-          {question.type === 'video' && (
+          {node.type === 'video' && (
             <Box sx={{ mt: 2 }}>
-              {question.video ? (
-                <VideoPlayer video={question.video} />
+              {node.video ? (
+                <VideoPlayer video={node.video} />
               ) : (
                 <Typography variant="body2" color="text.secondary">
                   Video unavailable
@@ -61,78 +70,91 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
               )}
             </Box>
           )}
-          {question.subquestions.map((sub, idx) =>
+          {node.subquestions.map((sub, idx) =>
             renderQuestion(sub, `${numbering}.${idx + 1}`, depth + 1)
           )}
         </Box>
       );
     }
 
+    const options = node.options ?? [];
+    const answer = answers[node.id];
+
     return (
-      <Box key={question.id} sx={{ my: 2, ml: indent }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Box key={node.id} sx={{ my: 2, ml: indent }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Typography variant={textVariant}>
-            {numbering}. {question.questionText}
+            {numbering}. {node.questionText || 'Untitled question'}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            (Weight: {question.weight})
+            (Weight: {Number.isFinite(node.weight) ? node.weight : 0})
           </Typography>
         </Box>
         <Box sx={{ mt: 1 }}>
           {(() => {
-            const answer = answers[question.id];
-
-            switch (question.type) {
-              case 'radio':
-                return (
-                  <RadioGroup value={answer || ''} row>
-                    {question.options?.map((option, idx) => (
+            if (node.type === 'radio') {
+              return (
+                <RadioGroup value={answer || ''} row>
+                  {options.length > 0 ? (
+                    options.map((option, idx) => (
                       <FormControlLabel
                         key={idx}
                         value={option}
                         control={<Radio disabled />}
-                        label={option}
+                        label={option || `Option ${idx + 1}`}
                       />
-                    ))}
-                  </RadioGroup>
-                );
-
-              case 'multi-select':
-                return (
-                  <Box>
-                    {question.options?.map((option, idx) => (
-                      <FormControlLabel
-                        key={idx}
-                        control={
-                          <Checkbox
-                            disabled
-                            checked={
-                              Array.isArray(answer)
-                                ? answer.includes(option)
-                                : false
-                            }
-                          />
-                        }
-                        label={option}
-                      />
-                    ))}
-                  </Box>
-                );
-              case 'video':
-                return question.video ? (
-                  <VideoPlayer video={question.video} />
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    Video unavailable
-                  </Typography>
-                );
-              default:
-                return (
-                  <Typography variant="body2" color="text.secondary">
-                    Unsupported question type
-                  </Typography>
-                );
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Options will appear here
+                    </Typography>
+                  )}
+                </RadioGroup>
+              );
             }
+
+            if (node.type === 'multi-select') {
+              return options.length > 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                  {options.map((option, idx) => (
+                    <FormControlLabel
+                      key={idx}
+                      control={
+                        <Checkbox
+                          disabled
+                          checked={
+                            Array.isArray(answer)
+                              ? answer.includes(option)
+                              : false
+                          }
+                        />
+                      }
+                      label={option || `Option ${idx + 1}`}
+                    />
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Options will appear here
+                </Typography>
+              );
+            }
+
+            if (node.type === 'video') {
+              return node.video ? (
+                <VideoPlayer video={node.video} />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Video unavailable
+                </Typography>
+              );
+            }
+
+            return (
+              <Typography variant="body2" color="text.secondary">
+                Unsupported question type
+              </Typography>
+            );
           })()}
         </Box>
       </Box>

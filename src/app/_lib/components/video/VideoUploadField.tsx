@@ -6,13 +6,11 @@ import {
   LinearProgress,
   Alert,
   Paper,
-  IconButton,
   Stack,
+  Chip,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import Image from 'next/image';
 import {
   VideoMeta,
   VideoUploadResponse,
@@ -20,6 +18,8 @@ import {
   CreateUploadDto,
 } from '../../interfaces/types';
 import { createDirectUpload, getVideoMeta } from '../../actions/stream';
+import StudentClassCardSkeleton from '@/app/dashboard/_components/_skeletonLoaders/StudentClassCardSkeleton';
+import VideoCardThumbnail from '@/app/_lib/components/video/VideoCardThumbnail';
 
 interface Props {
   value?: VideoMeta;
@@ -174,6 +174,56 @@ export const VideoUploadField: React.FC<Props> = ({
     fileInputRef.current?.click();
   };
 
+  const isProcessing =
+    uploading ||
+    processingStatus === 'processing' ||
+    value?.status === 'processing';
+
+  const formattedDuration = value?.durationSeconds
+    ? `${Math.floor((value.durationSeconds || 0) / 60)}:${String(
+        Math.floor((value.durationSeconds || 0) % 60)
+      ).padStart(2, '0')}`
+    : null;
+
+  const sizeLabel = value?.sizeBytes
+    ? `${(value.sizeBytes / (1024 * 1024)).toFixed(1)} MB`
+    : null;
+
+  const isError = processingStatus === 'error' || value?.status === 'error';
+
+  const statusLabelRaw = (processingStatus || value?.status || 'ready').replace(
+    /\s+/g,
+    ' '
+  );
+  const statusLabel =
+    statusLabelRaw
+      .split(' ')
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ') || 'Ready';
+
+  const videoIdLabel = value?.playbackId || value?.uid || '—';
+  const instructionsMessage =
+    'Your video has been successfully uploaded. To play it, please click the preview on the right-hand side of your screen that shows a play icon.';
+
+  const statusColor = (() => {
+    const lowered = statusLabel.toLowerCase();
+    if (lowered === 'ready') return 'success' as const;
+    if (lowered === 'processing') return 'warning' as const;
+    if (lowered === 'error') return 'error' as const;
+    return 'default' as const;
+  })();
+
+  const statusChip = (
+    <Chip
+      label={statusLabel}
+      color={statusColor}
+      size="small"
+      variant={statusColor === 'default' ? 'outlined' : 'filled'}
+      sx={{ fontWeight: 600 }}
+    />
+  );
+
   return (
     <Box>
       <input
@@ -191,78 +241,96 @@ export const VideoUploadField: React.FC<Props> = ({
           startIcon={<CloudUploadIcon />}
           onClick={handleSelectFile}
           disabled={disabled || uploading}
-          fullWidth
-          sx={{ py: 2 }}
+          sx={{ py: 2, mb: 1 }}
         >
           Upload Video
         </Button>
       )}
 
-      {uploading && (
+      {isProcessing && (
         <Box sx={{ mt: 2 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Uploading video...
+            {uploading ? 'Uploading video…' : 'Processing video…'}
           </Typography>
-          <LinearProgress variant="determinate" value={uploadProgress} />
-          <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-            {Math.round(uploadProgress)}%
-          </Typography>
+          {uploading && (
+            <>
+              <LinearProgress variant="determinate" value={uploadProgress} />
+              <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+                {Math.round(uploadProgress)}%
+              </Typography>
+            </>
+          )}
+          <Box sx={{ mt: 2 }}>
+            <StudentClassCardSkeleton count={1} />
+          </Box>
         </Box>
       )}
 
-      {value && (
+      {value && !isProcessing && !isError && (
         <Paper sx={{ p: 2, mt: 2 }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Video: {value.uid}
+          <Stack spacing={2}>
+            <VideoCardThumbnail
+              mediaUrl={value.posterUrl}
+              mediaAlt="Uploaded video thumbnail"
+              metadataLabel={
+                formattedDuration
+                  ? `Duration ${formattedDuration}`
+                  : 'Duration unavailable'
+              }
+              titleContent={statusChip}
+              subtitle={instructionsMessage}
+              avatarLabel="Embedded assessment video"
+              footerAction={
+                <Button
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleRemoveVideo}
+                  disabled={disabled}
+                  size="small"
+                >
+                  Delete
+                </Button>
+              }
+            />
+            <Stack direction="row" spacing={2} flexWrap="wrap">
+              <Typography variant="body2" color="text.secondary">
+                Video ID: {videoIdLabel}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Status: {processingStatus || value.status}
-                {value.durationSeconds &&
-                  ` • Duration: ${Math.round(value.durationSeconds)}s`}
-                {value.sizeBytes &&
-                  ` • Size: ${(value.sizeBytes / (1024 * 1024)).toFixed(1)}MB`}
+                Status: {statusLabel}
               </Typography>
-              {value.posterUrl && (
-                <Box
-                  sx={{ mt: 1, position: 'relative', width: 200, height: 100 }}
-                >
-                  <Image
-                    src={value.posterUrl}
-                    alt="Video thumbnail"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                  />
-                </Box>
+              {sizeLabel && (
+                <Typography variant="body2" color="text.secondary">
+                  Size: {sizeLabel}
+                </Typography>
               )}
-            </Box>
-            {value.status === 'ready' && value.playbackId && (
-              <IconButton
-                color="primary"
-                onClick={() => {
-                  // You can implement video preview here if needed
-                  console.log('Play video:', value.playbackId);
-                }}
-              >
-                <PlayArrowIcon />
-              </IconButton>
-            )}
-            <IconButton
-              color="error"
-              onClick={handleRemoveVideo}
-              disabled={disabled}
-            >
-              <DeleteIcon />
-            </IconButton>
+            </Stack>
           </Stack>
         </Paper>
       )}
 
-      {processingStatus === 'processing' && (
+      {processingStatus === 'processing' && !uploading && (
         <Alert severity="info" sx={{ mt: 2 }}>
           Video is being processed. This may take a few minutes.
         </Alert>
+      )}
+
+      {isError && (
+        <Box sx={{ mt: 2 }}>
+          <Alert severity="error" sx={{ mb: 1 }}>
+            Video processing failed. Please try uploading again.
+          </Alert>
+          {value && (
+            <Button
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleRemoveVideo}
+              disabled={disabled}
+            >
+              Remove video
+            </Button>
+          )}
+        </Box>
       )}
 
       {error && (

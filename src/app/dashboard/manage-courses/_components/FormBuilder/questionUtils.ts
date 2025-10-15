@@ -1,4 +1,4 @@
-import { Homework, Question } from '../../../../_lib/interfaces/types';
+import { HomeworkPayload, Question } from '../../../../_lib/interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const ALLOWED_TYPES: readonly Question['type'][] = [
@@ -131,8 +131,8 @@ const normalizeChoiceNode = (
     );
   }
 
-  if (base.weight < 0) {
-    errors.push(`${path}: Weight cannot be negative.`);
+  if (base.weight <= 0) {
+    errors.push(`${path}: Weight must be greater than zero.`);
   }
 
   let sanitizedSubquestions = [...(question.subquestions ?? [])];
@@ -157,6 +157,8 @@ const normalizeChoiceNode = (
     return {
       ...base,
       options: undefined,
+      correctAnswer: undefined,
+      correctAnswers: undefined,
       subquestions: processedChildren,
     };
   }
@@ -168,10 +170,80 @@ const normalizeChoiceNode = (
   );
   errors.push(...optionErrors);
 
+  const availableOptions = sanitized ?? [];
+
+  if (base.type === 'radio') {
+    const candidate = (question.correctAnswer ?? '').trim();
+    let normalizedAnswer: string | undefined = undefined;
+
+    if (!candidate) {
+      errors.push(`${path}: Select a correct answer for this question.`);
+    } else {
+      const match = availableOptions.find(
+        (option) => option.toLowerCase() === candidate.toLowerCase()
+      );
+      if (!match) {
+        errors.push(
+          `${path}: Correct answer must exactly match one of the provided options.`
+        );
+      } else {
+        normalizedAnswer = match;
+      }
+    }
+
+    return {
+      ...base,
+      options: availableOptions,
+      subquestions: [],
+      correctAnswer: normalizedAnswer,
+      correctAnswers: undefined,
+    };
+  }
+
+  const rawAnswers = Array.isArray(question.correctAnswers)
+    ? question.correctAnswers
+    : typeof question.correctAnswer === 'string' && question.correctAnswer
+      ? [question.correctAnswer]
+      : [];
+
+  const trimmedAnswers = rawAnswers
+    .map((answer) => (answer ?? '').trim())
+    .filter((answer) => answer.length > 0);
+
+  const uniqueAnswers: string[] = [];
+  const seen = new Set<string>();
+
+  for (const answer of trimmedAnswers) {
+    const match = availableOptions.find(
+      (option) => option.toLowerCase() === answer.toLowerCase()
+    );
+
+    if (!match) {
+      errors.push(
+        `${path}: Each correct answer must match one of the provided options.`
+      );
+      continue;
+    }
+
+    const key = match.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueAnswers.push(match);
+    }
+  }
+
+  if (uniqueAnswers.length === 0) {
+    errors.push(
+      `${path}: Select at least one correct answer for this multi-select question.`
+    );
+  }
+
   return {
     ...base,
-    options: sanitized,
+    options: availableOptions,
     subquestions: [],
+    correctAnswer: undefined,
+    correctAnswers: uniqueAnswers,
   };
 };
 
@@ -221,28 +293,17 @@ const normalizeRootQuestion = (
       );
     }
 
-    const { sanitized, errors: optionErrors } = normalizeOptions(
-      question.options,
+    return normalizeChoiceNode(
+      {
+        ...question,
+        type: sanitizedType,
+        questionText: sanitizedText,
+        video: undefined,
+      },
       path,
-      true
+      errors,
+      0
     );
-    errors.push(...optionErrors);
-
-    const rawWeight = Number(question.weight);
-    const sanitizedWeight = Number.isFinite(rawWeight) ? rawWeight : 0;
-    if (sanitizedWeight < 0) {
-      errors.push(`${path}: Weight cannot be negative.`);
-    }
-
-    return {
-      ...question,
-      type: sanitizedType,
-      questionText: sanitizedText,
-      weight: sanitizedWeight,
-      video: undefined,
-      subquestions: [],
-      options: sanitized,
-    };
   }
 
   return {
@@ -255,55 +316,66 @@ const normalizeRootQuestion = (
 export const buildValidatedHomework = (
   title: string,
   description: string,
-  publishDate: string,
   dueDate: string,
+  hasExpiry: boolean,
+  expiryDate: string,
   questions: Question[]
-): { homework: Homework; errors: string[] } => {
+): { homework: HomeworkPayload; errors: string[] } => {
   const errors: string[] = [];
 
   const sanitizedTitle = title.trim();
   const sanitizedDescription = (description ?? '').trim();
+  const sanitizedDueDate = (dueDate ?? '').trim();
+  const sanitizedExpiryDate = (expiryDate ?? '').trim();
 
   if (!sanitizedTitle) {
     errors.push('Title is required.');
   }
 
-  if (!publishDate) {
-    errors.push('Publish date is required.');
-  }
-
-  if (!dueDate) {
+  if (!sanitizedDueDate) {
     errors.push('Due date is required.');
   }
 
-  const publish = publishDate ? new Date(publishDate) : null;
-  const due = dueDate ? new Date(dueDate) : null;
-
-  if (publish && Number.isNaN(publish.getTime())) {
-    errors.push('Publish date is invalid.');
-  }
+  const due = sanitizedDueDate ? new Date(sanitizedDueDate) : null;
 
   if (due && Number.isNaN(due.getTime())) {
     errors.push('Due date is invalid.');
   }
 
-  if (publish && due && publish.getTime() > due.getTime()) {
-    errors.push('Due date cannot be before publish date.');
+  let normalizedExpiry: string | null = null;
+  if (hasExpiry) {
+    if (!sanitizedExpiryDate) {
+      errors.push('Expiry date is required when expiry is enabled.');
+    }
+
+    const expiry = sanitizedExpiryDate ? new Date(sanitizedExpiryDate) : null;
+    if (expiry && Number.isNaN(expiry.getTime())) {
+      errors.push('Expiry date is invalid.');
+    }
+
+    if (expiry && due && expiry.getTime() <= due.getTime()) {
+      errors.push('Expiry date must be after the due date.');
+    }
+
+    if (expiry && !Number.isNaN(expiry.getTime())) {
+      normalizedExpiry = sanitizedExpiryDate;
+    }
   }
 
   if (questions.length === 0) {
-    errors.push('At least one question is required before publishing.');
+    errors.push('At least one question is required before saving.');
   }
 
   const sanitizedQuestions = questions.map((question, idx) =>
     normalizeRootQuestion(question, `Question ${idx + 1}`, errors)
   );
 
-  const homework: Homework = {
+  const homework: HomeworkPayload = {
     title: sanitizedTitle,
     description: sanitizedDescription,
-    publishDate,
-    dueDate,
+    dueDate: sanitizedDueDate,
+    hasExpiry,
+    expiryDate: hasExpiry ? normalizedExpiry : null,
     questions: sanitizedQuestions,
   };
 
@@ -316,8 +388,10 @@ export const createLeafQuestion = (): Question => ({
   type: 'radio',
   options: ['', ''],
   required: false,
-  weight: 0,
+  weight: 1,
   subquestions: [],
+  correctAnswer: '',
+  correctAnswers: [],
 });
 
 export const createVideoQuestion = (): Question => ({
@@ -328,4 +402,6 @@ export const createVideoQuestion = (): Question => ({
   required: false,
   weight: 0,
   subquestions: [],
+  correctAnswer: undefined,
+  correctAnswers: undefined,
 });

@@ -2,11 +2,13 @@ import React from 'react';
 import {
   Box,
   Button,
+  Checkbox,
   FormControl,
   IconButton,
   InputLabel,
   MenuItem,
   Paper,
+  Radio,
   Select,
   Stack,
   TextField,
@@ -49,6 +51,87 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
   onRemoveSubquestion,
   onRemoveQuestion,
 }) => {
+  const renderChoiceOptions = (target: Question) => {
+    if (!isChoiceType(target.type) || (target.subquestions?.length ?? 0) > 0) {
+      return null;
+    }
+
+    const options = target.options ?? [];
+    const isRadio = target.type === 'radio';
+
+    const handleToggle = (option: string, checked: boolean) => {
+      if (isRadio) {
+        onFieldChange(target.id, 'correctAnswer', option);
+        return;
+      }
+
+      const current = new Set(target.correctAnswers ?? []);
+      if (checked) {
+        current.add(option);
+      } else {
+        current.delete(option);
+      }
+      onFieldChange(target.id, 'correctAnswers', Array.from(current));
+    };
+
+    return (
+      <Box sx={{ mt: 1 }}>
+        <Typography variant="subtitle2">
+          Options &amp; correct answer{isRadio ? '' : 's'}
+        </Typography>
+        {options.map((option, index) => {
+          const trimmed = option.trim();
+          const isChecked = isRadio
+            ? (target.correctAnswer ?? '') === option
+            : Array.isArray(target.correctAnswers) &&
+              target.correctAnswers.includes(option);
+
+          return (
+            <Stack
+              key={index}
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              sx={{ mt: 1 }}
+            >
+              {isRadio ? (
+                <Radio
+                  color="primary"
+                  checked={isChecked}
+                  disabled={!trimmed}
+                  onChange={(event) =>
+                    handleToggle(option, event.target.checked)
+                  }
+                />
+              ) : (
+                <Checkbox
+                  color="primary"
+                  checked={isChecked}
+                  disabled={!trimmed}
+                  onChange={(event) =>
+                    handleToggle(option, event.target.checked)
+                  }
+                />
+              )}
+              <TextField
+                label={`Option ${index + 1}`}
+                fullWidth
+                margin="dense"
+                value={option}
+                onChange={(e) =>
+                  onOptionChange(target.id, index, e.target.value)
+                }
+              />
+            </Stack>
+          );
+        })}
+        <Button onClick={() => onAddOption(target.id)} sx={{ mt: 1 }}>
+          Add Option
+        </Button>
+      </Box>
+    );
+  };
+
   if (!question) {
     return (
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -111,22 +194,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           />
         </Stack>
 
-        {isLeaf && isChoiceType(sub.type) && (
-          <Box sx={{ mt: 1 }}>
-            <Typography variant="subtitle2">Options</Typography>
-            {sub.options?.map((option, index) => (
-              <TextField
-                key={index}
-                label={`Option ${index + 1}`}
-                fullWidth
-                margin="normal"
-                value={option}
-                onChange={(e) => onOptionChange(sub.id, index, e.target.value)}
-              />
-            ))}
-            <Button onClick={() => onAddOption(sub.id)}>Add Option</Button>
-          </Box>
-        )}
+        {isLeaf && isChoiceType(sub.type) && renderChoiceOptions(sub)}
 
         {sub.subquestions && sub.subquestions.length > 0 && depth < 2 && (
           <Box sx={{ borderLeft: '2px solid #ddd', pl: 2, mt: 1 }}>
@@ -231,26 +299,9 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
             )}
           </Stack>
 
-          {isChoiceType(question.type) && !hasSubquestions && (
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="subtitle1">Options</Typography>
-              {question.options?.map((option, index) => (
-                <TextField
-                  key={index}
-                  label={`Option ${index + 1}`}
-                  fullWidth
-                  margin="normal"
-                  value={option}
-                  onChange={(e) =>
-                    onOptionChange(question.id, index, e.target.value)
-                  }
-                />
-              ))}
-              <Button onClick={() => onAddOption(question.id)}>
-                Add Option
-              </Button>
-            </Box>
-          )}
+          {isChoiceType(question.type) &&
+            !hasSubquestions &&
+            renderChoiceOptions(question)}
         </>
       )}
 

@@ -1,21 +1,30 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { Box, Button, Stack, Tab, Tooltip, Typography } from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import React, { useState } from 'react';
+import { Box, Button, Stack, Tab, Tooltip } from '@mui/material';
 import DragDropFormBuilderModal from './Modals/FormBuilderModal';
-import { ClassDto, Homework, UserDto } from '../../../_lib/interfaces/types';
+import {
+  ClassDto,
+  Homework,
+  HomeworkPayload,
+  UserDto,
+} from '../../../_lib/interfaces/types';
 import { useParams } from 'next/navigation';
-import { createHomework } from '../../../_lib/actions/homework';
+import {
+  createHomework,
+  publishHomework,
+  updateHomeworkDraft,
+  getHomeworkForTeacher,
+} from '../../../_lib/actions/homework';
 import { OutlinedWrapper } from '../../../_lib/components/shared-theme/customizations/OutlinedWrapper';
-import TabPanel from '@mui/lab/TabPanel';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import StudentDatagridTable from './Tables/studentTable';
 import { GridRowId } from '@mui/x-data-grid';
-import ManageStudentHomework from './Homework/ManageStudentHomework';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { useSession } from 'next-auth/react';
 import ConditionalTabPanel from '@/app/_lib/components/conditionalTabPanel';
+import ModulesPanel from './DraftModulesPanel';
+import StudentAssignmentsModal from './Modals/StudentAssignmentsModal';
 
 interface StudentManagementComponentProps {
   userData: UserDto[] | undefined;
@@ -38,6 +47,9 @@ export default function StudentManagementComponent({
 
   const [builderOpen, setBuilderOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<UserDto | null>(null);
+  const [assignmentsModalOpen, setAssignmentsModalOpen] = useState(false);
+  const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
+  const [modulesRefreshIndex, setModulesRefreshIndex] = useState(0);
   const [value, setValue] = useState('1');
 
   const handleChange = async (
@@ -47,29 +59,63 @@ export default function StudentManagementComponent({
     setValue(newValue);
   };
 
-  useEffect(() => {
-    if (selectedStudent) {
-      setValue('2');
-    }
-  }, [selectedStudent]);
-
   // Handler when a teacher publishes a new homework.
-  const handlePublish = async (homework: Homework) => {
-    //should admins be able to publish homework for classrooms that they dont own?
-    //Should we track the user id that initiates the classroom creation?
-    //should admins be able to publish homework ?
-    const submitHomework = await createHomework(
-      homework,
-      classDetails.teacherId,
-      classroomId,
-      false
-    );
+  const handleModuleSubmit = async (
+    homework: HomeworkPayload,
+    options: { isDraft: boolean; homeworkId?: string }
+  ) => {
+    if (options.homeworkId) {
+      await updateHomeworkDraft(
+        classDetails.teacherId,
+        options.homeworkId,
+        homework
+      );
+
+      if (!options.isDraft) {
+        await publishHomework(classDetails.teacherId, options.homeworkId);
+      }
+    } else {
+      await createHomework(
+        homework,
+        classDetails.teacherId,
+        classroomId,
+        options.isDraft
+      );
+    }
+
+    setModulesRefreshIndex((prev) => prev + 1);
+  };
+
+  const handleEditDraftModule = async (homeworkId: string) => {
+    try {
+      const homework = await getHomeworkForTeacher(
+        classDetails.teacherId,
+        homeworkId
+      );
+      setEditingHomework(homework);
+      setBuilderOpen(true);
+    } catch (error) {
+      console.error('Failed to load homework for editing', error);
+    }
   };
 
   const handleSeeHomeworkClick = (id: GridRowId) => () => {
     if (!isElevated) return; // Prevent selection if not a Teacher
     const selectedUser = userData?.find((user) => user.userId === id);
     setSelectedStudent(selectedUser || null);
+    if (selectedUser) {
+      setAssignmentsModalOpen(true);
+    }
+  };
+
+  const handleBuilderClose = () => {
+    setBuilderOpen(false);
+    setEditingHomework(null);
+  };
+
+  const handleAssignmentsClose = () => {
+    setAssignmentsModalOpen(false);
+    setSelectedStudent(null);
   };
 
   return (
@@ -96,7 +142,10 @@ export default function StudentManagementComponent({
             <span>
               <Button
                 variant="outlined"
-                onClick={() => setBuilderOpen(true)}
+                onClick={() => {
+                  setEditingHomework(null);
+                  setBuilderOpen(true);
+                }}
                 sx={{ mr: 2 }}
                 disabled={!isElevated}
               >
@@ -123,31 +172,16 @@ export default function StudentManagementComponent({
         >
           <DragDropFormBuilderModal
             open={builderOpen}
-            onClose={() => setBuilderOpen(false)}
-            onPublish={handlePublish}
+            onClose={handleBuilderClose}
+            onSubmit={handleModuleSubmit}
+            initialHomework={editingHomework}
           />
 
           <TabContext value={value}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <TabList onChange={handleChange} aria-label="review trainees">
+              <TabList onChange={handleChange} aria-label="manage classroom">
                 <Tab label="Trainees" value="1" />
-                <Tab
-                  label={
-                    selectedStudent == null ? (
-                      <Stack direction="row" spacing={0.5} alignItems="center">
-                        <span>Review trainees</span>
-                        <Tooltip title="Please select a trainee to review">
-                          <InfoOutlinedIcon
-                            sx={{ fontSize: 16, opacity: 0.8 }}
-                          />
-                        </Tooltip>
-                      </Stack>
-                    ) : (
-                      'Review trainees'
-                    )
-                  }
-                  value="2"
-                />
+                <Tab label="All modules" value="2" />
               </TabList>
             </Box>
 
@@ -170,38 +204,35 @@ export default function StudentManagementComponent({
             </ConditionalTabPanel>
 
             <ConditionalTabPanel value={value} index="2">
-              {selectedStudent == null ? (
-                <Stack
-                  alignItems="center"
-                  justifyContent="center"
-                  spacing={2}
-                  sx={{ p: 4, height: '100%' }}
-                >
-                  <InfoOutlinedIcon color="info" sx={{ fontSize: 48 }} />
-                  <Typography variant="subtitle1" color="text.secondary">
-                    Please select a trainee from the trainees tab to review.
-                  </Typography>
-                </Stack>
-              ) : (
-                <Box
-                  sx={{
-                    flex: 1,
-                    overflow: 'auto',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minHeight: 0,
-                  }}
-                >
-                  <ManageStudentHomework
-                    classId={classroomId}
-                    student={selectedStudent}
-                  />
-                </Box>
-              )}
+              <Box
+                sx={{
+                  flex: 1,
+                  overflow: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minHeight: 0,
+                }}
+              >
+                <ModulesPanel
+                  teacherId={classDetails.teacherId}
+                  classroomId={classroomId}
+                  refreshIndex={modulesRefreshIndex}
+                  onEdit={handleEditDraftModule}
+                  onAfterChange={() =>
+                    setModulesRefreshIndex((prev) => prev + 1)
+                  }
+                />
+              </Box>
             </ConditionalTabPanel>
           </TabContext>
         </OutlinedWrapper>
       </Box>
+      <StudentAssignmentsModal
+        open={assignmentsModalOpen}
+        onClose={handleAssignmentsClose}
+        student={selectedStudent}
+        classId={classroomId}
+      />
     </Box>
   );
 }
