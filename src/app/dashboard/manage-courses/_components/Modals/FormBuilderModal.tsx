@@ -50,11 +50,12 @@ interface FormBuilderModalProps {
 
 const QUESTION_TYPES = [
   { value: 'video', label: 'Video Section' },
+  { value: 'pdf', label: 'PDF Section' },
   { value: 'radio', label: 'Single Choice' },
   { value: 'multi-select', label: 'Multiple Choice' },
 ] as const;
 
-const FORM_STORAGE_KEY = 'form_builder_modal_state_v2';
+const FORM_STORAGE_KEY = 'form_builder_modal_state_v3';
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & { children: React.ReactElement<any> },
@@ -240,7 +241,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       const meta = findQuestionMeta(prev, questionId);
       if (!meta) return prev;
 
-      if (meta.depth > 0 && newType === 'video') {
+      if (meta.depth > 0 && (newType === 'video' || newType === 'pdf')) {
         return prev;
       }
 
@@ -253,6 +254,23 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             weight: 0,
             options: undefined,
             subquestions: q.subquestions ?? [],
+            video: q.video,
+            pdf: undefined,
+            correctAnswer: undefined,
+            correctAnswers: undefined,
+          };
+        }
+
+        if (newType === 'pdf') {
+          return {
+            ...q,
+            type: 'pdf',
+            required: false,
+            weight: 0,
+            options: undefined,
+            subquestions: q.subquestions ?? [],
+            video: undefined,
+            pdf: q.pdf,
             correctAnswer: undefined,
             correctAnswers: undefined,
           };
@@ -267,6 +285,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             ...q,
             type: newType,
             video: undefined,
+            pdf: undefined,
             subquestions: [],
             options: fallbackOptions,
             correctAnswer: newType === 'radio' ? '' : undefined,
@@ -279,6 +298,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           ...q,
           type: newType,
           video: undefined,
+          pdf: undefined,
           options: hasChildren ? undefined : fallbackOptions,
           correctAnswer: newType === 'radio' ? '' : undefined,
           correctAnswers: newType === 'multi-select' ? [] : undefined,
@@ -355,7 +375,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       const meta = findQuestionMeta(prev, parentId);
       if (!meta) return prev;
 
-      if (meta.depth === 0 && meta.question.type !== 'video') {
+      if (meta.depth === 0 && !['video', 'pdf'].includes(meta.question.type)) {
         return prev;
       }
 

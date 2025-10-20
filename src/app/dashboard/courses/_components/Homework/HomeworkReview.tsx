@@ -18,6 +18,7 @@ import PaginationItem from '@mui/material/PaginationItem';
 import { SubmittedHomework, Question } from '../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
 import { VideoPlayer } from '../../../../_lib/components/video/VideoPlayer';
+import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 
 interface HomeworkReviewProps {
   submittedHomework: SubmittedHomework;
@@ -67,6 +68,41 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
                 <Typography variant="body2" color="text.secondary">
                   Video unavailable
                 </Typography>
+              )}
+            </Box>
+          )}
+          {node.type === 'pdf' && (
+            <Box
+              sx={{
+                mt: 2,
+                height: 360,
+                borderRadius: 1,
+                overflow: 'hidden',
+                border: 1,
+                borderColor: 'divider',
+              }}
+            >
+              {node.pdf?.url ? (
+                <PDFViewer
+                  key={node.pdf.key || node.id}
+                  fileUrl={node.pdf.url}
+                  initialPage={1}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    px: 2,
+                    textAlign: 'center',
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Document unavailable
+                  </Typography>
+                </Box>
               )}
             </Box>
           )}
@@ -146,6 +182,31 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
               ) : (
                 <Typography variant="body2" color="text.secondary">
                   Video unavailable
+                </Typography>
+              );
+            }
+
+            if (node.type === 'pdf') {
+              return node.pdf?.url ? (
+                <Box
+                  sx={{
+                    mt: 1,
+                    height: 360,
+                    borderRadius: 1,
+                    overflow: 'hidden',
+                    border: 1,
+                    borderColor: 'divider',
+                  }}
+                >
+                  <PDFViewer
+                    key={node.pdf.key || node.id}
+                    fileUrl={node.pdf.url}
+                    initialPage={1}
+                  />
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Document unavailable
                 </Typography>
               );
             }

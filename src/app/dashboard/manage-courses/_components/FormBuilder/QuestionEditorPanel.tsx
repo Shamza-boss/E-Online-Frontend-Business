@@ -17,6 +17,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Question } from '../../../../_lib/interfaces/types';
 import { VideoUploadField } from '@/app/_lib/components/video/VideoUploadField';
+import { PdfUploadField } from '@/app/_lib/components/pdf/PdfUploadField';
 import { isChoiceType } from './questionUtils';
 
 interface QuestionEditorPanelProps {
@@ -176,7 +177,9 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
               }
             >
               {questionTypeOptions
-                .filter((type) => type.value !== 'video')
+                .filter(
+                  (type) => type.value !== 'video' && type.value !== 'pdf'
+                )
                 .map((type) => (
                   <MenuItem key={type.value} value={type.value}>
                     {type.label}
@@ -228,19 +231,21 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     );
   };
 
+  const isSection = question.type === 'video' || question.type === 'pdf';
   const isVideo = question.type === 'video';
+  const isPdf = question.type === 'pdf';
   const hasSubquestions =
     question.subquestions && question.subquestions.length > 0;
-  const showTypeControls = question.type !== 'video' || !hasSubquestions;
+  const showTypeControls = !isSection || !hasSubquestions;
 
   return (
     <Paper key={question.id} sx={{ p: 2, mb: 2 }}>
       <Typography variant="subtitle1">
-        {isVideo && hasSubquestions
+        {isSection && hasSubquestions
           ? `Section ${questionIndex + 1} (Total Weight: ${computeTotalWeight(question)})`
           : `Question ${questionIndex + 1}`}
       </Typography>
-      {isVideo ? (
+      {isSection ? (
         <>
           <TextField
             label="Section Title"
@@ -251,10 +256,18 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
               onFieldChange(question.id, 'questionText', e.target.value)
             }
           />
-          <VideoUploadField
-            value={question.video}
-            onChange={(video) => onFieldChange(question.id, 'video', video)}
-          />
+          {isVideo && (
+            <VideoUploadField
+              value={question.video}
+              onChange={(video) => onFieldChange(question.id, 'video', video)}
+            />
+          )}
+          {isPdf && (
+            <PdfUploadField
+              value={question.pdf}
+              onChange={(pdf) => onFieldChange(question.id, 'pdf', pdf)}
+            />
+          )}
         </>
       ) : (
         <TextField
@@ -287,7 +300,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
                 ))}
               </Select>
             </FormControl>
-            {question.type !== 'video' && (
+            {!isSection && (
               <TextField
                 label="Weight"
                 type="number"
@@ -306,12 +319,12 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       )}
 
       <Stack direction="row" spacing={1} mt={2} alignItems="center">
-        {question.type === 'video' && (
+        {isSection && (
           <Button
             variant="outlined"
             onClick={() => onAddSubquestion(question.id)}
           >
-            Add Question to Video Section
+            Add Question to Section
           </Button>
         )}
         <Box flexGrow={1} />

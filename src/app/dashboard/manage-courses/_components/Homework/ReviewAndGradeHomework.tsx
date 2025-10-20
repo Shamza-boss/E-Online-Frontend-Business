@@ -26,6 +26,7 @@ import {
 } from '../../../../_lib/interfaces/types';
 import dynamic from 'next/dynamic'; // ✅ At top of file
 import { MathJaxContext } from 'better-react-mathjax';
+import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 
 const mathJaxConfig = {
   tex: {
@@ -136,6 +137,48 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
           <Typography variant={textVariant}>
             {numbering}. {question.questionText} (Total Weight: {totalWeight})
           </Typography>
+          {question.type === 'video' && question.video && (
+            <Box sx={{ mt: 2 }}>
+              <VideoPlayer
+                video={question.video}
+                title={question.questionText}
+              />
+            </Box>
+          )}
+          {question.type === 'pdf' && (
+            <Box
+              sx={{
+                mt: 2,
+                height: 360,
+                borderRadius: 1,
+                overflow: 'hidden',
+                border: 1,
+                borderColor: 'divider',
+              }}
+            >
+              {question.pdf?.url ? (
+                <PDFViewer
+                  key={question.pdf.key || question.id}
+                  fileUrl={question.pdf.url}
+                  initialPage={1}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    px: 2,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Document unavailable
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          )}
           {question.subquestions.map((sub, idx) =>
             renderQuestion(sub, `${numbering}.${idx + 1}`, depth + 1)
           )}
@@ -159,6 +202,32 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
                 />
               </Box>
             )}
+            {question.type === 'pdf' && (
+              <Box sx={{ ml: 2 }}>
+                {question.pdf?.url ? (
+                  <Box
+                    sx={{
+                      mt: 1,
+                      height: 360,
+                      borderRadius: 1,
+                      overflow: 'hidden',
+                      border: 1,
+                      borderColor: 'divider',
+                    }}
+                  >
+                    <PDFViewer
+                      key={question.pdf.key || question.id}
+                      fileUrl={question.pdf.url}
+                      initialPage={1}
+                    />
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Document unavailable
+                  </Typography>
+                )}
+              </Box>
+            )}
             <Typography variant="caption" color="text.secondary">
               (Weight: {question.weight})
             </Typography>
@@ -172,6 +241,8 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
                 case 'video':
                   // For video questions, the answer would be from subquestions
                   // so we don't render anything here as subquestions handle their own answers
+                  return null;
+                case 'pdf':
                   return null;
                 case 'radio':
                   return (

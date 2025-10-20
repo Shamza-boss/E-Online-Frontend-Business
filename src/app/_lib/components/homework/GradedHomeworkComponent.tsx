@@ -24,6 +24,7 @@ import {
 } from '../../utils/gradeCalculator';
 import { MathJaxContext } from 'better-react-mathjax';
 import { VideoPlayer } from '../video/VideoPlayer';
+import PDFViewer from '../PDFViewer/PDFViewer';
 
 const mathJaxConfig = {
   tex: {
@@ -89,6 +90,40 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
                 <Typography variant="body2" color="text.secondary">
                   Video unavailable
                 </Typography>
+              )}
+            </Box>
+          )}
+          {question.type === 'pdf' && (
+            <Box
+              sx={{
+                mt: 2,
+                height: 360,
+                borderRadius: 1,
+                overflow: 'hidden',
+                border: 1,
+                borderColor: 'divider',
+              }}
+            >
+              {question.pdf?.url ? (
+                <PDFViewer
+                  key={question.pdf.key || question.id}
+                  fileUrl={question.pdf.url}
+                  initialPage={1}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    px: 2,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Document unavailable
+                  </Typography>
+                </Box>
               )}
             </Box>
           )}
@@ -188,6 +223,29 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
                   ) : (
                     <Typography variant="body2" color="text.secondary">
                       Video unavailable
+                    </Typography>
+                  );
+                case 'pdf':
+                  return question.pdf?.url ? (
+                    <Box
+                      sx={{
+                        mt: 1,
+                        height: 360,
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        border: 1,
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <PDFViewer
+                        key={question.pdf.key || question.id}
+                        fileUrl={question.pdf.url}
+                        initialPage={1}
+                      />
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Document unavailable
                     </Typography>
                   );
                 default:
