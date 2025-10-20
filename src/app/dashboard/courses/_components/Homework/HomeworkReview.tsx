@@ -5,6 +5,7 @@ import {
   AppBar,
   Toolbar,
   Typography,
+  Button,
   Paper,
   Radio,
   RadioGroup,
@@ -13,12 +14,27 @@ import {
   Box,
   Stack,
   Pagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
 } from '@mui/material';
 import PaginationItem from '@mui/material/PaginationItem';
+import CloseIcon from '@mui/icons-material/Close';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { SubmittedHomework, Question } from '../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
 import { VideoPlayer } from '../../../../_lib/components/video/VideoPlayer';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+
+const formatFileSize = (bytes?: number | null) => {
+  if (!bytes || bytes <= 0) return null;
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 1) {
+    return `${mb.toFixed(1)} MB`;
+  }
+  return `${(bytes / 1024).toFixed(1)} KB`;
+};
 
 interface HomeworkReviewProps {
   submittedHomework: SubmittedHomework;
@@ -29,6 +45,11 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
 }) => {
   const { homework, answers } = submittedHomework;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [pdfPreview, setPdfPreview] = useState<{
+    title: string;
+    url: string;
+    key?: string | null;
+  } | null>(null);
 
   const questionCount = homework.questions.length;
   const currentQuestion = homework.questions[currentQuestionIndex];
@@ -42,6 +63,71 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
     }
 
     return Number.isFinite(node.weight) ? node.weight : 0;
+  };
+
+  const openPdfPreview = (fallbackTitle: string, pdf?: Question['pdf']) => {
+    if (!pdf?.url) return;
+    setPdfPreview({
+      title: pdf.title || fallbackTitle || 'PDF Document',
+      url: pdf.url,
+      key: pdf.key,
+    });
+  };
+
+  const closePdfPreview = () => setPdfPreview(null);
+
+  const renderPdfAttachment = (
+    title: string,
+    pdf?: Question['pdf'],
+    options: { compact?: boolean } = {}
+  ) => {
+    const mt = options.compact ? 1 : 2;
+
+    if (!pdf?.url) {
+      return (
+        <Paper variant="outlined" sx={{ mt, p: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Document unavailable
+          </Typography>
+        </Paper>
+      );
+    }
+
+    const sizeLabel = formatFileSize(pdf.sizeBytes);
+
+    return (
+      <Paper variant="outlined" sx={{ mt, p: 2 }}>
+        <Stack spacing={1.5}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <PictureAsPdfIcon color="error" />
+            <Box>
+              <Typography variant="subtitle1" fontWeight={600}>
+                {pdf.title || title || 'PDF Document'}
+              </Typography>
+              {pdf.key && (
+                <Typography variant="caption" color="text.secondary">
+                  {pdf.key}
+                </Typography>
+              )}
+            </Box>
+            <Box flexGrow={1} />
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<PictureAsPdfIcon />}
+              onClick={() => openPdfPreview(title, pdf)}
+            >
+              Open PDF
+            </Button>
+          </Stack>
+          {sizeLabel && (
+            <Typography variant="caption" color="text.secondary">
+              Size: {sizeLabel}
+            </Typography>
+          )}
+        </Stack>
+      </Paper>
+    );
   };
 
   const renderQuestion = (
@@ -71,41 +157,8 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
               )}
             </Box>
           )}
-          {node.type === 'pdf' && (
-            <Box
-              sx={{
-                mt: 2,
-                height: 360,
-                borderRadius: 1,
-                overflow: 'hidden',
-                border: 1,
-                borderColor: 'divider',
-              }}
-            >
-              {node.pdf?.url ? (
-                <PDFViewer
-                  key={node.pdf.key || node.id}
-                  fileUrl={node.pdf.url}
-                  initialPage={1}
-                />
-              ) : (
-                <Box
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    px: 2,
-                    textAlign: 'center',
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Document unavailable
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          )}
+          {node.type === 'pdf' &&
+            renderPdfAttachment(node.questionText || 'PDF section', node.pdf)}
           {node.subquestions.map((sub, idx) =>
             renderQuestion(sub, `${numbering}.${idx + 1}`, depth + 1)
           )}
@@ -187,27 +240,10 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
             }
 
             if (node.type === 'pdf') {
-              return node.pdf?.url ? (
-                <Box
-                  sx={{
-                    mt: 1,
-                    height: 360,
-                    borderRadius: 1,
-                    overflow: 'hidden',
-                    border: 1,
-                    borderColor: 'divider',
-                  }}
-                >
-                  <PDFViewer
-                    key={node.pdf.key || node.id}
-                    fileUrl={node.pdf.url}
-                    initialPage={1}
-                  />
-                </Box>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Document unavailable
-                </Typography>
+              return renderPdfAttachment(
+                node.questionText || 'PDF question',
+                node.pdf,
+                { compact: true }
               );
             }
 
@@ -268,6 +304,39 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
           </Typography>
         )}
       </Paper>
+      <Dialog
+        open={Boolean(pdfPreview)}
+        onClose={closePdfPreview}
+        fullWidth
+        maxWidth="lg"
+        PaperProps={{ sx: { height: { xs: '90vh', md: '80vh' } } }}
+      >
+        <DialogTitle sx={{ pr: 6 }}>
+          {pdfPreview?.title || 'PDF Document'}
+          <IconButton
+            onClick={closePdfPreview}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+            aria-label="Close"
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent
+          dividers
+          sx={{
+            p: 0,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {pdfPreview?.url && (
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <PDFViewer fileUrl={pdfPreview.url} initialPage={1} />
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
     </React.Fragment>
   );
 };
