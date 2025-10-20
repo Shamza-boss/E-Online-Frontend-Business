@@ -2,7 +2,7 @@ import StudentManagementComponent from '../_components/Class';
 import {
   getAllUsersInClassroom,
   getClassroomById,
-} from '../../../_lib/actions/classroom';
+} from '../../../_lib/actions/classrooms';
 import { Metadata } from 'next';
 
 interface PageProps {

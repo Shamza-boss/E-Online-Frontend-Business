@@ -1,6 +1,6 @@
 'use server';
 
-import { createSubject } from '@/app/_lib/actions/subject';
+import { createSubject } from '@/app/_lib/actions/subjects';
 import { SubjectDto } from '@/app/_lib/interfaces/types';
 import { subjectsSchema } from '@/app/_lib/schemas/management';
 import { parseWithZod } from '@conform-to/zod';

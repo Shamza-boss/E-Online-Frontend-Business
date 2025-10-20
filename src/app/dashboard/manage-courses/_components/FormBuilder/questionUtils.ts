@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const ALLOWED_TYPES: readonly Question['type'][] = [
   'video',
+  'pdf',
   'radio',
   'multi-select',
 ];
@@ -123,11 +124,12 @@ const normalizeChoiceNode = (
     weight: sanitizedWeight,
     required: question.required ?? false,
     video: undefined,
+    pdf: undefined,
   };
 
   if (!isChoiceType(base.type)) {
     errors.push(
-      `${path}: Only single-select or multi-select types are allowed under a video section.`
+      `${path}: Only single-select or multi-select types are allowed under a media section.`
     );
   }
 
@@ -138,7 +140,7 @@ const normalizeChoiceNode = (
   let sanitizedSubquestions = [...(question.subquestions ?? [])];
   if (depth >= 2 && sanitizedSubquestions.length > 0) {
     errors.push(
-      `${path}: Nesting deeper than two levels under a video section is not allowed.`
+      `${path}: Nesting deeper than two levels under a media section is not allowed.`
     );
     sanitizedSubquestions = [];
   }
@@ -247,6 +249,76 @@ const normalizeChoiceNode = (
   };
 };
 
+const normalizeSectionQuestion = (
+  question: Question,
+  path: string,
+  errors: string[],
+  sectionType: 'video' | 'pdf'
+): Question => {
+  const label = sectionType === 'video' ? 'video' : 'PDF';
+  const sanitizedText = (question.questionText ?? '').trim();
+  const subquestions = question.subquestions ?? [];
+
+  if (subquestions.length === 0) {
+    errors.push(
+      `${path}: A ${label.toLowerCase()} section must contain at least one subquestion.`
+    );
+  }
+
+  const processedSubquestions = subquestions.map((sub, idx) =>
+    normalizeChoiceNode(sub, `${path}.${idx + 1}`, errors, 1)
+  );
+
+  if (sectionType === 'pdf') {
+    const pdfMeta = question.pdf;
+    const provider = (pdfMeta?.provider ?? 'r2').trim() || 'r2';
+    const key = (pdfMeta?.key ?? '').trim();
+    const url = (pdfMeta?.url ?? '').trim();
+    const hash = pdfMeta?.hash?.trim() ?? null;
+    const sizeBytes =
+      typeof pdfMeta?.sizeBytes === 'number'
+        ? pdfMeta.sizeBytes
+        : (pdfMeta?.sizeBytes ?? null);
+    const title = pdfMeta?.title?.trim() ?? null;
+
+    if (!key) {
+      errors.push(`${path}: Attach a PDF file before saving this section.`);
+    }
+
+    return {
+      ...question,
+      type: 'pdf',
+      questionText: sanitizedText,
+      required: false,
+      options: undefined,
+      weight: 0,
+      video: undefined,
+      pdf: key
+        ? {
+            provider,
+            key,
+            url,
+            hash,
+            sizeBytes,
+            title,
+          }
+        : undefined,
+      subquestions: processedSubquestions,
+    };
+  }
+
+  return {
+    ...question,
+    type: 'video',
+    questionText: sanitizedText,
+    required: false,
+    options: undefined,
+    weight: 0,
+    pdf: undefined,
+    subquestions: processedSubquestions,
+  };
+};
+
 const normalizeRootQuestion = (
   question: Question,
   path: string,
@@ -261,29 +333,8 @@ const normalizeRootQuestion = (
     errors.push(`${path}: Unsupported question type '${question.type}'.`);
   }
 
-  const sanitizedText = (question.questionText ?? '').trim();
-
-  if (sanitizedType === 'video') {
-    const subquestions = question.subquestions ?? [];
-    if (subquestions.length === 0) {
-      errors.push(
-        `${path}: A video section must contain at least one subquestion.`
-      );
-    }
-
-    const processedSubquestions = subquestions.map((sub, idx) =>
-      normalizeChoiceNode(sub, `${path}.${idx + 1}`, errors, 1)
-    );
-
-    return {
-      ...question,
-      type: 'video',
-      questionText: sanitizedText,
-      required: false,
-      options: undefined,
-      weight: 0,
-      subquestions: processedSubquestions,
-    };
+  if (sanitizedType === 'video' || sanitizedType === 'pdf') {
+    return normalizeSectionQuestion(question, path, errors, sanitizedType);
   }
 
   if (isChoiceType(sanitizedType)) {
@@ -297,8 +348,9 @@ const normalizeRootQuestion = (
       {
         ...question,
         type: sanitizedType,
-        questionText: sanitizedText,
+        questionText: (question.questionText ?? '').trim(),
         video: undefined,
+        pdf: undefined,
       },
       path,
       errors,
@@ -308,7 +360,7 @@ const normalizeRootQuestion = (
 
   return {
     ...question,
-    questionText: sanitizedText,
+    questionText: (question.questionText ?? '').trim(),
     subquestions: question.subquestions ?? [],
   };
 };
@@ -390,6 +442,8 @@ export const createLeafQuestion = (): Question => ({
   required: false,
   weight: 1,
   subquestions: [],
+  video: undefined,
+  pdf: undefined,
   correctAnswer: '',
   correctAnswers: [],
 });
@@ -402,6 +456,22 @@ export const createVideoQuestion = (): Question => ({
   required: false,
   weight: 0,
   subquestions: [],
+  video: undefined,
+  pdf: undefined,
+  correctAnswer: undefined,
+  correctAnswers: undefined,
+});
+
+export const createPdfQuestion = (): Question => ({
+  id: uuidv4(),
+  questionText: '',
+  type: 'pdf',
+  options: [],
+  required: false,
+  weight: 0,
+  subquestions: [],
+  video: undefined,
+  pdf: undefined,
   correctAnswer: undefined,
   correctAnswers: undefined,
 });

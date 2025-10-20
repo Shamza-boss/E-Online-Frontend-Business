@@ -13,7 +13,7 @@ import CancelIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import { ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
-import { getAllClassroomsAndData } from '@/app/_lib/actions/classroom';
+import { getAllClassroomsAndData } from '@/app/_lib/actions/classrooms';
 import useSWR from 'swr';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { useSession } from 'next-auth/react';

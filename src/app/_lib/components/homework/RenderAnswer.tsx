@@ -5,6 +5,7 @@ import { Typography, Box } from '@mui/material';
 import { RichTextAnswer } from './RichTextAnswer';
 import { Question } from '../../interfaces/types';
 import { VideoPlayer } from '../video/VideoPlayer';
+import PDFViewer from '../PDFViewer/PDFViewer';
 
 interface RenderAnswerProps {
   question: Question;
@@ -25,6 +26,39 @@ const RenderAnswer: React.FC<RenderAnswerProps> = ({ question, answer }) => {
             <Typography variant="body2" color="text.secondary">
               This video section contains {question.subquestions.length}{' '}
               questions
+            </Typography>
+          )}
+        </Box>
+      );
+    case 'pdf':
+      return (
+        <Box>
+          {question.pdf?.url && (
+            <Box
+              sx={{
+                mt: 1,
+                height: 360,
+                borderRadius: 1,
+                overflow: 'hidden',
+                border: 1,
+                borderColor: 'divider',
+              }}
+            >
+              <PDFViewer
+                key={question.pdf.key || question.id}
+                fileUrl={question.pdf.url}
+                initialPage={1}
+              />
+            </Box>
+          )}
+          {(!question.pdf || !question.pdf.url) && (
+            <Typography variant="body2" color="text.secondary">
+              Document unavailable
+            </Typography>
+          )}
+          {question.subquestions && question.subquestions.length > 0 && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              This PDF section contains {question.subquestions.length} questions
             </Typography>
           )}
         </Box>

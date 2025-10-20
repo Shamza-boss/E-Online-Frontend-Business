@@ -24,7 +24,7 @@ import {
   EnrollStudents,
   getAllUsersInClassroom,
   getAllClassroomsAndData,
-} from '../../../../_lib/actions/classroom';
+} from '../../../../_lib/actions/classrooms';
 import {
   UserDto,
   ClassDto,

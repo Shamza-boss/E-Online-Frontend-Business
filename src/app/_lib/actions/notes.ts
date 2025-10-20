@@ -20,7 +20,7 @@ export async function getOrCreateNoteByClassroomId(
 ): Promise<NoteDto> {
   const session = await requireSession();
   return serverFetch(
-    `/Note/${classId}?userId=${encodeURIComponent(session.user.id)}`,
+    `/notes/${classId}?userId=${encodeURIComponent(session.user.id)}`,
     {
       method: 'GET',
     }
@@ -31,7 +31,7 @@ export async function updateNoteById(
   noteId: string,
   payload: UpdateNotePayload
 ): Promise<NoteDto> {
-  return serverFetch(`/Note/${noteId}`, {
+  return serverFetch(`/notes/${noteId}`, {
     method: 'PUT',
     body: payload,
   });
@@ -42,7 +42,7 @@ export async function getNotesForClassroom(
 ): Promise<NoteDto[]> {
   const session = await requireSession();
   return serverFetch(
-    `/Note/${classId}/teacher/notes?teacherId=${encodeURIComponent(session.user.id)}`,
+    `/notes/${classId}/teacher/notes?teacherId=${encodeURIComponent(session.user.id)}`,
     {
       method: 'GET',
     }
@@ -52,7 +52,7 @@ export async function getNotesForClassroom(
 export async function deleteNoteById(noteId: string): Promise<void> {
   const session = await requireSession();
   await serverFetch(
-    `/Note/${noteId}?userId=${encodeURIComponent(session.user.id)}`,
+    `/notes/${noteId}?userId=${encodeURIComponent(session.user.id)}`,
     {
       method: 'DELETE',
     }

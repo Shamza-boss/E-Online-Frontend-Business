@@ -1,7 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { ClassComponent } from '../_components/Class';
-import { getClassroomById } from '@/app/_lib/actions/classroom';
+import { getClassroomById } from '@/app/_lib/actions/classrooms';
 
 interface PageProps {
   params: Promise<{ slug: string }>;

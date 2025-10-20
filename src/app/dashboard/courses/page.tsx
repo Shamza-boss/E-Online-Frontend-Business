@@ -4,7 +4,7 @@ import { Box, Stack } from '@mui/material';
 import StudentClassCardSkeleton from '../_components/_skeletonLoaders/StudentClassCardSkeleton';
 import { SWRConfig } from 'swr';
 import ClassroomClasses from './_components/Classes';
-import { getAllUserClassrooms } from '@/app/_lib/actions/classroom';
+import { getAllUserClassrooms } from '@/app/_lib/actions/classrooms';
 
 export default function ClassroomPage() {
   const classes = getAllUserClassrooms();

@@ -30,7 +30,7 @@ const NavbarBreadcrumbs = dynamic(
           separator={<NavigateNextRoundedIcon fontSize="small" />}
         >
           {pathParts.map((part, index) => {
-            const href = '/' + pathParts.slice(0, index + 1).join('/');
+            const href = ('/' + pathParts.slice(0, index + 1).join('/')) as any;
             const isLast = index === pathParts.length - 1;
 
             let displayName: string;

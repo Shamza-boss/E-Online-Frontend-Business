@@ -4,7 +4,7 @@ import { hashFile } from '../common/functions';
 import { UploadResult } from '../interfaces/types';
 import { serverFetch } from '../serverFetch';
 
-export async function uploadTextbook(file: File): Promise<UploadResult> {
+async function uploadFileToStorage(file: File): Promise<UploadResult> {
   // 1️⃣ compute the hash
   const hash = await hashFile(file);
 
@@ -31,4 +31,12 @@ export async function uploadTextbook(file: File): Promise<UploadResult> {
     presignedGet: result.presignedGet,
     hash: result.hash,
   };
+}
+
+export async function uploadTextbook(file: File): Promise<UploadResult> {
+  return uploadFileToStorage(file);
+}
+
+export async function uploadPdfAsset(file: File): Promise<UploadResult> {
+  return uploadFileToStorage(file);
 }

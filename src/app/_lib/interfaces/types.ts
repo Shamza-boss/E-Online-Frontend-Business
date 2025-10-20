@@ -11,6 +11,15 @@ export interface VideoMeta {
   sizeBytes?: number;
 }
 
+export interface PdfMeta {
+  provider: string;
+  key: string;
+  url: string;
+  hash?: string | null;
+  sizeBytes?: number | null;
+  title?: string | null;
+}
+
 export interface VideoUploadResponse {
   uploadURL: string;
   uid: string;
@@ -32,11 +41,12 @@ export interface CreateUploadDto {
 export interface Question {
   id: string;
   questionText: string;
-  type: 'video' | 'radio' | 'multi-select';
+  type: 'video' | 'pdf' | 'radio' | 'multi-select';
   options?: string[];
   required: boolean;
   weight: number; // Each question must have a weight.
   video?: VideoMeta; // Video metadata for video type questions
+  pdf?: PdfMeta; // PDF metadata for PDF type questions
   subquestions?: Question[]; // Optional subquestions for nested question structure.
   correctAnswer?: string; // For single-choice questions
   correctAnswers?: string[]; // For multi-select questions
