@@ -66,7 +66,7 @@ export default function MenuContent() {
     if (disabled) return;
     setClickedRoute(route);
     startTransition(() => {
-      router.push(`/dashboard/${route}`);
+      router.push(`/dashboard/${route}` as any);
     });
   };
 

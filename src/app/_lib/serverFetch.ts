@@ -38,8 +38,8 @@ export async function serverFetch<T>(
     if (!session) redirect('/signin');
 
     const { cookies } = await import('next/headers');
-    const cookieStore = cookies();
-    const cookieHeader = (await cookieStore)
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore
       .getAll()
       .map((c) => `${c.name}=${c.value}`)
       .join('; ');
@@ -57,11 +57,15 @@ export async function serverFetch<T>(
   }
 
   // Build the fetch options
-  const fetchOpts: RequestInit = {
+  const fetchOpts: RequestInit & { next?: { revalidate?: number } } = {
     method,
     credentials: 'include',
     headers: requestHeaders,
   };
+
+  // Ensure data is always fresh when calling through the app router
+  fetchOpts.cache = 'no-store';
+  fetchOpts.next = { revalidate: 0 };
 
   // Attach body for JSON or FormData
   if (
@@ -96,7 +100,7 @@ export async function serverFetch<T>(
       const text = await res.text();
       const ref = crypto.randomUUID();
       console.error(`[API Error – ${ref}]: ${res.status} – ${text}`);
-      redirect(`/error/server-error?ref=${ref}`);
+      redirect(`/error/server-error?ref=${ref}` as const);
     }
 
     // Handle empty/no-content
@@ -111,10 +115,6 @@ export async function serverFetch<T>(
       url: fetchUrl,
       headers: requestHeaders,
     });
-
-    if (error.name === 'AbortError') {
-      redirect(`/error/connection-error?ref=${ref}`);
-    }
 
     throw error;
   } finally {

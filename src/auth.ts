@@ -3,9 +3,7 @@ import NextAuth, { type Session } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 import Passkey from '@auth/core/providers/passkey';
 import { PrismaAdapter } from '@auth/prisma-adapter';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/app/_lib/prisma';
 const isDev = process.env.NODE_ENV === 'development';
 
 const ORIGIN = (
@@ -18,7 +16,11 @@ const rpId = new URL(ORIGIN).hostname;
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
+  session: {
+    strategy: 'jwt',
+    maxAge: 60 * 15,
+    updateAge: 60 * 5,
+  },
   debug: isDev,
   trustHost: true,
   experimental: { enableWebAuthn: true },

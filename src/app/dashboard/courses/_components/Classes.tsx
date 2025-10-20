@@ -1,6 +1,6 @@
 'use client';
 
-import { getAllUserClassrooms } from '@/app/_lib/actions/classroom';
+import { getAllUserClassrooms } from '@/app/_lib/actions/classrooms';
 import ClassCard from '@/app/_lib/components/shared-theme/customizations/card';
 import { ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import Box from '@mui/material/Box';
@@ -53,7 +53,9 @@ export default function ClassroomClasses() {
         >
           <Link
             style={{ textDecoration: 'none' }}
-            href={`/dashboard/courses/${encodeURIComponent(`${classItem.classroomName}~${classItem.classroomId}`)}`}
+            href={
+              `/dashboard/courses/${encodeURIComponent(`${classItem.classroomName}~${classItem.classroomId}`)}` as any
+            }
           >
             <ClassCard
               className={classItem.classroomName}

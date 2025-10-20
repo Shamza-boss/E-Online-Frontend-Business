@@ -6,7 +6,7 @@ import {
   getOrCreateNoteByClassroomId,
   updateNoteById,
   UpdateNotePayload,
-} from '../actions/note';
+} from '../actions/notes';
 import type { NoteDto } from '../interfaces/types';
 
 const emptyNoteList: NoteDto[] = [];

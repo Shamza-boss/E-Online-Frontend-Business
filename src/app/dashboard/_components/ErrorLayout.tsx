@@ -35,7 +35,7 @@ export default function ErrorLayout({
   const handleClick = () => {
     setLoading(true);
     setTimeout(() => {
-      router.push(actionHref!);
+      router.push(actionHref! as any);
     }, 700);
   };
 

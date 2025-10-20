@@ -30,7 +30,7 @@ import {
 import { classroomSchema } from '@/app/_lib/schemas/management';
 import { SubmitClassroom } from './submitClassroom';
 import { getAllAcademics } from '@/app/_lib/actions/academics';
-import { getAllSubjects } from '@/app/_lib/actions/subject';
+import { getAllSubjects } from '@/app/_lib/actions/subjects';
 import { getAllUsers } from '@/app/_lib/actions/users';
 import { uploadTextbook } from '@/app/_lib/actions/storage';
 

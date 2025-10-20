@@ -52,7 +52,7 @@ export default function useAuthActions() {
         console.error('Sign-in failed:', result?.error);
         throw new Error(result?.error || 'Sign-in failed');
       }
-      if (result.url) router.push(result.url);
+      if (result.url) router.push(result.url as any);
       return;
     }
 
@@ -73,7 +73,7 @@ export default function useAuthActions() {
       console.error('Passkey sign-in failed:', result?.error);
       throw new Error(result?.error || 'Passkey sign-in failed');
     }
-    if (result.url) router.push(result.url);
+    if (result.url) router.push(result.url as any);
   };
 
   // Register a new passkey for the (current or new) user
@@ -115,12 +115,12 @@ export default function useAuthActions() {
       console.error('Passkey registration failed:', result?.error);
       throw new Error(result?.error || 'Passkey registration failed');
     }
-    if (result.url) router.push(result.url);
+    if (result.url) router.push(result.url as any);
   };
 
   const handleSignOut = async (callbackUrl: string = '/') => {
     const result = await signOut({ redirect: false, callbackUrl });
-    if (result.url) router.push(result.url);
+    if (result.url) router.push(result.url as any);
   };
 
   return {

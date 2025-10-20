@@ -1,6 +1,6 @@
 'use server';
 
-import { createInstitution } from '@/app/_lib/actions/institution';
+import { createInstitution } from '@/app/_lib/actions/institutions';
 import { InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
 import { institutionSchema } from '@/app/_lib/schemas/management';
 import { parseWithZod } from '@conform-to/zod';

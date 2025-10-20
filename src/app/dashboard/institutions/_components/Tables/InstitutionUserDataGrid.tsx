@@ -17,7 +17,7 @@ import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { InstitutionDto } from '@/app/_lib/interfaces/types';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
-import { getAllInstitutions } from '@/app/_lib/actions/institution';
+import { getAllInstitutions } from '@/app/_lib/actions/institutions';
 import { format } from 'date-fns';
 
 export default function InstitutionUserDataGrid() {

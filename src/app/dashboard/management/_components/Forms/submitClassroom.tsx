@@ -1,5 +1,5 @@
 'use server';
-import { createClassroom } from '@/app/_lib/actions/classroom';
+import { createClassroom } from '@/app/_lib/actions/classrooms';
 import { ClassDto } from '@/app/_lib/interfaces/types';
 import { classroomSchema } from '@/app/_lib/schemas/management';
 import { parseWithZod } from '@conform-to/zod';

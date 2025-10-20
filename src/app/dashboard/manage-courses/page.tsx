@@ -1,5 +1,5 @@
 import { SWRConfig } from 'swr';
-import { getAllUserClassrooms } from '@/app/_lib/actions/classroom';
+import { getAllUserClassrooms } from '@/app/_lib/actions/classrooms';
 import StudentClassesManagementClient from './clientPage';
 
 export default function StudentClassesManagementWrapper() {
