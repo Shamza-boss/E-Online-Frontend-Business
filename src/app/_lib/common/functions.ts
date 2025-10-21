@@ -15,6 +15,7 @@ export const routeLabels: Record<string, string> = {
   management: 'Management',
   institutions: 'Institutions',
   'manage-courses': 'Manage courses',
+  library: 'Library',
   courses: 'My courses',
   settings: 'Settings',
 };

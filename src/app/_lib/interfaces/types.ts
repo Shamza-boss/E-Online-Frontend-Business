@@ -20,6 +20,15 @@ export interface PdfMeta {
   title?: string | null;
 }
 
+export interface FileDto {
+  id: string;
+  fileKey: string;
+  url: string;
+  hash: string;
+  isPublic: boolean;
+  institutionId: string;
+}
+
 export interface VideoUploadResponse {
   uploadURL: string;
   uid: string;
