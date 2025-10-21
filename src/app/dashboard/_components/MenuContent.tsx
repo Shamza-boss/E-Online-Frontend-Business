@@ -18,6 +18,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import DomainAddIcon from '@mui/icons-material/DomainAdd';
 import LockIcon from '@mui/icons-material/Lock';
+import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
 import { routeLabels } from '@/app/_lib/common/functions';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 
@@ -28,13 +29,14 @@ const platformOnlyRoutes = ['institutions'];
 // numeric roles with full access (Admin, Trainer(Teacher))
 const fullAccessRoles: UserRole[] = [UserRole.Admin, UserRole.Instructor];
 // student allowed routes
-const studentAllowed = ['', 'courses'];
+const studentAllowed = ['', 'courses', 'library'];
 
 const mainListItems = [
   { route: '', icon: <TimelineIcon /> }, // Dashboard root route
   { route: 'institutions', icon: <DomainAddIcon /> }, // Institutions route
   { route: 'management', icon: <ManageAccountsIcon /> },
   { route: 'manage-courses', icon: <AssignmentIcon /> },
+  { route: 'library', icon: <LocalLibraryIcon /> },
   { route: 'courses', icon: <SchoolIcon /> },
 ];
 
