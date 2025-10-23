@@ -72,17 +72,14 @@ export default function PageViewsBarChart({
     return normalizedSeries.map((currentSeries) => ({
       ...currentSeries,
       data: currentSeries.data.map((value, index) => {
-        const denominator =
-          globalTotal ?? totalsPerMonth[index] ?? 0;
+        const denominator = globalTotal ?? totalsPerMonth[index] ?? 0;
 
         if (!denominator) {
           return 0;
         }
 
         const percentage = (value / denominator) * 100;
-        return Number.isFinite(percentage)
-          ? Number(percentage.toFixed(2))
-          : 0;
+        return Number.isFinite(percentage) ? Number(percentage.toFixed(2)) : 0;
       }),
     }));
   }, [normalizedSeries, numberOfTrainees]);
@@ -224,8 +221,7 @@ export default function PageViewsBarChart({
               }
 
               const dataIndex = context?.dataIndex ?? 0;
-              const rawValue =
-                normalizedSeries[index]?.data?.[dataIndex] ?? 0;
+              const rawValue = normalizedSeries[index]?.data?.[dataIndex] ?? 0;
 
               return `${rawValue} trainees (${value.toFixed(1)}%)`;
             },
