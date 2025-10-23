@@ -15,6 +15,7 @@ type PageViewsBarChartProps = {
   average: string; // e.g., '+0%'
   months: string[]; // x-axis: e.g. ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
   series: GradePerfomanceDto[];
+  numberOfTrainees: number;
   isLoading: boolean; // Optional loading state
 };
 
@@ -25,15 +26,45 @@ export default function PageViewsBarChart({
   average,
   months,
   series,
+  numberOfTrainees,
   isLoading,
 }: PageViewsBarChartProps) {
   const theme = useTheme();
 
   const colorPalette = [
-    theme.palette.primary.dark,
+    theme.palette.error.dark,
     theme.palette.primary.main,
-    theme.palette.primary.light,
+    theme.palette.success.dark,
   ];
+
+  const chartMaxValue = React.useMemo(() => {
+    const flattenedSeries = series.flatMap((s) => s.data ?? []);
+    const maxSeriesValue = flattenedSeries.length
+      ? Math.max(...flattenedSeries)
+      : 0;
+    return Math.max(numberOfTrainees ?? 0, maxSeriesValue);
+  }, [numberOfTrainees, series]);
+
+  // Generate evenly spaced integer ticks so rounded labels remain unique.
+  const yAxisTicks = React.useMemo(() => {
+    if (!Number.isFinite(chartMaxValue) || chartMaxValue <= 0) {
+      return [0];
+    }
+
+    const desiredTickCount = Math.min(chartMaxValue, 6);
+    const step = Math.max(1, Math.ceil(chartMaxValue / desiredTickCount));
+    const ticks: number[] = [0];
+
+    for (let value = step; value < chartMaxValue; value += step) {
+      ticks.push(value);
+    }
+
+    if (ticks[ticks.length - 1] !== chartMaxValue) {
+      ticks.push(chartMaxValue);
+    }
+
+    return ticks;
+  }, [chartMaxValue]);
 
   // Show loading skeleton while data is loading
   if (isLoading) {
@@ -130,27 +161,27 @@ export default function PageViewsBarChart({
           colors={colorPalette}
           xAxis={[
             {
-              scaleType: 'band',
+              scaleType: 'band' as const,
               categoryGapRatio: 0.5,
               data: months,
             },
           ]}
           yAxis={[
             {
+              label: 'Number of Trainees (each month)',
               min: 0,
-              max: 1,
-              valueFormatter: (value: number) =>
-                Math.round(value * 100).toString(),
+              max: chartMaxValue,
+              tickInterval: yAxisTicks,
+              valueFormatter: (value: number): string => `${value}`,
             },
           ]}
           series={series.map((s, index) => ({
-            id: `series-${index}`,
+            id: `series-${index}` as const,
             label: s.label,
             data: s.data,
-            stack: 'A',
+            stack: 'A' as const,
           }))}
           height={550}
-          margin={{ left: -20, right: 0, top: 0, bottom: 0 }}
           grid={{ horizontal: true }}
         />
       </CardContent>

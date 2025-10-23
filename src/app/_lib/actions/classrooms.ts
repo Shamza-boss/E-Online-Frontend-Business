@@ -10,7 +10,7 @@ import { serverFetch } from '../serverFetch';
 import { auth } from '@/auth';
 
 export async function createClassroom(classroom: ClassDto): Promise<any> {
-  return serverFetch('/Classroom', {
+  return serverFetch('/classrooms', {
     method: 'POST',
     body: classroom,
   });
@@ -22,20 +22,20 @@ export async function EnrollStudents(
   const session = await auth();
   if (!session) redirect('/signin');
 
-  return serverFetch('/Classrooms/EnrollStudents', {
+  return serverFetch('/classrooms/EnrollStudents', {
     method: 'POST',
     body: newStudents,
   });
 }
 
 export async function getAllClassrooms(): Promise<ClassDto[]> {
-  return serverFetch<ClassDto[]>('/Classrooms');
+  return serverFetch<ClassDto[]>('/classrooms');
 }
 
 export async function getAllClassroomsAndData(): Promise<
   ClassroomDetailsDto[]
 > {
-  return serverFetch<ClassroomDetailsDto[]>('/Classrooms/details');
+  return serverFetch<ClassroomDetailsDto[]>('/classrooms/details');
 }
 
 export async function getAllUserClassrooms(): Promise<ClassroomDetailsDto[]> {
@@ -43,16 +43,16 @@ export async function getAllUserClassrooms(): Promise<ClassroomDetailsDto[]> {
   if (!session) redirect('/signin');
 
   return serverFetch<ClassroomDetailsDto[]>(
-    `/Classrooms/user/${session?.user.id}`
+    `/classrooms/user/${session?.user.id}`
   );
 }
 
 export async function getAllUsersInClassroom(
   classId: string
 ): Promise<UserDto[]> {
-  return serverFetch<UserDto[]>(`/Classrooms/classUsers/${classId}`);
+  return serverFetch<UserDto[]>(`/classrooms/classUsers/${classId}`);
 }
 
 export async function getClassroomById(classroomId: string): Promise<ClassDto> {
-  return serverFetch<ClassDto>(`/Classrooms/${classroomId}`);
+  return serverFetch<ClassDto>(`/classrooms/${classroomId}`);
 }

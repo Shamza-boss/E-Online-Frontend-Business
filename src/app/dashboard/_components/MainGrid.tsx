@@ -119,6 +119,7 @@ export default function MainGrid() {
             months={institutionData?.gradePerformanceMonths || []}
             series={institutionData?.gradePerformance || []}
             trend={institutionData?.gradePerformanceTrends?.color || 'default'}
+            numberOfTrainees={institutionData?.students?.total || 0}
             average={
               institutionData?.gradePerformanceTrends?.average != null
                 ? `+${institutionData.gradePerformanceTrends.average.toFixed(1)}%`
@@ -127,20 +128,14 @@ export default function MainGrid() {
           />
         </Grid>
       </Grid>
-      <Grid container spacing={2} columns={12}>
+      {/* to replace current distribution chart modal */}
+      {/* <Grid container spacing={2} columns={12}>
         <Grid size={{ xs: 12, lg: 12 }}>
-          <CustomizedDataGrid
-            rows={institutionData?.recentHomeworkStats || []}
-            isLoading={isLoading}
-          />
-        </Grid>
-        {/* <Grid size={{ xs: 12, lg: 3 }}>
           <Stack gap={2} direction={{ xs: 'column', sm: 'row', lg: 'column' }}>
-            <CustomizedTreeView />
             <ChartUserByCountry />
           </Stack>
-        </Grid> */}
-      </Grid>
+        </Grid>
+      </Grid> */}
     </Box>
   );
 }

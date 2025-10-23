@@ -41,6 +41,41 @@ export default function ActiveSubjectsChart({
     theme.palette.primary.dark,
   ];
 
+  const normalizedSeries = React.useMemo(
+    () =>
+      series.map((subjectSeries) => ({
+        ...subjectSeries,
+        data: subjectSeries.data.map((value) => Math.round(value)),
+      })),
+    [series]
+  );
+
+  const chartMaxValue = React.useMemo(() => {
+    const flattened = normalizedSeries.flatMap((s) => s.data ?? []);
+    return flattened.length ? Math.max(...flattened) : 0;
+  }, [normalizedSeries]);
+
+  // Force integer tick marks so submissions display in whole numbers.
+  const yAxisTicks = React.useMemo(() => {
+    if (!Number.isFinite(chartMaxValue) || chartMaxValue <= 0) {
+      return [0];
+    }
+
+    const desiredTickCount = Math.min(chartMaxValue, 6);
+    const step = Math.max(1, Math.ceil(chartMaxValue / desiredTickCount));
+    const ticks: number[] = [0];
+
+    for (let value = step; value < chartMaxValue; value += step) {
+      ticks.push(value);
+    }
+
+    if (ticks[ticks.length - 1] !== chartMaxValue) {
+      ticks.push(chartMaxValue);
+    }
+
+    return ticks;
+  }, [chartMaxValue]);
+
   // Show loading skeleton while data is loading
   if (isLoading) {
     return (
@@ -119,7 +154,7 @@ export default function ActiveSubjectsChart({
         <Stack sx={{ justifyContent: 'space-between' }}>
           <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
             <Typography variant="h4" component="p">
-              {series.reduce(
+              {normalizedSeries.reduce(
                 (sum, s) => sum + (s.data?.reduce((a, b) => a + b, 0) || 0),
                 0
               )}
@@ -140,7 +175,16 @@ export default function ActiveSubjectsChart({
               tickInterval: (index, i) => (i + 1) % 5 === 0,
             },
           ]}
-          series={series.map((s, idx) => ({
+          yAxis={[
+            {
+              label: 'Total Submissions',
+              min: 0,
+              max: chartMaxValue,
+              tickInterval: yAxisTicks,
+              valueFormatter: (value: number) => `${value}`,
+            },
+          ]}
+          series={normalizedSeries.map((s, idx) => ({
             id: s.id,
             label: s.label,
             data: s.data,
@@ -150,8 +194,7 @@ export default function ActiveSubjectsChart({
             stackOrder: 'ascending',
             area: true,
           }))}
-          height={575}
-          margin={{ left: -40, right: 0, top: 0, bottom: 0 }}
+          height={550}
           grid={{ horizontal: true }}
           sx={{
             '& .MuiAreaElement-series-0': { fill: "url('#subject0')" },
@@ -159,7 +202,7 @@ export default function ActiveSubjectsChart({
             '& .MuiAreaElement-series-2': { fill: "url('#subject2')" },
           }}
         >
-          {series.map((_, idx) => (
+          {normalizedSeries.map((_, idx) => (
             <AreaGradient
               key={`grad-${idx}`}
               color={colorPalette[idx % colorPalette.length]}
