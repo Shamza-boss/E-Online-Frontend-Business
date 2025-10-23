@@ -1,7 +1,6 @@
 import { alpha, Theme, Components } from '@mui/material/styles';
 import { gray } from '../themePrimitives';
 
- 
 export const surfacesCustomizations: Components<Theme> = {
   MuiAccordion: {
     defaultProps: {
@@ -51,8 +50,10 @@ export const surfacesCustomizations: Components<Theme> = {
     },
   },
   MuiPaper: {
-    defaultProps: {
-      elevation: 0,
+    styleOverrides: {
+      root: {
+        variant: 'outlined',
+      },
     },
   },
   MuiCard: {

@@ -6,6 +6,13 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/app/_lib/prisma';
 const isDev = process.env.NODE_ENV === 'development';
 
+const SESSION_MAX_AGE_SECONDS = 60 * 15; // 15 minutes hard session timeout
+
+type ExtendedToken = JWT & {
+  sessionIssuedAt?: number;
+  sessionExpiresAt?: number;
+};
+
 const ORIGIN = (
   process.env.AUTH_URL ??
   process.env.NEXTAUTH_URL ??
@@ -18,8 +25,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt',
-    maxAge: 60 * 15,
-    updateAge: 60 * 5,
+    maxAge: SESSION_MAX_AGE_SECONDS,
+    updateAge: 0,
   },
   debug: isDev,
   trustHost: true,
@@ -88,6 +95,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     async jwt({ token, user }) {
+      const extended = token as ExtendedToken;
+      const nowSeconds = Math.floor(Date.now() / 1000);
+
       const api = process.env.BASE_API_URL;
       const email = user?.email ?? token.email;
 
@@ -135,10 +145,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           institutionName: token.institutionName,
         });
       }
+      if (user) {
+        extended.sessionIssuedAt = nowSeconds;
+        extended.sessionExpiresAt = nowSeconds + SESSION_MAX_AGE_SECONDS;
+      } else {
+        if (extended.sessionIssuedAt == null) {
+          extended.sessionIssuedAt = nowSeconds;
+        }
+        if (extended.sessionExpiresAt == null) {
+          extended.sessionExpiresAt =
+            extended.sessionIssuedAt + SESSION_MAX_AGE_SECONDS;
+        }
+      }
+
+      if (extended.sessionIssuedAt != null) {
+        token.iat = extended.sessionIssuedAt;
+      }
+      if (extended.sessionExpiresAt != null) {
+        token.exp = extended.sessionExpiresAt;
+      }
+
       return token;
     },
     async session({ session, token }) {
-      const t = token as JWT;
+      const t = token as ExtendedToken;
       if (session.user) {
         session.user.id =
           (t.userId ?? t.appUserId ?? t.sub) || session.user.id || '';

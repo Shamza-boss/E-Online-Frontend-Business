@@ -37,25 +37,64 @@ export default function PageViewsBarChart({
     theme.palette.success.dark,
   ];
 
-  const chartMaxValue = React.useMemo(() => {
-    const flattenedSeries = series.flatMap((s) => s.data ?? []);
-    const maxSeriesValue = flattenedSeries.length
-      ? Math.max(...flattenedSeries)
-      : 0;
-    return Math.max(numberOfTrainees ?? 0, maxSeriesValue);
-  }, [numberOfTrainees, series]);
+  const normalizedSeries = React.useMemo(
+    () =>
+      (series ?? []).map((currentSeries) => ({
+        ...currentSeries,
+        data: (currentSeries.data ?? []).map((value) =>
+          typeof value === 'number' && Number.isFinite(value) ? value : 0
+        ),
+      })),
+    [series]
+  );
+
+  const percentageSeries = React.useMemo(() => {
+    if (!normalizedSeries.length) {
+      return [];
+    }
+
+    // Convert absolute counts into percentages of the overall trainee base.
+    const totalsPerMonth = normalizedSeries.reduce<number[]>(
+      (accumulator, currentSeries) => {
+        currentSeries.data?.forEach((value, index) => {
+          accumulator[index] = (accumulator[index] ?? 0) + value;
+        });
+        return accumulator;
+      },
+      []
+    );
+
+    const globalTotal =
+      typeof numberOfTrainees === 'number' && numberOfTrainees > 0
+        ? numberOfTrainees
+        : null;
+
+    return normalizedSeries.map((currentSeries) => ({
+      ...currentSeries,
+      data: currentSeries.data.map((value, index) => {
+        const denominator =
+          globalTotal ?? totalsPerMonth[index] ?? 0;
+
+        if (!denominator) {
+          return 0;
+        }
+
+        const percentage = (value / denominator) * 100;
+        return Number.isFinite(percentage)
+          ? Number(percentage.toFixed(2))
+          : 0;
+      }),
+    }));
+  }, [normalizedSeries, numberOfTrainees]);
+
+  const chartMaxValue = 100;
 
   // Generate evenly spaced integer ticks so rounded labels remain unique.
   const yAxisTicks = React.useMemo(() => {
-    if (!Number.isFinite(chartMaxValue) || chartMaxValue <= 0) {
-      return [0];
-    }
+    const ticks: number[] = [];
+    const step = 20;
 
-    const desiredTickCount = Math.min(chartMaxValue, 6);
-    const step = Math.max(1, Math.ceil(chartMaxValue / desiredTickCount));
-    const ticks: number[] = [0];
-
-    for (let value = step; value < chartMaxValue; value += step) {
+    for (let value = 0; value < chartMaxValue; value += step) {
       ticks.push(value);
     }
 
@@ -168,18 +207,28 @@ export default function PageViewsBarChart({
           ]}
           yAxis={[
             {
-              label: 'Number of Trainees (each month)',
+              label: 'Percentage of Trainees',
               min: 0,
               max: chartMaxValue,
               tickInterval: yAxisTicks,
-              valueFormatter: (value: number): string => `${value}`,
+              valueFormatter: (value: number): string => `${value}%`,
             },
           ]}
-          series={series.map((s, index) => ({
+          series={percentageSeries.map((s, index) => ({
             id: `series-${index}` as const,
             label: s.label,
             data: s.data,
-            stack: 'A' as const,
+            valueFormatter: (value: number | null, context) => {
+              if (value == null) {
+                return null;
+              }
+
+              const dataIndex = context?.dataIndex ?? 0;
+              const rawValue =
+                normalizedSeries[index]?.data?.[dataIndex] ?? 0;
+
+              return `${rawValue} trainees (${value.toFixed(1)}%)`;
+            },
           }))}
           height={550}
           grid={{ horizontal: true }}

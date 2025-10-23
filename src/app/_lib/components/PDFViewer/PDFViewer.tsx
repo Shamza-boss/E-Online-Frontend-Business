@@ -55,16 +55,6 @@ const highlightCursorStyle = {
   },
 } as const;
 
-const getScaledPosition = (rect: DOMRect, container: HTMLElement) => {
-  const containerRect = container.getBoundingClientRect();
-  return {
-    top: rect.top - containerRect.top,
-    left: rect.left - containerRect.left,
-    width: rect.width,
-    height: rect.height,
-  };
-};
-
 const PdfViewer: React.FC<PdfViewerProps> = ({
   fileUrl,
   initialPage = 1,
