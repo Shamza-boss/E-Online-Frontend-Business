@@ -3,6 +3,7 @@ import {
   ClassDto,
   ClassroomDetailsDto,
   EnrollStudentsDto,
+  UpdateClassroomDto,
   UserDto,
 } from '../interfaces/types';
 import { redirect } from 'next/navigation';
@@ -55,4 +56,22 @@ export async function getAllUsersInClassroom(
 
 export async function getClassroomById(classroomId: string): Promise<ClassDto> {
   return serverFetch<ClassDto>(`/classrooms/${classroomId}`);
+}
+
+export async function updateClassroom(
+  payload: UpdateClassroomDto
+): Promise<void> {
+  return serverFetch<void>(`/classrooms/${payload.id}`, {
+    method: 'PUT',
+    body: {
+      ...payload,
+      teacherId: payload.teacherId ?? null,
+    },
+  });
+}
+
+export async function deleteClassroom(classroomId: string): Promise<void> {
+  return serverFetch<void>(`/classrooms/${classroomId}`, {
+    method: 'DELETE',
+  });
 }

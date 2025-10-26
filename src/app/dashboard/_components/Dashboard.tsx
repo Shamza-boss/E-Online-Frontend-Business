@@ -29,28 +29,53 @@ export default function DashboardComponent(props: any) {
   return (
     <AppTheme {...props} themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
-      <Box sx={{ display: 'flex' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          width: '100%',
+          minHeight: '100vh',
+          maxHeight: '100vh',
+          overflow: 'hidden',
+        }}
+      >
         <SideMenu />
         <AppNavbar />
         <Box
           component="main"
           sx={(theme: Theme) => ({
             flexGrow: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh',
+            maxHeight: '100vh',
             backgroundColor: alpha(theme.palette.background.default, 1),
-            overflow: 'auto',
+            overflow: 'hidden',
           })}
         >
           <Stack
             spacing={2}
             sx={{
-              alignItems: 'center',
-              mx: 3,
+              flexGrow: 1,
+              alignItems: 'stretch',
+              mx: { xs: 3, md: '5%' },
               pb: 5,
               mt: { xs: 8, md: 0 },
+              overflow: 'hidden',
             }}
           >
-            <Header />
-            {props.children}
+            <Box sx={{ flexShrink: 0, width: '100%' }}>
+              <Header />
+            </Box>
+            <Box
+              sx={{
+                flexGrow: 1,
+                width: '100%',
+                minHeight: 0,
+                overflow: 'auto',
+              }}
+            >
+              {props.children}
+            </Box>
           </Stack>
         </Box>
       </Box>

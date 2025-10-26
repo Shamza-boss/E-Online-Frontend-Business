@@ -178,14 +178,24 @@ export interface ClassDto {
 export interface ClassroomDetailsDto {
   classroomId: string;
   classroomName: string;
-  teacherId: string;
+  teacherId?: string | null;
   teacherFirstName: string;
   teacherLastName: string;
+  academicLevelId?: string;
   academicLevelName: string;
+  subjectId?: string;
   subjectName: string;
   subjectCode: string;
   numberOfUsers: number;
   textbookUrl: string;
+}
+
+export interface UpdateClassroomDto {
+  id: string;
+  name: string;
+  teacherId?: string | null;
+  academicLevelId: string;
+  subjectId: string;
 }
 
 export interface EnrollStudentsDto {

@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Box, Button, Stack, Tab, Tooltip } from '@mui/material';
+import { Box, Button, IconButton, Stack, Tab, Tooltip } from '@mui/material';
 import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
@@ -14,6 +14,7 @@ import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { useSession } from 'next-auth/react';
 import CreateSubjectModal from './_components/Modals/CreateSubjectModal';
 import CreateAcademicsModal from './_components/Modals/CreateAcademicsModal';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 const ClassesManagement = () => {
   const { data: session } = useSession();
@@ -112,24 +113,35 @@ const ClassesManagement = () => {
             </>
           )}
           {value === '1' && (
-            <Tooltip
-              title={
-                !isElevated
-                  ? 'Only administrators and moderators can make changes on this page. Please contact your administrator for assistance.'
-                  : ''
-              }
-            >
-              <span>
-                <Button
-                  sx={{ maxWidth: 'max-content' }}
-                  variant="outlined"
-                  onClick={handleClickOpen}
-                  disabled={!isElevated}
+            <>
+              <Tooltip
+                title={
+                  !isElevated
+                    ? 'Only administrators and moderators can make changes on this page. Please contact your administrator for assistance.'
+                    : ''
+                }
+              >
+                <span>
+                  <Button
+                    sx={{ maxWidth: 'max-content' }}
+                    variant="outlined"
+                    onClick={handleClickOpen}
+                    disabled={!isElevated}
+                  >
+                    Register person
+                  </Button>
+                </span>
+              </Tooltip>
+              <Tooltip title="Use the trash icon in the table actions to remove a person. A confirmation dialog will appear before deletion.">
+                <IconButton
+                  size="small"
+                  sx={{ alignSelf: 'center' }}
+                  aria-label="People management help"
                 >
-                  Register person
-                </Button>
-              </span>
-            </Tooltip>
+                  <InfoOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </>
           )}
         </Stack>
       </Box>

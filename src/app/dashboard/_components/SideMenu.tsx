@@ -70,11 +70,6 @@ export default function SideMenu() {
           borderColor: 'divider',
         }}
       >
-        <Avatar
-          sizes="small"
-          alt={userProfileName}
-          sx={{ width: 36, height: 36 }}
-        />
         <Stack spacing={1} sx={{ mr: 'auto', maxWidth: '200px' }}>
           <Typography
             variant="body2"

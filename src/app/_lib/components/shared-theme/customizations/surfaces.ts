@@ -1,5 +1,5 @@
 import { alpha, Theme, Components } from '@mui/material/styles';
-import { gray } from '../themePrimitives';
+import { gray, brand } from '../themePrimitives';
 
 export const surfacesCustomizations: Components<Theme> = {
   MuiAccordion: {
@@ -51,9 +51,13 @@ export const surfacesCustomizations: Components<Theme> = {
   },
   MuiPaper: {
     styleOverrides: {
-      root: {
-        variant: 'outlined',
-      },
+      root: ({ theme }) => ({
+        backgroundColor: theme.palette.background.default,
+      }),
+    },
+    defaultProps: {
+      elevation: 5,
+      variant: 'outlined',
     },
   },
   MuiCard: {

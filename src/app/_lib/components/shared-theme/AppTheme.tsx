@@ -8,6 +8,13 @@ import {
 } from '@mui/material/styles';
 import type { ThemeOptions } from '@mui/material/styles';
 import { colorSchemes } from './themePrimitives';
+import {
+  dataDisplayCustomizations,
+  feedbackCustomizations,
+  inputsCustomizations,
+  navigationCustomizations,
+  surfacesCustomizations,
+} from './customizations';
 
 interface AppThemeProps {
   children: React.ReactNode;
@@ -87,6 +94,7 @@ export default function AppTheme({
       shape,
       shadows,
       components: {
+        ...surfacesCustomizations,
         MuiTextField: {
           defaultProps: {
             size: 'small',
@@ -108,7 +116,9 @@ export default function AppTheme({
           },
         },
         MuiInputBase: {
+          ...(inputsCustomizations.MuiInputBase ?? {}),
           defaultProps: {
+            ...(inputsCustomizations.MuiInputBase?.defaultProps ?? {}),
             size: 'small',
           },
         },
