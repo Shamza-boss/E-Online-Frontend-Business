@@ -50,6 +50,7 @@ export default function AppAppBar() {
         bgcolor: 'transparent',
         backgroundImage: 'none',
         mt: 'calc(var(--template-frame-height, 0px) + 28px)',
+        border: 'none',
       }}
     >
       <Container maxWidth="lg">
