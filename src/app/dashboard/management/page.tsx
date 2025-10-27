@@ -42,12 +42,16 @@ const ClassesManagement = () => {
 
   const handleClose = async () => {
     setOpenRegisterPerson(false);
-    mutate('users');
+    await mutate((key) => Array.isArray(key) && key[0] === 'users');
   };
 
   const handleCloseClass = async () => {
     setOpnClassCreator(false);
-    mutate('classes');
+    await mutate(
+      (key) =>
+        key === 'classes' ||
+        (Array.isArray(key) && key.length > 0 && key[0] === 'classes')
+    );
   };
 
   const handleCloseAcademics = async () => {
@@ -155,9 +159,8 @@ const ClassesManagement = () => {
         <OutlinedWrapper
           display="flex"
           flexDirection="column"
-          height="80vh" // Set the height as required
+          flexGrow={1}
           width="100%"
-          maxHeight="80vh"
           overflow="hidden"
         >
           <TabContext value={value}>
@@ -171,10 +174,10 @@ const ClassesManagement = () => {
               </TabList>
             </Box>
             <TabPanel value="1" sx={{ padding: 0, height: '100%' }}>
-              <UserManagementDataGrid />
+              <UserManagementDataGrid active={value === '1'} />
             </TabPanel>
             <TabPanel value="2" sx={{ padding: 0, height: '100%' }}>
-              <ClassManagementDataGrid />
+              <ClassManagementDataGrid active={value === '2'} />
             </TabPanel>
           </TabContext>
         </OutlinedWrapper>

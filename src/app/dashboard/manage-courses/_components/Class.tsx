@@ -165,9 +165,8 @@ export default function StudentManagementComponent({
         <OutlinedWrapper
           display="flex"
           flexDirection="column"
-          height="80vh"
+          flexGrow={1}
           width="100%"
-          maxHeight="80vh"
           overflow="hidden"
         >
           <DragDropFormBuilderModal

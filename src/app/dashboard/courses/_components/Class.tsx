@@ -119,9 +119,8 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
           <Box
             display="flex"
             flexDirection="column"
-            height="84.5vh"
             width="100%"
-            maxHeight="84.5vh"
+            flexGrow={1}
             overflow="hidden"
           >
             {isMobile ? (

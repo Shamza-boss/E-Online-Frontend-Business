@@ -17,6 +17,7 @@ import {
   datePickersCustomizations,
   treeViewCustomizations,
 } from './theme/customizations';
+import { SearchProvider } from '@/app/_lib/context/SearchContext';
 
 const xThemeComponents = {
   ...chartsCustomizations,
@@ -52,31 +53,33 @@ export default function DashboardComponent(props: any) {
             overflow: 'hidden',
           })}
         >
-          <Stack
-            spacing={2}
-            sx={{
-              flexGrow: 1,
-              alignItems: 'stretch',
-              mx: { xs: 3, md: '5%' },
-              pb: 5,
-              mt: { xs: 8, md: 0 },
-              overflow: 'hidden',
-            }}
-          >
-            <Box sx={{ flexShrink: 0, width: '100%' }}>
-              <Header />
-            </Box>
-            <Box
+          <SearchProvider>
+            <Stack
+              spacing={2}
               sx={{
                 flexGrow: 1,
-                width: '100%',
-                minHeight: 0,
-                overflow: 'auto',
+                alignItems: 'stretch',
+                mx: { xs: 3, md: '5%' },
+                pb: 5,
+                mt: { xs: 8, md: 0 },
+                overflow: 'hidden',
               }}
             >
-              {props.children}
-            </Box>
-          </Stack>
+              <Box sx={{ flexShrink: 0, width: '100%' }}>
+                <Header />
+              </Box>
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  width: '100%',
+                  minHeight: 0,
+                  overflow: 'auto',
+                }}
+              >
+                {props.children}
+              </Box>
+            </Stack>
+          </SearchProvider>
         </Box>
       </Box>
     </AppTheme>

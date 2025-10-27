@@ -136,14 +136,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } catch (e) {
           console.error('[auth][jwt] resolve error', e);
         }
-      } else if (isDev) {
-        console.log('[auth][jwt] skip enrichment (conditions unmet)', {
-          hasEmail: !!email,
-          userPresent: !!user,
-          userId: token.userId,
-          role: token.role,
-          institutionName: token.institutionName,
-        });
       }
       if (user) {
         extended.sessionIssuedAt = nowSeconds;

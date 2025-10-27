@@ -90,7 +90,7 @@ export default function MainGrid() {
   ];
 
   return (
-    <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
       {/* cards */}
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Overview
@@ -99,7 +99,11 @@ export default function MainGrid() {
         container
         spacing={2}
         columns={12}
-        sx={{ mb: (theme) => theme.spacing(2) }}
+        sx={{
+          mb: (theme) => theme.spacing(2),
+          display: 'flex',
+          flexDirection: 'row',
+        }}
       >
         {institutionStats.map((card, index) => (
           <Grid key={index} size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -127,15 +131,13 @@ export default function MainGrid() {
             }
           />
         </Grid>
-      </Grid>
-      {/* to replace current distribution chart modal */}
-      {/* <Grid container spacing={2} columns={12}>
-        <Grid size={{ xs: 12, lg: 12 }}>
-          <Stack gap={2} direction={{ xs: 'column', sm: 'row', lg: 'column' }}>
-            <ChartUserByCountry />
-          </Stack>
+        <Grid size={{ xs: 12, lg: 12 }} sx={{ flexGrow: 1 }}>
+          <CustomizedDataGrid
+            rows={institutionData?.recentHomeworkStats || []}
+            isLoading={isLoading}
+          />
         </Grid>
-      </Grid> */}
+      </Grid>
     </Box>
   );
 }

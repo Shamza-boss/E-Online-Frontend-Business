@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import {
   GridActionsCellItem,
   GridColDef,
+  GridPaginationModel,
   GridRowId,
   GridRowModel,
   GridRowModes,
   GridRowModesModel,
   GridRowParams,
+  GridSortModel,
 } from '@mui/x-data-grid';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
@@ -23,48 +25,176 @@ import {
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
 import {
   deleteClassroom,
-  getAllClassroomsAndData,
+  getClassroomsAndData,
   updateClassroom,
 } from '@/app/_lib/actions/classrooms';
-import useSWR, { mutate } from 'swr';
+import useSWR from 'swr';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { useSession } from 'next-auth/react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
+import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from '@mui/material';
-import { getAllUsers } from '@/app/_lib/actions/users';
+  PagedResult,
+  PaginationParams,
+} from '@/app/_lib/interfaces/pagination';
+import { getUsers } from '@/app/_lib/actions/users';
 import { getAllAcademics } from '@/app/_lib/actions/academics';
 import { getAllSubjects } from '@/app/_lib/actions/subjects';
+import { useRegisterSearch } from '@/app/_lib/context/SearchContext';
 
-export default function ClassManagementDataGrid() {
+const DEFAULT_PAGE_SIZE = 20;
+
+const sanitizeOptionalInput = (value: unknown) => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const lower = trimmed.toLowerCase();
+  if (
+    lower === 'undefined' ||
+    lower === 'null' ||
+    lower === '$undefined' ||
+    lower === '$null'
+  ) {
+    return undefined;
+  }
+
+  return trimmed;
+};
+
+interface ClassManagementDataGridProps {
+  active: boolean;
+}
+
+export default function ClassManagementDataGrid({
+  active,
+}: ClassManagementDataGridProps) {
   const { data: session } = useSession();
   const userRole = Number(session?.user?.role);
   const isElevated = userRole === UserRole.Admin;
 
   const { showAlert } = useAlert();
-  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-  const [deleteTarget, setDeleteTarget] = useState<ClassroomDetailsDto | null>(
-    null
+  const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
+    {}
   );
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteTarget, setDeleteTarget] =
+    React.useState<ClassroomDetailsDto | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [paginationModel, setPaginationModel] =
+    React.useState<GridPaginationModel>({
+      page: 0,
+      pageSize: DEFAULT_PAGE_SIZE,
+    });
+  const [sortModel, setSortModel] = React.useState<GridSortModel>([]);
+  const [searchTerm, setSearchTermState] = React.useState('');
+  const [rowCount, setRowCount] = React.useState(0);
+
+  const handleSearch = React.useCallback((term: string) => {
+    setSearchTermState(term);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, []);
+
+  useRegisterSearch({
+    id: 'dashboard-management-classes',
+    placeholder: 'Search courses',
+    onSearch: handleSearch,
+    debounceMs: 300,
+    active,
+  });
+
+  const sortField = sortModel[0]?.field ?? null;
+  const sortDirection = sortModel[0]?.sort ?? null;
+  const normalizedSearchKey = sanitizeOptionalInput(searchTerm) ?? '';
+
+  const classesKey = React.useMemo(
+    () =>
+      active
+        ? [
+            'classes',
+            paginationModel.page,
+            paginationModel.pageSize,
+            sortField ?? '',
+            sortDirection ?? '',
+            normalizedSearchKey,
+          ]
+        : null,
+    [
+      active,
+      paginationModel.page,
+      paginationModel.pageSize,
+      sortField,
+      sortDirection,
+      normalizedSearchKey,
+    ]
+  );
+
   const {
-    data: classes,
+    data: classesResult,
     isLoading: classLoading,
     isValidating: classValidating,
-  } = useSWR<ClassroomDetailsDto[]>('classes', getAllClassroomsAndData, {
-    revalidateOnMount: true,
-    revalidateOnFocus: true,
-  });
-  const { data: users } = useSWR<UserDto[]>('users', getAllUsers, {
-    revalidateOnMount: true,
-  });
+    mutate: mutateClasses,
+  } = useSWR<PagedResult<ClassroomDetailsDto>>(
+    classesKey,
+    () => {
+      const pageIndex = paginationModel.page;
+      const size = Number.isFinite(paginationModel.pageSize)
+        ? paginationModel.pageSize
+        : DEFAULT_PAGE_SIZE;
+      const orderBy = sortField ?? null;
+      const normalizedDirection = sanitizeOptionalInput(sortDirection);
+      const orderDirection =
+        normalizedDirection === 'asc' || normalizedDirection === 'desc'
+          ? normalizedDirection
+          : undefined;
+      const sanitizedSearch = normalizedSearchKey;
+
+      const requestParams: PaginationParams = {
+        pageNumber: pageIndex + 1,
+        pageSize: size,
+      };
+
+      if (orderBy) {
+        requestParams.sortBy = orderBy;
+        requestParams.sortDirection = orderDirection ?? 'asc';
+      }
+
+      if (sanitizedSearch) {
+        requestParams.searchTerm = sanitizedSearch;
+      }
+
+      return getClassroomsAndData(requestParams);
+    },
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: active,
+    }
+  );
+
+  React.useEffect(() => {
+    if (typeof classesResult?.totalCount === 'number') {
+      setRowCount(classesResult.totalCount);
+    }
+  }, [classesResult?.totalCount]);
+
+  const { data: users } = useSWR<PagedResult<UserDto>>(
+    ['users', 'instructors'],
+    () =>
+      getUsers({
+        pageNumber: 1,
+        pageSize: 100,
+        sortBy: 'lastName',
+        sortDirection: 'asc',
+      }),
+    {
+      revalidateOnMount: true,
+    }
+  );
   const { data: academics } = useSWR<AcademicLevelDto[]>(
     'academics',
     getAllAcademics,
@@ -74,16 +204,16 @@ export default function ClassManagementDataGrid() {
     revalidateOnMount: true,
   });
 
-  const instructorUsers = useMemo(
+  const instructorUsers = React.useMemo(
     () =>
-      (users ?? []).filter(
+      (users?.items ?? []).filter(
         (user): user is UserDto & { userId: string } =>
           Boolean(user.userId) && user.role === UserRole.Instructor
       ),
     [users]
   );
 
-  const teacherOptions = useMemo<{ value: string; label: string }[]>(
+  const teacherOptions = React.useMemo<{ value: string; label: string }[]>(
     () =>
       instructorUsers.map((teacher) => ({
         value: teacher.userId,
@@ -94,7 +224,7 @@ export default function ClassManagementDataGrid() {
     [instructorUsers]
   );
 
-  const teacherLabelMap = useMemo(() => {
+  const teacherLabelMap = React.useMemo(() => {
     const map = new Map<string, string>();
     teacherOptions.forEach((opt) => {
       map.set(opt.value, opt.label);
@@ -102,7 +232,7 @@ export default function ClassManagementDataGrid() {
     return map;
   }, [teacherOptions]);
 
-  const academicOptions = useMemo<{ value: string; label: string }[]>(
+  const academicOptions = React.useMemo<{ value: string; label: string }[]>(
     () =>
       (academics ?? [])
         .filter((academic): academic is AcademicLevelDto & { id: string } =>
@@ -115,7 +245,7 @@ export default function ClassManagementDataGrid() {
     [academics]
   );
 
-  const academicLabelMap = useMemo(() => {
+  const academicLabelMap = React.useMemo(() => {
     const map = new Map<string, string>();
     academicOptions.forEach((opt) => {
       map.set(opt.value, opt.label);
@@ -123,7 +253,9 @@ export default function ClassManagementDataGrid() {
     return map;
   }, [academicOptions]);
 
-  const subjectOptions = useMemo(
+  const subjectOptions = React.useMemo<
+    Array<{ value: string; label: string; code: string; subjectName: string }>
+  >(
     () =>
       (subjects ?? [])
         .filter((subject): subject is SubjectDto & { id: string } =>
@@ -138,12 +270,12 @@ export default function ClassManagementDataGrid() {
     [subjects]
   );
 
-  const subjectValueOptions = useMemo(
+  const subjectValueOptions = React.useMemo(
     () => subjectOptions.map(({ value, label }) => ({ value, label })),
     [subjectOptions]
   );
 
-  const subjectLabelMap = useMemo(() => {
+  const subjectLabelMap = React.useMemo(() => {
     const map = new Map<
       string,
       { label: string; code: string; name: string }
@@ -158,15 +290,15 @@ export default function ClassManagementDataGrid() {
     return map;
   }, [subjectOptions]);
 
-  const rows = useMemo(
+  const rows = React.useMemo(
     () =>
-      (classes ?? []).map((row) => ({
+      (classesResult?.items ?? []).map((row) => ({
         ...row,
         teacherId: row.teacherId ?? '',
         academicLevelId: row.academicLevelId ?? '',
         subjectId: row.subjectId ?? '',
       })),
-    [classes]
+    [classesResult?.items]
   );
 
   const handleEditClick = (id: GridRowId) => () => {
@@ -346,7 +478,7 @@ export default function ClassManagementDataGrid() {
       showAlert('success', 'Classroom deleted successfully');
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
-      mutate('classes');
+      await mutateClasses();
     } catch (err: any) {
       const message = err?.message || 'Failed to delete classroom.';
       showAlert('error', message);
@@ -419,7 +551,7 @@ export default function ClassManagementDataGrid() {
       };
 
       showAlert('success', 'Classroom updated successfully');
-      mutate('classes');
+      await mutateClasses();
       return updatedRow;
     } catch (err: any) {
       const message = err?.message || 'Failed to update classroom.';
@@ -443,8 +575,14 @@ export default function ClassManagementDataGrid() {
           params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
         }
         editMode="row"
-        initialState={{ pagination: { paginationModel: { pageSize: 20 } } }}
+        paginationMode="server"
+        paginationModel={paginationModel}
+        onPaginationModelChange={setPaginationModel}
         pageSizeOptions={[10, 20, 50]}
+        rowCount={rowCount}
+        sortingMode="server"
+        sortModel={sortModel}
+        onSortModelChange={setSortModel}
         rowModesModel={rowModesModel}
         onRowModesModelChange={setRowModesModel}
         processRowUpdate={processRowUpdate}
@@ -457,36 +595,17 @@ export default function ClassManagementDataGrid() {
           },
         }}
       />
-      <Dialog
+      <ConfirmDialog
         open={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        aria-labelledby="confirm-delete-classroom-title"
-      >
-        <DialogTitle id="confirm-delete-classroom-title">
-          {`Remove ${deleteTarget?.classroomName?.trim() || 'classroom'}`}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            This action cannot be undone. The selected classroom will be
-            permanently removed if you continue.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} disabled={isDeleting}>
-            Cancel
-          </Button>
-          <span>
-            <Button
-              onClick={handleConfirmDelete}
-              color="error"
-              disabled={isDeleting}
-              variant="contained"
-            >
-              {isDeleting ? 'Deleting…' : 'Delete'}
-            </Button>
-          </span>
-        </DialogActions>
-      </Dialog>
+        onCancel={handleCloseDeleteDialog}
+        onConfirm={handleConfirmDelete}
+        title={`Remove ${deleteTarget?.classroomName?.trim() || 'classroom'}`}
+        description="This action cannot be undone. The selected classroom will be permanently removed if you continue."
+        confirmText={isDeleting ? 'Deleting…' : 'Delete'}
+        disableCancel={isDeleting}
+        disableConfirm={isDeleting}
+        confirmButtonProps={{ variant: 'contained' }}
+      />
     </>
   );
 }

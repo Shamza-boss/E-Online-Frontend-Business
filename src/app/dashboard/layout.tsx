@@ -31,7 +31,6 @@ export default function DashboardLayout({
           <Box
             sx={{
               width: '100%',
-              maxWidth: { sm: '100%', md: '1700px' },
               height: '100%',
               display: 'flex',
               flexDirection: 'column',

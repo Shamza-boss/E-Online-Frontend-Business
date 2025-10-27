@@ -26,7 +26,6 @@ export default function EDataGrid(
         flex: isMobile ? 'none' : 1, // Disable flex on mobile
         boxSizing: 'border-box',
         height: '100%',
-        maxHeight: 'calc(80vh - 42px)',
         width: isMobile ? '100%' : 'auto', // Full width on mobile
         minHeight: isMobile ? 'auto' : 0, // Remove min-height constraint on mobile
       }}

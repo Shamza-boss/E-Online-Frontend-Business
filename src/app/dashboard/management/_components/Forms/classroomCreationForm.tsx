@@ -31,7 +31,8 @@ import { classroomSchema } from '@/app/_lib/schemas/management';
 import { SubmitClassroom } from './submitClassroom';
 import { getAllAcademics } from '@/app/_lib/actions/academics';
 import { getAllSubjects } from '@/app/_lib/actions/subjects';
-import { getAllUsers } from '@/app/_lib/actions/users';
+import { getUsers } from '@/app/_lib/actions/users';
+import { PagedResult } from '@/app/_lib/interfaces/pagination';
 import { uploadTextbook } from '@/app/_lib/actions/storage';
 
 const steps = ['Textbook Upload', 'Classroom Details'];
@@ -46,9 +47,17 @@ export default function ClassroomCreationStepper() {
     getAllSubjects,
     { revalidateOnMount: true }
   );
-  const { data: users, isLoading: usersLoading } = useSWR<UserDto[]>(
-    'users',
-    getAllUsers,
+  const { data: usersResult, isLoading: usersLoading } = useSWR<
+    PagedResult<UserDto>
+  >(
+    ['users', 'instructors'],
+    () =>
+      getUsers({
+        pageNumber: 1,
+        pageSize: 100,
+        sortBy: 'lastName',
+        sortDirection: 'asc',
+      }),
     { revalidateOnMount: false }
   );
 
@@ -85,7 +94,8 @@ export default function ClassroomCreationStepper() {
   const [textbookPresignedGet, setTextbookPresignedGet] = useState('');
 
   // Filter only trainers
-  const teachers = users?.filter((u) => u.role === UserRole.Instructor) ?? [];
+  const teachers =
+    usersResult?.items.filter((u) => u.role === UserRole.Instructor) ?? [];
 
   // handle file selection & upload
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

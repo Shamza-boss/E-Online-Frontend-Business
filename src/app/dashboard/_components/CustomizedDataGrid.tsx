@@ -95,7 +95,7 @@ export default function CustomizedDataGrid({
 
   return (
     <DataGrid
-      checkboxSelection
+      checkboxSelection={false}
       rows={rows}
       columns={columns}
       getRowClassName={(params) =>
@@ -106,7 +106,6 @@ export default function CustomizedDataGrid({
       }}
       pageSizeOptions={[10, 20, 50]}
       loading={isLoading}
-      density="compact"
       sx={{
         '& .MuiDataGrid-root': {
           overflow: 'auto',

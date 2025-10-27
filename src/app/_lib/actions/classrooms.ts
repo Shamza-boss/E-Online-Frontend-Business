@@ -9,6 +9,8 @@ import {
 import { redirect } from 'next/navigation';
 import { serverFetch } from '../serverFetch';
 import { auth } from '@/auth';
+import { PagedResult, PaginationParams } from '../interfaces/pagination';
+import { fetchPaginatedResource } from '../services/paginationService';
 
 export async function createClassroom(classroom: ClassDto): Promise<any> {
   return serverFetch('/classrooms', {
@@ -37,6 +39,15 @@ export async function getAllClassroomsAndData(): Promise<
   ClassroomDetailsDto[]
 > {
   return serverFetch<ClassroomDetailsDto[]>('/classrooms/details');
+}
+
+export async function getClassroomsAndData(
+  params?: PaginationParams
+): Promise<PagedResult<ClassroomDetailsDto>> {
+  return fetchPaginatedResource<ClassroomDetailsDto>(
+    '/classrooms/details',
+    params
+  );
 }
 
 export async function getAllUserClassrooms(): Promise<ClassroomDetailsDto[]> {
