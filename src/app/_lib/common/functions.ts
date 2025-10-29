@@ -24,7 +24,6 @@ export const roleOptions = [
   { value: UserRole.Admin, label: 'Admin' },
   { value: UserRole.Trainee, label: 'Trainee' },
   { value: UserRole.Instructor, label: 'Instructor' },
-  { value: UserRole.PlatformAdmin, label: 'Platform Admin' },
 ];
 
 export function getAllowedRoles(editorRole: UserRole, targetRow: UserDto) {

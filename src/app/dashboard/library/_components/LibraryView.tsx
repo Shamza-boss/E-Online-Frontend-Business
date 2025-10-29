@@ -1,12 +1,15 @@
 'use client';
+import NextImage from '@/app/_lib/components/shared-theme/NextImage';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
   Card,
+  CardActionArea,
   CardActions,
   CardContent,
+  CardMedia,
   Chip,
   CircularProgress,
   Dialog,
@@ -50,9 +53,17 @@ import {
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 
+import { generatePdfThumbnail } from '@/app/_lib/utils/pdfThumbnail';
+import {
+  StyledCard,
+  StyledCardContent,
+} from '@/app/_lib/components/website/components/styled/StyledComponents';
+
 interface ManagedFile extends FileDto {}
 
-const extractName = (fileKey: string) => fileKey.split('/').pop() ?? fileKey;
+const extractName = (fileKey: string) => {
+  return fileKey.split('_').pop() ?? fileKey;
+};
 
 export default function LibraryView() {
   const { data: session } = useSession();
@@ -92,6 +103,9 @@ export default function LibraryView() {
   const [uploadIsPublic, setUploadIsPublic] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  // Store generated thumbnail as data URL
+  const [uploadThumbnail, setUploadThumbnail] = useState<string | null>(null);
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
 
   const institutionId =
     typeof session?.user?.institutionId === 'string'
@@ -115,11 +129,22 @@ export default function LibraryView() {
     }
   };
 
-  const handleFileSelection: React.ChangeEventHandler<HTMLInputElement> = (
-    event
-  ) => {
+  const handleFileSelection: React.ChangeEventHandler<
+    HTMLInputElement
+  > = async (event) => {
     const file = event.target.files?.[0] ?? null;
     setSelectedUploadFile(file);
+    setUploadThumbnail(null);
+    if (file) {
+      try {
+        // Generate thumbnail from first page
+        const thumb = await generatePdfThumbnail(file);
+        setUploadThumbnail(thumb);
+      } catch (err) {
+        console.error('Failed to generate PDF thumbnail', err);
+        setUploadThumbnail(null);
+      }
+    }
   };
 
   const handleUpload = async () => {
@@ -130,14 +155,20 @@ export default function LibraryView() {
 
     setUploading(true);
     try {
+      // Upload PDF file
       const uploadResult = await uploadTextbook(selectedUploadFile);
-      await registerRepositoryFile({
+      // Prepare payload for backend (add thumbnail if supported)
+      const payload: any = {
         fileKey: uploadResult.key,
         url: uploadResult.proxyDownload,
         hash: uploadResult.hash,
         isPublic: uploadIsPublic,
         institutionId,
-      });
+      };
+      if (uploadThumbnail) {
+        payload.thumbnail = uploadThumbnail;
+      }
+      await registerRepositoryFile(payload);
 
       showAlert(
         'success',
@@ -145,6 +176,7 @@ export default function LibraryView() {
       );
       setSelectedUploadFile(null);
       setUploadIsPublic(true);
+      setUploadThumbnail(null);
       await mutate();
     } catch (error) {
       console.error('[UploadRepositoryFile]', error);
@@ -153,6 +185,34 @@ export default function LibraryView() {
       setUploading(false);
     }
   };
+
+  useEffect(() => {
+    async function generateMissingThumbnails() {
+      if (!files.length) return;
+      const newThumbs: Record<string, string> = {};
+      await Promise.all(
+        files.map(async (file) => {
+          if (!thumbnails[file.id]) {
+            try {
+              const response = await fetch(file.url);
+              const blob = await response.blob();
+              const pdfFile = new File(
+                [blob],
+                file.fileName || extractName(file.fileKey),
+                { type: blob.type }
+              );
+              const thumb = await generatePdfThumbnail(pdfFile, 500, 560); // ClassCard size
+              newThumbs[file.id] = thumb;
+            } catch {}
+          }
+        })
+      );
+      if (Object.keys(newThumbs).length > 0)
+        setThumbnails((prev) => ({ ...prev, ...newThumbs }));
+    }
+    generateMissingThumbnails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files.map((f) => f.id).join(','), files.map((f) => f.url).join(',')]);
 
   return (
     <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 4 }, width: '100%' }}>
@@ -214,47 +274,55 @@ export default function LibraryView() {
         <Grid container spacing={2} columns={12}>
           {files.map((file) => (
             <Grid key={file.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-              <Card
-                variant="outlined"
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Stack spacing={1.5}>
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="h6" sx={{ pr: 1 }} noWrap>
-                        {extractName(file.fileKey)}
-                      </Typography>
-                      <Chip
-                        size="small"
-                        label={file.isPublic ? 'Public' : 'Private'}
-                        color={file.isPublic ? 'success' : 'default'}
-                        icon={file.isPublic ? <PublicIcon /> : <LockIcon />}
-                      />
-                    </Stack>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ wordBreak: 'break-all' }}
-                    >
-                      {file.hash}
+              <StyledCard variant="outlined" tabIndex={0}>
+                <CardActionArea sx={{ flexGrow: 1 }}>
+                  <CardMedia
+                    component="img"
+                    alt={`${extractName(file.fileKey)} image`}
+                    src={thumbnails[file.id]}
+                    sx={{
+                      aspectRatio: '16 / 9',
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                    }}
+                  />
+                  <StyledCardContent sx={{ padding: 2 }}>
+                    <Typography variant="h6" sx={{ pr: 1, minWidth: 0 }} noWrap>
+                      {file.fileName || extractName(file.fileKey)}
                     </Typography>
-                  </Stack>
-                </CardContent>
-                <CardActions sx={{ px: 2, pb: 2 }}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={<VisibilityIcon />}
-                    onClick={() => setPreviewFile(file)}
+                  </StyledCardContent>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: 2,
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '16px',
+                    }}
                   >
-                    View
-                  </Button>
-                </CardActions>
-              </Card>
+                    <Chip
+                      size="small"
+                      label={file.isPublic ? 'Public' : 'Private'}
+                      color={file.isPublic ? 'success' : 'default'}
+                      icon={file.isPublic ? <PublicIcon /> : <LockIcon />}
+                    />
+                    {file.sizeBytes != null && (
+                      <Typography variant="body2" color="text.secondary">
+                        {(file.sizeBytes / 1024 / 1024).toFixed(2)} MB
+                      </Typography>
+                    )}
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      startIcon={<VisibilityIcon />}
+                      onClick={() => setPreviewFile(file)}
+                    >
+                      View
+                    </Button>
+                  </Box>
+                </CardActionArea>
+              </StyledCard>
             </Grid>
           ))}
         </Grid>
@@ -307,25 +375,44 @@ export default function LibraryView() {
                       files.map((file) => (
                         <TableRow key={file.id} hover>
                           <TableCell sx={{ maxWidth: 220 }}>
-                            <Typography variant="body2" noWrap>
-                              {extractName(file.fileKey)}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ wordBreak: 'break-all' }}
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
                             >
-                              {file.fileKey}
-                            </Typography>
+                              {file.thumbnail ? (
+                                <NextImage
+                                  src={file.thumbnail}
+                                  alt="PDF thumbnail"
+                                  width={32}
+                                  height={44}
+                                  style={{
+                                    borderRadius: 3,
+                                    boxShadow: '0 1px 4px #0002',
+                                    objectFit: 'cover',
+                                  }}
+                                  unoptimized
+                                />
+                              ) : (
+                                <LibraryBooksIcon
+                                  color="primary"
+                                  sx={{ fontSize: 24 }}
+                                />
+                              )}
+                              <Typography variant="body2" noWrap>
+                                {file.fileName || extractName(file.fileKey)}
+                              </Typography>
+                            </Stack>
                           </TableCell>
-                          <TableCell sx={{ maxWidth: 240 }}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ wordBreak: 'break-all' }}
-                            >
-                              {file.hash}
-                            </Typography>
+                          <TableCell sx={{ maxWidth: 120 }}>
+                            {file.sizeBytes != null ? (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {(file.sizeBytes / 1024 / 1024).toFixed(2)} MB
+                              </Typography>
+                            ) : null}
                           </TableCell>
                           <TableCell align="center">
                             <Switch
@@ -391,13 +478,29 @@ export default function LibraryView() {
                   />
                 </Button>
                 {selectedUploadFile && (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ wordBreak: 'break-all' }}
-                  >
-                    {selectedUploadFile.name}
-                  </Typography>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ wordBreak: 'break-all' }}
+                    >
+                      {selectedUploadFile.name}
+                    </Typography>
+                    {uploadThumbnail && (
+                      <NextImage
+                        src={uploadThumbnail}
+                        alt="PDF thumbnail preview"
+                        width={48}
+                        height={67}
+                        style={{
+                          borderRadius: 4,
+                          boxShadow: '0 1px 4px #0002',
+                          objectFit: 'cover',
+                        }}
+                        unoptimized
+                      />
+                    )}
+                  </Stack>
                 )}
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Switch
@@ -432,7 +535,9 @@ export default function LibraryView() {
         fullWidth
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', pr: 6 }}>
-          {previewFile ? extractName(previewFile.fileKey) : 'Preview'}
+          {previewFile
+            ? previewFile.fileName || extractName(previewFile.fileKey)
+            : 'Preview'}
           <IconButton
             aria-label="Close preview"
             onClick={() => setPreviewFile(null)}
@@ -447,14 +552,15 @@ export default function LibraryView() {
             p: 0,
             height: { xs: '85vh', md: '75vh' },
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
+            gap: 0,
           }}
         >
-          {previewFile && (
-            <Box sx={{ flex: 1, minHeight: 0 }}>
+          <Box sx={{ flex: 1, minHeight: 0, p: 0 }}>
+            {previewFile && (
               <PDFViewer fileUrl={previewFile.url} initialPage={1} />
-            </Box>
-          )}
+            )}
+          </Box>
         </DialogContent>
       </Dialog>
     </Box>

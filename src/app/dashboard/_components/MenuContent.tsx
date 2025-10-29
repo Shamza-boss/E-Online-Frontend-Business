@@ -36,8 +36,8 @@ const mainListItems = [
   { route: 'institutions', icon: <DomainAddIcon /> }, // Institutions route
   { route: 'management', icon: <ManageAccountsIcon /> },
   { route: 'manage-courses', icon: <AssignmentIcon /> },
-  { route: 'library', icon: <LocalLibraryIcon /> },
   { route: 'courses', icon: <SchoolIcon /> },
+  { route: 'library', icon: <LocalLibraryIcon /> },
 ];
 
 const secondaryListItems = [

@@ -27,6 +27,10 @@ export interface FileDto {
   hash: string;
   isPublic: boolean;
   institutionId: string;
+  // New fields for metadata and thumbnail
+  thumbnail?: string | null; // Data URL or URL to the thumbnail image
+  fileName?: string | null;
+  sizeBytes?: number | null;
 }
 
 export interface VideoUploadResponse {
