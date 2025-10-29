@@ -80,7 +80,7 @@ export default function CustomizedDataGrid({
       minWidth: 150,
       renderCell: (params) => {
         if (params.value == null) return 'N/A';
-        const percentage = params.value * 100; // Convert decimal to percentage
+        const percentage = params.value; // Convert decimal to percentage
         return (
           <Chip
             size="small"
