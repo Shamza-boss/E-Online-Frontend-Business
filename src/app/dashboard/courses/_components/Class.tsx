@@ -225,7 +225,15 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                       </TabList>
                     </Box>
                     <DataGridTabPanel value="1">
-                      <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+                      <Box
+                        sx={{
+                          flex: 1,
+                          overflow: 'auto',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          minHeight: 0,
+                        }}
+                      >
                         <SeeAssignmentsAndPreview
                           classId={classId}
                           canEdit={!isElevated}
