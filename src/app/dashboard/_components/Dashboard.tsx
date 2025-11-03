@@ -60,7 +60,6 @@ export default function DashboardComponent(props: any) {
                 flexGrow: 1,
                 alignItems: 'stretch',
                 p: 2,
-                mt: { xs: 8, md: 0 },
                 overflow: 'hidden',
               }}
             >

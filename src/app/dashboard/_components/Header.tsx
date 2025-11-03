@@ -14,7 +14,6 @@ export default function Header() {
         width: '100%',
         alignItems: { xs: 'flex-start', md: 'center' },
         justifyContent: 'space-between',
-        pb: 1,
       }}
       spacing={1}
     >

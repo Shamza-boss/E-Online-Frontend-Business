@@ -43,15 +43,14 @@ export default function SideMenu() {
       <Box
         sx={{
           display: 'flex',
-          mt: 'calc(var(--template-frame-height, 0px) + 4px)',
-          p: 1,
+          p: 2.5,
         }}
       >
         <Typography
           variant="h6"
           noWrap
           component="div"
-          sx={{ fontWeight: 600 }}
+          sx={{ fontWeight: 500 }}
         >
           {institutionName}
         </Typography>
