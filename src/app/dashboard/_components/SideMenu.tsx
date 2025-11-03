@@ -44,7 +44,7 @@ export default function SideMenu() {
         sx={{
           display: 'flex',
           mt: 'calc(var(--template-frame-height, 0px) + 4px)',
-          p: 1.5,
+          p: 1,
         }}
       >
         <Typography
@@ -77,8 +77,6 @@ export default function SideMenu() {
           >
             {userProfileName}
           </Typography>
-
-          {/* may make the below user school name plus role */}
           <Typography variant="caption" sx={{ color: 'text.secondary' }} noWrap>
             <RoleChip role={userProfleRole} />
           </Typography>

@@ -28,7 +28,7 @@ interface ModulesPanelProps {
   onAfterChange?: () => void;
 }
 
-const ModulesPanel: React.FC<ModulesPanelProps> = ({
+const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
   teacherId,
   classroomId,
   refreshIndex,
@@ -298,4 +298,4 @@ const ModulesPanel: React.FC<ModulesPanelProps> = ({
   );
 };
 
-export default ModulesPanel;
+export default ModulesDataGrid;

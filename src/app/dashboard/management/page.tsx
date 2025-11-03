@@ -4,7 +4,6 @@ import { Box, Button, IconButton, Stack, Tab, Tooltip } from '@mui/material';
 import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
-import TabPanel from '@mui/lab/TabPanel';
 import CreateClassroomModal from './_components/Modals/CreateClassroomModal';
 import RegisterPersonModal from './_components/Modals/RegisterPersonModal';
 import ClassManagementDataGrid from './_components/Tables/classManagementDataGrid';
@@ -15,6 +14,7 @@ import { useSession } from 'next-auth/react';
 import CreateSubjectModal from './_components/Modals/CreateSubjectModal';
 import CreateAcademicsModal from './_components/Modals/CreateAcademicsModal';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
 
 const ClassesManagement = () => {
   const { data: session } = useSession();
@@ -151,17 +151,21 @@ const ClassesManagement = () => {
       </Box>
       <Box
         sx={{
-          flex: 1, // Allow this box to grow and fill the available space
+          flex: '1 1 0%',
           display: 'flex',
           overflow: 'hidden',
+          minHeight: 0,
         }}
       >
         <OutlinedWrapper
-          display="flex"
-          flexDirection="column"
-          flexGrow={1}
-          width="100%"
-          overflow="hidden"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            width: '100%',
+            overflow: 'hidden',
+            minHeight: 0,
+          }}
         >
           <TabContext value={value}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -173,12 +177,26 @@ const ClassesManagement = () => {
                 <Tab label="Courses" value="2" />
               </TabList>
             </Box>
-            <TabPanel value="1" sx={{ padding: 0, height: '100%' }}>
-              <UserManagementDataGrid active={value === '1'} />
-            </TabPanel>
-            <TabPanel value="2" sx={{ padding: 0, height: '100%' }}>
-              <ClassManagementDataGrid active={value === '2'} />
-            </TabPanel>
+            <DataGridTabPanel
+              value="1"
+              sx={{
+                flex: 1,
+              }}
+            >
+              <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+                <UserManagementDataGrid active={value === '1'} />
+              </Box>
+            </DataGridTabPanel>
+            <DataGridTabPanel
+              value="2"
+              sx={{
+                flex: 1,
+              }}
+            >
+              <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+                <ClassManagementDataGrid active={value === '2'} />
+              </Box>
+            </DataGridTabPanel>
           </TabContext>
         </OutlinedWrapper>
       </Box>

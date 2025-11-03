@@ -55,12 +55,11 @@ export default function DashboardComponent(props: any) {
         >
           <SearchProvider>
             <Stack
-              spacing={2}
+              spacing={1}
               sx={{
                 flexGrow: 1,
                 alignItems: 'stretch',
-                mx: { xs: 3, md: '5%' },
-                pb: 5,
+                p: 2,
                 mt: { xs: 8, md: 0 },
                 overflow: 'hidden',
               }}

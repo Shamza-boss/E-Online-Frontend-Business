@@ -14,9 +14,9 @@ export default function Header() {
         width: '100%',
         alignItems: { xs: 'flex-start', md: 'center' },
         justifyContent: 'space-between',
-        pt: 1.5,
+        pb: 1,
       }}
-      spacing={2}
+      spacing={1}
     >
       <NavbarBreadcrumbs />
       <Stack direction="row" sx={{ gap: 1 }}>

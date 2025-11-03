@@ -80,7 +80,6 @@ export async function getUsers(
   params?: PaginationParams
 ): Promise<PagedResult<UserDto>> {
   const normalized = normalizePaginationParams(params);
-  console.log('Fetching users with params:', normalized);
   return fetchPaginatedResource<UserDto>('/users', normalized);
 }
 

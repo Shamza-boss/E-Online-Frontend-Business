@@ -30,6 +30,7 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import { OutlinedWrapper } from '../../../_lib/components/shared-theme/customizations/OutlinedWrapper';
 import { GutterStyles } from '@/app/_lib/components/shared-theme/customizations/SplitterComponent';
+import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
 
 interface Props {
   classId: string;
@@ -223,23 +224,15 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                         <Tab label="Resources" value="2" />
                       </TabList>
                     </Box>
-                    <ConditionalTabPanel value={tabVal} index="1">
-                      <Box
-                        sx={{
-                          flex: 1,
-                          overflow: 'auto',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 0,
-                        }}
-                      >
+                    <DataGridTabPanel value="1">
+                      <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
                         <SeeAssignmentsAndPreview
                           classId={classId}
                           canEdit={!isElevated}
                         />
                       </Box>
-                    </ConditionalTabPanel>
-                    <ConditionalTabPanel value={tabVal} index="2">
+                    </DataGridTabPanel>
+                    <DataGridTabPanel value="2">
                       <PDFViewer
                         key={`pdf-${currentPage}-${pdfKey}`}
                         fileUrl={textbookUrl}
@@ -250,7 +243,7 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                         onZoomChange={setZoom}
                         onOutlineChange={setOutline}
                       />
-                    </ConditionalTabPanel>
+                    </DataGridTabPanel>
                   </TabContext>
                 </OutlinedWrapper>
               </Splitter>

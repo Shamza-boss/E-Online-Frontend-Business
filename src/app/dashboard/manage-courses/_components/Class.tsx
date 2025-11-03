@@ -23,8 +23,9 @@ import { GridRowId } from '@mui/x-data-grid';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { useSession } from 'next-auth/react';
 import ConditionalTabPanel from '@/app/_lib/components/conditionalTabPanel';
-import ModulesPanel from './DraftModulesPanel';
+import ModulesDataGrid from './DraftModulesDatagrid';
 import StudentAssignmentsModal from './Modals/StudentAssignmentsModal';
+import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
 
 interface StudentManagementComponentProps {
   userData: UserDto[] | undefined;
@@ -163,11 +164,14 @@ export default function StudentManagementComponent({
         }}
       >
         <OutlinedWrapper
-          display="flex"
-          flexDirection="column"
-          flexGrow={1}
-          width="100%"
-          overflow="hidden"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            width: '100%',
+            overflow: 'hidden',
+            minHeight: 0,
+          }}
         >
           <DragDropFormBuilderModal
             open={builderOpen}
@@ -184,35 +188,19 @@ export default function StudentManagementComponent({
               </TabList>
             </Box>
 
-            <ConditionalTabPanel value={value} index="1">
-              <Box
-                sx={{
-                  flex: 1,
-                  overflow: 'auto',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minHeight: 0,
-                }}
-              >
+            <DataGridTabPanel value="1">
+              <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
                 <StudentDatagridTable
                   userData={userData}
                   usersLoading={false}
                   handleSeeHomeworkClick={handleSeeHomeworkClick}
                 />
               </Box>
-            </ConditionalTabPanel>
+            </DataGridTabPanel>
 
-            <ConditionalTabPanel value={value} index="2">
-              <Box
-                sx={{
-                  flex: 1,
-                  overflow: 'auto',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minHeight: 0,
-                }}
-              >
-                <ModulesPanel
+            <DataGridTabPanel value="2">
+              <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+                <ModulesDataGrid
                   teacherId={classDetails.teacherId}
                   classroomId={classroomId}
                   refreshIndex={modulesRefreshIndex}
@@ -222,7 +210,7 @@ export default function StudentManagementComponent({
                   }
                 />
               </Box>
-            </ConditionalTabPanel>
+            </DataGridTabPanel>
           </TabContext>
         </OutlinedWrapper>
       </Box>

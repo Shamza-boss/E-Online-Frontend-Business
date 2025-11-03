@@ -238,7 +238,7 @@ export default function UserManagementDataGrid({
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',
-      width: 110,
+      minWidth: 110,
       getActions: ({ id, row }: GridRowParams<UserDto>) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
         if (isInEditMode) {
