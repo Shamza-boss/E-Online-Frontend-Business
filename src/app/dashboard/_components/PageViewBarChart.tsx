@@ -197,14 +197,13 @@ export default function PageViewsBarChart({
           colors={colorPalette}
           xAxis={[
             {
-              scaleType: 'band' as const,
               categoryGapRatio: 0.5,
               data: months,
             },
           ]}
           yAxis={[
             {
-              label: 'Percentage of Trainees',
+              label: 'Proportion of Trainees (%)',
               min: 0,
               max: chartMaxValue,
               tickInterval: yAxisTicks,
@@ -215,6 +214,7 @@ export default function PageViewsBarChart({
             id: `series-${index}` as const,
             label: s.label,
             data: s.data,
+            stack: 'total',
             valueFormatter: (value: number | null, context) => {
               if (value == null) {
                 return null;

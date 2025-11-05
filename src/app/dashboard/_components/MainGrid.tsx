@@ -90,54 +90,53 @@ export default function MainGrid() {
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-      {/* cards */}
-      <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        Overview
-      </Typography>
-      <Grid
-        container
-        spacing={2}
-        columns={12}
-        sx={{
-          mb: (theme) => theme.spacing(2),
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        {institutionStats.map((card, index) => (
-          <Grid key={index} size={{ xs: 12, sm: 6, lg: 3 }}>
-            <StatCard {...card} />
-          </Grid>
-        ))}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ActiveSubjectsChart
-            isLoading={isLoading}
-            labels={institutionData?.mostActiveSubjects?.labels || []}
-            series={institutionData?.mostActiveSubjects?.series || []}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <PageViewsBarChart
-            isLoading={isLoading}
-            months={institutionData?.gradePerformanceMonths || []}
-            series={institutionData?.gradePerformance || []}
-            trend={institutionData?.gradePerformanceTrends?.color || 'default'}
-            numberOfTrainees={institutionData?.students?.total || 0}
-            average={
-              institutionData?.gradePerformanceTrends?.average != null
-                ? `+${institutionData.gradePerformanceTrends.average.toFixed(1)}%`
-                : '+0%'
-            }
-          />
-        </Grid>
-        <Grid size={{ xs: 12, lg: 12 }} sx={{ flexGrow: 1 }}>
-          <CustomizedDataGrid
-            rows={institutionData?.recentHomeworkStats || []}
-            isLoading={isLoading}
-          />
-        </Grid>
+    <Grid
+      container
+      spacing={2}
+      columns={12}
+      sx={{
+        mb: (theme) => theme.spacing(2),
+        display: 'flex',
+        flexDirection: 'row',
+      }}
+    >
+      <Grid size={{ xs: 12 }}>
+        <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+          Overview
+        </Typography>
       </Grid>
-    </Box>
+      {institutionStats.map((card, index) => (
+        <Grid key={index} size={{ xs: 12, sm: 6, lg: 3 }}>
+          <StatCard {...card} />
+        </Grid>
+      ))}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ActiveSubjectsChart
+          isLoading={isLoading}
+          labels={institutionData?.mostActiveSubjects?.labels || []}
+          series={institutionData?.mostActiveSubjects?.series || []}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <PageViewsBarChart
+          isLoading={isLoading}
+          months={institutionData?.gradePerformanceMonths || []}
+          series={institutionData?.gradePerformance || []}
+          trend={institutionData?.gradePerformanceTrends?.color || 'default'}
+          numberOfTrainees={institutionData?.students?.total || 0}
+          average={
+            institutionData?.gradePerformanceTrends?.average != null
+              ? `+${institutionData.gradePerformanceTrends.average.toFixed(1)}%`
+              : '+0%'
+          }
+        />
+      </Grid>
+      <Grid size={{ xs: 12, lg: 12 }} sx={{ flexGrow: 1 }}>
+        <CustomizedDataGrid
+          rows={institutionData?.recentHomeworkStats || []}
+          isLoading={isLoading}
+        />
+      </Grid>
+    </Grid>
   );
 }
