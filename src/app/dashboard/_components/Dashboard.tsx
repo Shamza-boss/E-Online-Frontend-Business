@@ -59,7 +59,7 @@ export default function DashboardComponent(props: any) {
               sx={{
                 flexGrow: 1,
                 alignItems: 'stretch',
-                pb: 1,
+                p: 1,
                 mt: { xs: 8, md: 0 },
                 overflow: 'hidden',
               }}
