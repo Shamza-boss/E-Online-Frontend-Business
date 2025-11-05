@@ -26,6 +26,7 @@ import { SubmittedHomework, Question } from '../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
 import { VideoPlayer } from '../../../../_lib/components/video/VideoPlayer';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 
 const formatFileSize = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return null;
@@ -35,6 +36,12 @@ const formatFileSize = (bytes?: number | null) => {
   }
   return `${(bytes / 1024).toFixed(1)} KB`;
 };
+
+const extractPlainText = (html?: string | null) =>
+  (html ?? '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 interface HomeworkReviewProps {
   submittedHomework: SubmittedHomework;
@@ -142,10 +149,35 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
       const sectionWeight = computeTotalWeight(node);
       return (
         <Box key={node.id} sx={{ my: 2, ml: indent }}>
-          <Typography variant={textVariant} sx={{ fontWeight: 600 }}>
-            {numbering}. {node.questionText || 'Untitled section'}
-            {sectionWeight > 0 ? ` (Total Weight: ${sectionWeight})` : ''}
-          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              alignItems: 'baseline',
+            }}
+          >
+            <Typography variant={textVariant} sx={{ fontWeight: 600 }}>
+              {numbering}.
+            </Typography>
+            <QuestionTextDisplay
+              content={node.questionText}
+              fallback="Untitled section"
+              variant={textVariant}
+              component="span"
+              fontWeight={600}
+              sx={{ flex: 1, minWidth: 0 }}
+            />
+            {sectionWeight > 0 && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                component="span"
+              >
+                (Total Weight: {sectionWeight})
+              </Typography>
+            )}
+          </Box>
           {node.type === 'video' && (
             <Box sx={{ mt: 2 }}>
               {node.video ? (
@@ -158,7 +190,10 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
             </Box>
           )}
           {node.type === 'pdf' &&
-            renderPdfAttachment(node.questionText || 'PDF section', node.pdf)}
+            renderPdfAttachment(
+              extractPlainText(node.questionText) || 'PDF section',
+              node.pdf
+            )}
           {node.subquestions.map((sub, idx) =>
             renderQuestion(sub, `${numbering}.${idx + 1}`, depth + 1)
           )}
@@ -172,9 +207,23 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
     return (
       <Box key={node.id} sx={{ my: 2, ml: indent }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <Typography variant={textVariant}>
-            {numbering}. {node.questionText || 'Untitled question'}
-          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              alignItems: 'baseline',
+            }}
+          >
+            <Typography variant={textVariant}>{numbering}.</Typography>
+            <QuestionTextDisplay
+              content={node.questionText}
+              fallback="Untitled question"
+              variant={textVariant}
+              component="span"
+              sx={{ flex: 1, minWidth: 0 }}
+            />
+          </Box>
           <Typography variant="caption" color="text.secondary">
             (Weight: {Number.isFinite(node.weight) ? node.weight : 0})
           </Typography>

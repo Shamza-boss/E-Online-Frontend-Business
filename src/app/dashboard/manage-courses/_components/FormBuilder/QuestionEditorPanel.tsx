@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useId, useRef } from 'react';
 import {
   Box,
   Button,
@@ -19,6 +21,89 @@ import { Question } from '../../../../_lib/interfaces/types';
 import { VideoUploadField } from '@/app/_lib/components/video/VideoUploadField';
 import { PdfUploadField } from '@/app/_lib/components/pdf/PdfUploadField';
 import { isChoiceType } from './questionUtils';
+import { RichTextEditor, RichTextEditorRef } from 'mui-tiptap';
+import useExtensions from '@/app/_lib/components/TipTapEditor/useExtensions';
+import EditorMenuControls from '@/app/_lib/components/TipTapEditor/EditorMenuControls';
+
+interface QuestionRichTextFieldProps {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+  minHeight?: number;
+  showToolbar?: boolean;
+}
+
+const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
+  label,
+  value,
+  placeholder,
+  onChange,
+  minHeight = 180,
+  showToolbar = true,
+}) => {
+  const fieldId = useId();
+  const editorRef = useRef<RichTextEditorRef>(null);
+  const extensions = useExtensions({ placeholder });
+  const normalizedValue = value ?? '';
+
+  useEffect(() => {
+    const editor = editorRef.current?.editor;
+    if (!editor) return;
+
+    if (!normalizedValue) {
+      if (!editor.isEmpty) {
+        editor.commands.clearContent();
+      }
+      return;
+    }
+
+    if (editor.getHTML() !== normalizedValue) {
+      editor.commands.setContent(normalizedValue, false);
+    }
+  }, [normalizedValue]);
+
+  const handleUpdate = () => {
+    const editor = editorRef.current?.editor;
+    if (!editor) return;
+
+    const html = editor.isEmpty ? '' : editor.getHTML();
+    if (html !== normalizedValue) {
+      onChange(html);
+    }
+  };
+
+  return (
+    <FormControl fullWidth margin="normal">
+      <InputLabel
+        shrink
+        htmlFor={fieldId}
+        sx={{ position: 'relative', transform: 'none', mb: 0.5 }}
+      >
+        {label}
+      </InputLabel>
+      <RichTextEditor
+        ref={editorRef}
+        content={normalizedValue}
+        extensions={extensions}
+        onUpdate={handleUpdate}
+        renderControls={showToolbar ? () => <EditorMenuControls /> : undefined}
+        immediatelyRender={false}
+        RichTextFieldProps={{
+          id: fieldId,
+          variant: 'outlined',
+          sx: {
+            mt: 1,
+            '& .MuiRichTextContent-root': {
+              minHeight,
+              px: 1,
+            },
+          },
+        }}
+      />
+    </FormControl>
+  );
+};
 
 interface QuestionEditorPanelProps {
   question?: Question;
@@ -157,14 +242,17 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
           Question {numbering}
         </Typography>
-        <TextField
+        <QuestionRichTextField
           label={depth === 1 ? 'Subquestion Text' : 'Nested Question Text'}
-          fullWidth
-          margin="normal"
-          value={sub.questionText}
-          onChange={(e) =>
-            onFieldChange(sub.id, 'questionText', e.target.value)
+          value={sub.questionText ?? ''}
+          placeholder={
+            depth === 1
+              ? 'Enter the supporting question prompt...'
+              : 'Enter the nested question prompt...'
           }
+          minHeight={depth > 1 ? 150 : 180}
+          showToolbar={depth <= 1}
+          onChange={(value) => onFieldChange(sub.id, 'questionText', value)}
         />
         <Stack spacing={2} direction="row">
           <FormControl fullWidth margin="normal">
@@ -270,13 +358,12 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           )}
         </>
       ) : (
-        <TextField
+        <QuestionRichTextField
           label="Question Text"
-          fullWidth
-          margin="normal"
-          value={question.questionText}
-          onChange={(e) =>
-            onFieldChange(question.id, 'questionText', e.target.value)
+          value={question.questionText ?? ''}
+          placeholder="Enter the question prompt..."
+          onChange={(value) =>
+            onFieldChange(question.id, 'questionText', value)
           }
         />
       )}

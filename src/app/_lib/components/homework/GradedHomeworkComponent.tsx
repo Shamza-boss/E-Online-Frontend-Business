@@ -25,6 +25,7 @@ import {
 import { MathJaxContext } from 'better-react-mathjax';
 import { VideoPlayer } from '../video/VideoPlayer';
 import PDFViewer from '../PDFViewer/PDFViewer';
+import QuestionTextDisplay from '../TipTapEditor/QuestionTextDisplay';
 
 const mathJaxConfig = {
   tex: {
@@ -79,9 +80,32 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
 
       return (
         <Box key={question.id} sx={{ ml: indent, my: 2 }}>
-          <Typography variant={textVariant}>
-            {numbering}. {question.questionText} (Est: {question.weight})
-          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              alignItems: 'baseline',
+            }}
+          >
+            <Typography variant={textVariant} sx={{ fontWeight: 600 }}>
+              {numbering}.
+            </Typography>
+            <QuestionTextDisplay
+              content={question.questionText}
+              fallback="Untitled section"
+              variant={textVariant}
+              component="span"
+              fontWeight={600}
+            />
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              component="span"
+            >
+              (Est: {question.weight})
+            </Typography>
+          </Box>
           {question.type === 'video' && (
             <Box sx={{ mt: 2 }}>
               {question.video ? (
@@ -171,9 +195,24 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
     return (
       <Box key={question.id} sx={{ ml: indent, my: 2 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Typography variant={textVariant}>
-            {numbering}. {question.questionText}
-          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              alignItems: 'baseline',
+            }}
+          >
+            <Typography variant={textVariant}>
+              {numbering}.
+            </Typography>
+            <QuestionTextDisplay
+              content={question.questionText}
+              fallback="Untitled question"
+              variant={textVariant}
+              component="span"
+            />
+          </Box>
           <Typography variant="caption" color="text.secondary">
             (Weight: {question.weight})
           </Typography>
