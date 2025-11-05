@@ -7,10 +7,6 @@ import {
   Typography,
   Button,
   Paper,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  Checkbox,
   Box,
   Stack,
   Pagination,
@@ -24,9 +20,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { SubmittedHomework, Question } from '../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
-import { VideoPlayer } from '../../../../_lib/components/video/VideoPlayer';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
-import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
+import QuestionTreeRenderer from '@/app/_lib/components/question/QuestionTreeRenderer';
 
 const formatFileSize = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return null;
@@ -36,12 +31,6 @@ const formatFileSize = (bytes?: number | null) => {
   }
   return `${(bytes / 1024).toFixed(1)} KB`;
 };
-
-const extractPlainText = (html?: string | null) =>
-  (html ?? '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 
 interface HomeworkReviewProps {
   submittedHomework: SubmittedHomework;
@@ -69,7 +58,7 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
       );
     }
 
-    return Number.isFinite(node.weight) ? node.weight : 0;
+    return Number.isFinite(node.weight) ? Number(node.weight) : 0;
   };
 
   const openPdfPreview = (fallbackTitle: string, pdf?: Question['pdf']) => {
@@ -137,176 +126,6 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
     );
   };
 
-  const renderQuestion = (
-    node: Question,
-    numbering: string,
-    depth: number = 1
-  ): React.ReactNode => {
-    const indent = depth > 1 ? (depth - 1) * 2 : 0;
-    const textVariant = depth === 1 ? 'h6' : 'subtitle1';
-
-    if (node.subquestions && node.subquestions.length > 0) {
-      const sectionWeight = computeTotalWeight(node);
-      return (
-        <Box key={node.id} sx={{ my: 2, ml: indent }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
-              alignItems: 'baseline',
-            }}
-          >
-            <Typography variant={textVariant} sx={{ fontWeight: 600 }}>
-              {numbering}.
-            </Typography>
-            <QuestionTextDisplay
-              content={node.questionText}
-              fallback="Untitled section"
-              variant={textVariant}
-              component="span"
-              fontWeight={600}
-              sx={{ flex: 1, minWidth: 0 }}
-            />
-            {sectionWeight > 0 && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                component="span"
-              >
-                (Total Weight: {sectionWeight})
-              </Typography>
-            )}
-          </Box>
-          {node.type === 'video' && (
-            <Box sx={{ mt: 2 }}>
-              {node.video ? (
-                <VideoPlayer video={node.video} />
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Video unavailable
-                </Typography>
-              )}
-            </Box>
-          )}
-          {node.type === 'pdf' &&
-            renderPdfAttachment(
-              extractPlainText(node.questionText) || 'PDF section',
-              node.pdf
-            )}
-          {node.subquestions.map((sub, idx) =>
-            renderQuestion(sub, `${numbering}.${idx + 1}`, depth + 1)
-          )}
-        </Box>
-      );
-    }
-
-    const options = node.options ?? [];
-    const answer = answers[node.id];
-
-    return (
-      <Box key={node.id} sx={{ my: 2, ml: indent }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
-              alignItems: 'baseline',
-            }}
-          >
-            <Typography variant={textVariant}>{numbering}.</Typography>
-            <QuestionTextDisplay
-              content={node.questionText}
-              fallback="Untitled question"
-              variant={textVariant}
-              component="span"
-              sx={{ flex: 1, minWidth: 0 }}
-            />
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            (Weight: {Number.isFinite(node.weight) ? node.weight : 0})
-          </Typography>
-        </Box>
-        <Box sx={{ mt: 1 }}>
-          {(() => {
-            if (node.type === 'radio') {
-              return (
-                <RadioGroup value={answer || ''} row>
-                  {options.length > 0 ? (
-                    options.map((option, idx) => (
-                      <FormControlLabel
-                        key={idx}
-                        value={option}
-                        control={<Radio disabled />}
-                        label={option || `Option ${idx + 1}`}
-                      />
-                    ))
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      Options will appear here
-                    </Typography>
-                  )}
-                </RadioGroup>
-              );
-            }
-
-            if (node.type === 'multi-select') {
-              return options.length > 0 ? (
-                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                  {options.map((option, idx) => (
-                    <FormControlLabel
-                      key={idx}
-                      control={
-                        <Checkbox
-                          disabled
-                          checked={
-                            Array.isArray(answer)
-                              ? answer.includes(option)
-                              : false
-                          }
-                        />
-                      }
-                      label={option || `Option ${idx + 1}`}
-                    />
-                  ))}
-                </Box>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Options will appear here
-                </Typography>
-              );
-            }
-
-            if (node.type === 'video') {
-              return node.video ? (
-                <VideoPlayer video={node.video} />
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Video unavailable
-                </Typography>
-              );
-            }
-
-            if (node.type === 'pdf') {
-              return renderPdfAttachment(
-                node.questionText || 'PDF question',
-                node.pdf,
-                { compact: true }
-              );
-            }
-
-            return (
-              <Typography variant="body2" color="text.secondary">
-                Unsupported question type
-              </Typography>
-            );
-          })()}
-        </Box>
-      </Box>
-    );
-  };
-
   return (
     <React.Fragment>
       <AppBar sx={{ position: 'relative' }}>
@@ -341,11 +160,16 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
                 )}
               />
             </Stack>
-            {currentQuestion &&
-              renderQuestion(
-                currentQuestion,
-                (currentQuestionIndex + 1).toString()
-              )}
+            {currentQuestion && (
+              <QuestionTreeRenderer
+                mode="review"
+                question={currentQuestion}
+                questionIndex={currentQuestionIndex}
+                computeTotalWeight={computeTotalWeight}
+                answers={answers}
+                renderPdfAttachment={renderPdfAttachment}
+              />
+            )}
           </>
         ) : (
           <Typography variant="body2" color="text.secondary">
