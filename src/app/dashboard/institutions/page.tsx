@@ -51,18 +51,21 @@ const ManageInstitutions = () => {
       </Box>
       <Box
         sx={{
-          flex: 1, // Allow this box to grow and fill the available space
+          flex: '1 1 0%',
           display: 'flex',
           overflow: 'hidden',
+          minHeight: 0,
         }}
       >
         <OutlinedWrapper
-          display="flex"
-          flexDirection="column"
-          height="80vh" // Set the height as required
-          width="100%"
-          maxHeight="80vh"
-          overflow="hidden"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            width: '100%',
+            overflow: 'hidden',
+            minHeight: 0,
+          }}
         >
           <InstitutionUserDataGrid />
         </OutlinedWrapper>

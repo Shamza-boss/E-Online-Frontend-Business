@@ -250,9 +250,18 @@ export interface GradeDetailDto {
   comment: string;
 }
 
+export interface InstitutionAdminDto extends NewAdminDto {
+  userId?: string;
+  institutionId?: string;
+  role?: UserRole | null;
+  status?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface InstitutionWithAdminDto {
   institution: InstitutionDto;
-  admin: NewAdminDto;
+  admin: InstitutionAdminDto | null;
 }
 
 export interface InstitutionDto {

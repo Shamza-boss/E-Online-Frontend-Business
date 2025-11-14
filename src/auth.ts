@@ -131,7 +131,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.firstName = u.firstName ?? token.firstName ?? undefined;
             token.lastName = u.lastName ?? token.lastName ?? undefined;
             token.institutionName =
-              institutionName ?? token.institutionName ?? undefined;
+              institutionName ??
+              token.institutionName ??
+              'Absolute Online PTY LTD';
           }
         } catch (e) {
           console.error('[auth][jwt] resolve error', e);
