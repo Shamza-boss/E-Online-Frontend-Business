@@ -21,12 +21,18 @@ async function proxyRequest(req: NextRequest, params: string[]) {
   const qs = req.nextUrl.search;
   if (qs) url += qs;
 
-  const headers: Record<string, string> = {
-    ...Object.fromEntries(req.headers.entries()),
-    'X-User-Id': session.user.id,
-    'X-User-Role': session.user.role.toString(),
-    'X-User-InstitutionId': session.user.institutionId,
-  };
+  const headers = new Headers(req.headers);
+  headers.delete('host');
+  headers.delete('connection');
+  headers.delete('content-length');
+  headers.delete('cookie');
+  headers.delete('set-cookie');
+
+  if (session.apiAccessToken) {
+    headers.set('Authorization', `Bearer ${session.apiAccessToken}`);
+  } else {
+    headers.delete('authorization');
+  }
 
   const init: RequestInit = {
     method: req.method,

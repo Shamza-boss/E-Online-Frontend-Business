@@ -8,7 +8,7 @@ const accessRules: Record<string, UserRole[]> = {
   '/dashboard/management': [UserRole.Admin, UserRole.Instructor],
   '/dashboard/manage-courses': [UserRole.Admin, UserRole.Instructor],
   '/dashboard/courses': [UserRole.Admin, UserRole.Instructor, UserRole.Trainee],
-  '/dashboard/settings': [UserRole.PlatformAdmin],
+  '/dashboard/settings': [UserRole.PlatformAdmin, UserRole.Admin],
 };
 
 // Use NextAuth middleware wrapper so we can access session via req.auth
@@ -56,7 +56,6 @@ export default auth((req) => {
 
   // Forward role to downstream (optional use in route handlers / pages)
   const res = NextResponse.next();
-  res.headers.set('x-user-role', String(userRole));
   return res;
 });
 

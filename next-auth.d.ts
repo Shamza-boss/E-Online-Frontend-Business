@@ -17,6 +17,7 @@ export interface AuthUserClaims {
 declare module 'next-auth' {
   interface Session {
     user: AuthUserClaims & DefaultSession['user'];
+    apiAccessToken?: string;
   }
 
   // Returned by adapter (Prisma) on first sign in; align with our claims
@@ -27,5 +28,6 @@ declare module 'next-auth/jwt' {
   interface JWT extends Partial<AuthUserClaims> {
     appUserId?: string; // legacy
     institutionName?: string;
+    apiAccessToken?: string;
   }
 }

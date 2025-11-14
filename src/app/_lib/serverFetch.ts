@@ -37,16 +37,9 @@ export async function serverFetch<T>(
     const session = await auth();
     if (!session) redirect('/signin');
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const cookieHeader = cookieStore
-      .getAll()
-      .map((c) => `${c.name}=${c.value}`)
-      .join('; ');
-    requestHeaders['Cookie'] = cookieHeader;
-    requestHeaders['X-User-Id'] = session.user.id;
-    requestHeaders['X-User-Role'] = session.user.role.toString();
-    requestHeaders['X-User-InstitutionId'] = session.user.institutionId;
+    if (session.apiAccessToken) {
+      requestHeaders['Authorization'] = `Bearer ${session.apiAccessToken}`;
+    }
 
     fetchUrl = `${process.env.BASE_API_URL}/api/${normalized}`;
   } else {

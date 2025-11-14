@@ -1,12 +1,14 @@
 // src/auth.ts
 import NextAuth, { type Session } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
+import { SignJWT } from 'jose';
 import Passkey from '@auth/core/providers/passkey';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/app/_lib/prisma';
 const isDev = process.env.NODE_ENV === 'development';
 
 const SESSION_MAX_AGE_SECONDS = 60 * 15; // 15 minutes hard session timeout
+const API_TOKEN_TTL = '15m';
 
 type ExtendedToken = JWT & {
   sessionIssuedAt?: number;
@@ -139,6 +141,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           console.error('[auth][jwt] resolve error', e);
         }
       }
+
+      const signingSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+      const primaryId =
+        token.userId ?? token.appUserId ?? token.sub ?? user?.id ?? undefined;
+      if (signingSecret && primaryId) {
+        try {
+          const key = new TextEncoder().encode(signingSecret);
+          const claims: Record<string, unknown> = {
+            userId: primaryId,
+          };
+          if (token.role != null) claims.role = token.role;
+          if (token.institutionId != null)
+            claims.institutionId = token.institutionId;
+
+          const audience = process.env.APP_AUDIENCE ?? 'api';
+          const issuer =
+            process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? ORIGIN;
+
+          token.apiAccessToken = await new SignJWT(claims)
+            .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+            .setSubject(String(primaryId))
+            .setAudience(audience)
+            .setIssuer(issuer)
+            .setExpirationTime(API_TOKEN_TTL)
+            .setIssuedAt()
+            .sign(key);
+        } catch (err) {
+          console.error('[auth][jwt] api token signing failed', err);
+          delete token.apiAccessToken;
+        }
+      }
       if (user) {
         extended.sessionIssuedAt = nowSeconds;
         extended.sessionExpiresAt = nowSeconds + SESSION_MAX_AGE_SECONDS;
@@ -177,6 +210,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (t.institutionId) session.user.institutionId = t.institutionId;
         if (t.institutionName) session.user.institutionName = t.institutionName;
       }
+      if (t.apiAccessToken) session.apiAccessToken = t.apiAccessToken;
       return session as Session;
     },
   },
