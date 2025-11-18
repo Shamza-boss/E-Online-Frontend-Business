@@ -64,7 +64,7 @@ const ExcalidrawStaticPreview: React.FC<ExcalidrawStaticPreviewProps> = ({
 
     (async () => {
       try {
-        const { exportToSvg } = await import('@excalidraw/utils');
+        const { exportToSvg } = await import('@excalidraw/excalidraw');
         const svgElement = await exportToSvg({
           elements,
           appState: {

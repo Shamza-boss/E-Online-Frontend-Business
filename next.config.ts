@@ -4,8 +4,11 @@ const nextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
   images: {
-    domains: ['videodelivery.net'], // Allow Cloudflare Stream images
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'videodelivery.net',
+      },
       {
         protocol: 'https',
         hostname: '*.cloudflarestream.com',
