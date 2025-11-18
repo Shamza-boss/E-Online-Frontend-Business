@@ -20,14 +20,12 @@ import EDataGrid from '../../../_components/EDataGrid';
 
 import { getAllStudents } from '../../../../_lib/actions/users';
 import {
-  getAllClassrooms,
   EnrollStudents,
   getAllUsersInClassroom,
   getAllClassroomsAndData,
 } from '../../../../_lib/actions/classrooms';
 import {
   UserDto,
-  ClassDto,
   EnrollStudentsDto,
   ClassroomDetailsDto,
 } from '../../../../_lib/interfaces/types';
@@ -48,7 +46,7 @@ const StudentManagementTable = () => {
 
   const { data: classRooms, isLoading: classesLoading } = useSWR<
     ClassroomDetailsDto[]
-  >('classes', getAllClassroomsAndData);
+  >('getAvailableClasses', getAllClassroomsAndData);
 
   const { data: enrolledStudents = [] } = useSWR<UserDto[]>(
     classId ? ['classroomUsers', classId] : null,
@@ -97,8 +95,8 @@ const StudentManagementTable = () => {
       <Stack spacing={2}>
         <Alert severity="info">
           {!classId
-            ? 'Please select a class you want to enroll students to.'
-            : 'Select students who are not yet enrolled in this class.'}
+            ? 'Please select a class you want to enroll trainees to.'
+            : 'Select trainees who are not yet enrolled in this class.'}
         </Alert>
 
         <FormControl fullWidth disabled={classesLoading}>

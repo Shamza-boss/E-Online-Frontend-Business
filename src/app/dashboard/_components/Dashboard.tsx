@@ -1,8 +1,8 @@
 import * as React from 'react';
-import type {} from '@mui/x-date-pickers/themeAugmentation';
-import type {} from '@mui/x-charts/themeAugmentation';
-import type {} from '@mui/x-data-grid/themeAugmentation';
-import type {} from '@mui/x-tree-view/themeAugmentation';
+import type { } from '@mui/x-date-pickers/themeAugmentation';
+import type { } from '@mui/x-charts/themeAugmentation';
+import type { } from '@mui/x-data-grid/themeAugmentation';
+import type { } from '@mui/x-tree-view/themeAugmentation';
 import { alpha, Theme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack';
 import AppNavbar from './AppNavBar';
 import Header from './Header';
 import SideMenu from './SideMenu';
+import NavigationProgress from './NavigationProgress';
 import AppTheme from '../../_lib/components/shared-theme/AppTheme';
 import {
   chartsCustomizations,
@@ -30,6 +31,7 @@ export default function DashboardComponent(props: any) {
   return (
     <AppTheme {...props} themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
+      <NavigationProgress />
       <Box
         sx={{
           display: 'flex',
