@@ -1,5 +1,32 @@
 import type { NextConfig } from 'next';
 
+const serverActionsAllowedOrigins = (() => {
+  const raw =
+    process.env.SERVER_ACTIONS_ALLOWED_ORIGINS ??
+    process.env.AUTH_URL ??
+    process.env.NEXTAUTH_URL ??
+    '';
+
+  if (!raw) {
+    return undefined;
+  }
+
+  const entries = raw
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => {
+      try {
+        return new URL(value).host || value;
+      } catch {
+        return value.replace(/^https?:\/\//, '');
+      }
+    })
+    .filter(Boolean);
+
+  return entries.length ? entries : undefined;
+})();
+
 const nextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
@@ -45,7 +72,9 @@ const nextConfig = {
     },
     serverActions: {
       bodySizeLimit: '100mb',
-      allowedOrigins: ['localhost:3000'],
+      ...(serverActionsAllowedOrigins
+        ? { allowedOrigins: serverActionsAllowedOrigins }
+        : {}),
     },
     optimizePackageImports: [
       '@mui/material',
