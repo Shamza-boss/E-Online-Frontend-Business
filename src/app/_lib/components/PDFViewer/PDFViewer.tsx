@@ -6,12 +6,15 @@ import React, {
   MouseEvent as ReactMouseEvent,
 } from 'react';
 import { pdfjs, Document, Page } from 'react-pdf';
-import { Box, CircularProgress, Alert } from '@mui/material';
+import { Box, CircularProgress, Alert, Tabs, Tab } from '@mui/material';
 import PDFOutline from './PDFOutline';
+import PDFThumbnails from './PDFThumbnails';
 import type { PDFDocumentProxy as ReactPDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import PDFControls from './PDFControls';
+import ArticleIcon from '@mui/icons-material/Article';
+import CollectionsIcon from '@mui/icons-material/Collections';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/build/pdf.worker.mjs`;
 
@@ -74,6 +77,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   );
   const [showOutlineState, setShowOutlineState] = useState(showOutline);
   const [isPageLoading, setIsPageLoading] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<'outline' | 'thumbnails'>('thumbnails');
 
   useEffect(() => {
     const savedHighlights = localStorage.getItem(`pdf-highlights-${fileUrl}`);
@@ -86,6 +90,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
     () => ({
       cMapUrl: 'https://unpkg.com/pdfjs-dist@3.4.120/cmaps/',
       cMapPacked: true,
+      standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.4.120/standard_fonts/',
     }),
     []
   );
@@ -257,29 +262,45 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
 
   const handleItemClick = async (item: any) => {
     if (!pdfDocument) return;
+
     try {
-      setIsPageLoading(true);
+      let targetPage: number | null = null;
+
       if (item.pageNumber) {
         // If we already processed the page number in the outline
-        setPageNumber(item.pageNumber);
+        targetPage = item.pageNumber;
       } else if (typeof item.dest === 'string') {
         // Handle string destination
         const destination = await pdfDocument.getDestination(item.dest);
         if (destination) {
           const pageIndex = await pdfDocument.getPageIndex(destination[0]);
-          setPageNumber(pageIndex + 1);
+          targetPage = pageIndex + 1;
         }
       } else if (Array.isArray(item.dest)) {
         // Handle array destination
         const pageRef = item.dest[0];
         if (pageRef) {
           const pageIndex = await pdfDocument.getPageIndex(pageRef);
-          setPageNumber(pageIndex + 1);
+          targetPage = pageIndex + 1;
         }
+      }
+
+      // Only navigate if we're changing pages
+      if (targetPage !== null && targetPage !== pageNumber) {
+        setIsPageLoading(true);
+        setPageNumber(targetPage);
       }
     } catch (error) {
       console.error('Error navigating to destination:', error);
       setIsPageLoading(false);
+    }
+  };
+
+  const handleThumbnailClick = (pageNum: number) => {
+    // Only set loading state if we're actually changing pages
+    if (pageNum !== pageNumber) {
+      setIsPageLoading(true);
+      setPageNumber(pageNum);
     }
   };
 
@@ -374,19 +395,63 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
       {showOutlineState && (
         <Box
           sx={{
-            width: 300,
+            width: 400,
             borderRight: 1,
             borderColor: 'divider',
-            overflow: 'auto',
+            overflow: 'hidden',
             transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
             transform: showOutlineState ? 'translateX(0)' : 'translateX(-100%)',
             opacity: showOutlineState ? 1 : 0,
             position: 'relative',
             backgroundColor: 'background.paper',
             zIndex: 1,
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <PDFOutline outline={outline} onNavigate={handleItemClick} />
+          <Tabs
+            value={sidebarTab}
+            onChange={(_, newValue) => setSidebarTab(newValue)}
+            variant="fullWidth"
+            sx={{
+              borderBottom: 1,
+              borderColor: 'divider',
+              minHeight: 48,
+            }}
+          >
+            <Tab
+              value="thumbnails"
+              icon={<CollectionsIcon />}
+              iconPosition="start"
+              label="Pages"
+              sx={{ minHeight: 48 }}
+            />
+            <Tab
+              value="outline"
+              icon={<ArticleIcon />}
+              iconPosition="start"
+              label="Outline"
+              sx={{ minHeight: 48 }}
+              disabled={!outline || outline.length === 0}
+            />
+          </Tabs>
+          <Box sx={{ flex: 1, overflow: 'hidden' }}>
+            {sidebarTab === 'outline' && (
+              <PDFOutline
+                outline={outline}
+                onNavigate={handleItemClick}
+                currentPage={pageNumber}
+              />
+            )}
+            {sidebarTab === 'thumbnails' && (
+              <PDFThumbnails
+                pdfDocument={pdfDocument}
+                numPages={numPages}
+                currentPage={pageNumber}
+                onPageClick={handleThumbnailClick}
+              />
+            )}
+          </Box>
         </Box>
       )}
       <Box

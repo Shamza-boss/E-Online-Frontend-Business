@@ -20,6 +20,7 @@ import {
   Grid,
   IconButton,
   Paper,
+  Skeleton,
   Stack,
   Switch,
   Table,
@@ -59,7 +60,7 @@ import {
   StyledCardContent,
 } from '@/app/_lib/components/website/components/styled/StyledComponents';
 
-interface ManagedFile extends FileDto {}
+interface ManagedFile extends FileDto { }
 
 const extractName = (fileKey: string) => {
   return fileKey.split('_').pop() ?? fileKey;
@@ -203,7 +204,7 @@ export default function LibraryView() {
               );
               const thumb = await generatePdfThumbnail(pdfFile, 500, 560); // ClassCard size
               newThumbs[file.id] = thumb;
-            } catch {}
+            } catch { }
           }
         })
       );
@@ -331,7 +332,7 @@ export default function LibraryView() {
       <Dialog
         open={manageOpen}
         onClose={() => setManageOpen(false)}
-        maxWidth="lg"
+        maxWidth="xl"
         fullWidth
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', pr: 6 }}>
@@ -394,9 +395,16 @@ export default function LibraryView() {
                                   unoptimized
                                 />
                               ) : (
-                                <LibraryBooksIcon
-                                  color="primary"
-                                  sx={{ fontSize: 24 }}
+                                <Skeleton
+                                  variant="rectangular"
+                                  sx={{
+                                    aspectRatio: '16 / 9',
+                                    width: '100%',
+                                    height: '100%',
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                  animation="wave"
                                 />
                               )}
                               <Typography variant="body2" noWrap>
