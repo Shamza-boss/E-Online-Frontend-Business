@@ -1,6 +1,8 @@
 export const PDF_NOTE_LINK_ATTRIBUTE = 'data-pdf-link';
 export const PDF_NOTE_LINK_SALT = 'eo-pdf-link';
-export const PDF_NOTE_LINK_SELECTOR = `[${PDF_NOTE_LINK_ATTRIBUTE}="true"], [data-pdf-salt="${PDF_NOTE_LINK_SALT}"]`;
+export const PDF_NOTE_ELEMENT_TAG = 'pdf-note-link';
+export const PDF_NOTE_LINK_SELECTOR = `${PDF_NOTE_ELEMENT_TAG}, [${PDF_NOTE_LINK_ATTRIBUTE}="true"], [data-pdf-salt="${PDF_NOTE_LINK_SALT}"]`;
+export const PDF_NOTE_TRAILING_PARAGRAPHS = 1;
 export const PDF_NOTE_LINK_CLASS = 'pdf-note-chip';
 export const PDF_NOTE_CHIP_MUI_CLASSNAMES = `${PDF_NOTE_LINK_CLASS} pdf-note-chip--section`;
 export const PDF_NOTE_DEFAULT_COLOR = '#2563eb';
@@ -34,8 +36,6 @@ export interface PdfNoteLinkRequest {
 export interface PdfNoteLinkInsertResult {
   id: string;
   html: string;
-  chipHtml: string;
-  sentinelHtml: string;
   summary: PdfNoteLinkSummary;
   attrs: PdfNoteLinkNodeAttributes;
 }
@@ -469,24 +469,16 @@ export const buildPdfNoteLinkHtml = (
     : `Open on Page ${request.pageNumber}`;
   const resolvedBookmarkTitle =
     (request.bookmarkTitle || '').trim() || chipLabelRaw;
-  const chipDisplayText = resolvedBookmarkTitle;
   const palette = getPdfNoteLinkPalette(request.bookmarkColor);
-  const timestampDisplay =
+
+  const fallbackTimestamp =
     formatPdfNoteTimestamp(createdAt) || 'Recently linked';
-  const safeTimestamp = escapeHtml(timestampDisplay);
-  const wrapperStyle = [
-    'display:block',
-    'width:100%',
-    'box-sizing:border-box',
-    'text-decoration:none',
-    'cursor:pointer',
-    'margin:12px 0',
-    'padding:8px 0',
-    'border-radius:0',
-    'background:transparent',
-    'border:none',
-    `color:${palette.muted}`,
-  ].join(';');
+  const fallbackTextParts = [
+    escapeHtml(resolvedBookmarkTitle),
+    escapeHtml(dataLabel),
+    snippetDisplay ? escapeHtml(snippetDisplay) : '',
+    escapeHtml(fallbackTimestamp),
+  ].filter(Boolean);
 
   const ariaLabel = `PDF link to ${dataLabel}`;
   const titleText = `Jump to ${dataLabel} (Page ${request.pageNumber})`;
@@ -529,86 +521,24 @@ export const buildPdfNoteLinkHtml = (
     'aria-label': ariaLabel,
   };
 
-  const inlineSegments = [
-    `<span class="pdf-note-chip__segment pdf-note-chip__segment--primary">${escapeHtml(chipDisplayText)}</span>`,
-    `<span class="pdf-note-chip__segment pdf-note-chip__segment--label">${escapeHtml(dataLabel)}</span>`,
-    snippetDisplay
-      ? `<span class="pdf-note-chip__segment pdf-note-chip__segment--snippet">${escapeHtml(snippetDisplay)}</span>`
-      : '',
-  ].filter(Boolean);
-
-  const inlineContent = inlineSegments
-    .map((segment, index) =>
-      index === 0
-        ? segment
-        : `<span class="pdf-note-chip__separator" aria-hidden="true">•</span>${segment}`
-    )
-    .join('');
-
   const attributeString = Object.entries(nodeAttrs)
     .map(([key, value]) => `${key}="${escapeHtml(value)}"`)
     .join(' ');
-
-  const chipHtml = `
-    <span
-      class="${PDF_NOTE_CHIP_MUI_CLASSNAMES}"
-      ${attributeString}
-      style="${wrapperStyle}"
-    >
-      <span
-        class="pdf-note-chip__body"
-        style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"
-      >
-        <span
-          class="pdf-note-chip__dot"
-          aria-hidden="true"
-          style="width:12px;height:12px;border-radius:999px;background:${palette.accent};box-shadow:0 0 0 4px ${palette.halo}33;flex-shrink:0;"
-        ></span>
-        <span
-          class="pdf-note-chip__inline"
-          style="display:flex;flex-wrap:wrap;gap:8px;row-gap:4px;align-items:center;color:${palette.muted};flex:1;min-width:0;"
-        >
-          ${inlineContent}
-        </span>
-      </span>
-      <span
-        class="pdf-note-chip__divider"
-        aria-hidden="true"
-        style="display:block;border-bottom:1px solid ${palette.border};margin-top:12px;"
-      ></span>
-      <span
-        class="pdf-note-chip__footer"
-        style="display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:0.75rem;font-weight:600;color:${palette.muted};text-transform:uppercase;letter-spacing:0.08em;margin-top:10px;"
-      >
-        <svg
-          class="pdf-note-chip__link-icon"
-          viewBox="0 0 24 24"
-          focusable="false"
-          aria-hidden="true"
-          style="width:16px;height:16px;fill:${palette.muted};"
-        >
-          <path d="M10.59 13.41a1 1 0 0 0 1.41 0l4.59-4.59a3 3 0 0 0-4.24-4.24L11.4 5.14a1 1 0 0 0 1.42 1.41l1-1a1 1 0 1 1 1.41 1.41l-4.58 4.59a1 1 0 0 0 0 1.41Zm-4.24 4.25a3 3 0 0 0 4.24 0l1.54-1.54a1 1 0 0 0-1.41-1.41L9.18 16.75a1 1 0 1 1-1.41-1.41l4.58-4.59a1 1 0 1 0-1.41-1.41l-4.59 4.58a3 3 0 0 0 0 4.24Z" />
-        </svg>
-        <span class="pdf-note-chip__timestamp">${safeTimestamp}</span>
-      </span>
-    </span>`.trim();
-
-  const sentinelText = buildPdfNoteSentinelText(encodedPayload);
-  const sentinelHtml = `
-    <span ${PDF_NOTE_SENTINEL_ATTRIBUTE}="true" data-link-id="${escapeHtml(
-      id
-    )}" hidden aria-hidden="true" style="display:none!important;visibility:hidden;width:0;height:0;overflow:hidden;padding:0;margin:0;">${escapeHtml(
-      sentinelText
-    )}</span>
+  const fallbackText = fallbackTextParts.join(' • ');
+  const trailingParagraphsHtml = Array.from({
+    length: PDF_NOTE_TRAILING_PARAGRAPHS,
+  })
+    .map(() => '<p><br /></p>')
+    .join('');
+  const html = `
+    <${PDF_NOTE_ELEMENT_TAG} ${attributeString}>
+      ${fallbackText}
+    </${PDF_NOTE_ELEMENT_TAG}>${trailingParagraphsHtml}
   `.trim();
-
-  const html = `${chipHtml}${sentinelHtml}`;
 
   return {
     id,
     html,
-    chipHtml,
-    sentinelHtml,
     summary: {
       id,
       pageNumber: request.pageNumber,

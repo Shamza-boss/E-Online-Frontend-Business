@@ -7,7 +7,7 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import ClearIcon from '@mui/icons-material/Clear';
 import BrushIcon from '@mui/icons-material/Brush';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import { MenuButton, MenuControlsContainer, MenuDivider } from 'mui-tiptap';
 
 interface PDFControlsProps {
@@ -93,14 +93,9 @@ const PDFControls: React.FC<PDFControlsProps> = ({
           <MenuDivider />
           <MenuButton
             value="createNoteLink"
-            tooltipLabel="Add Bookmark to notes"
+            tooltipLabel="Add a Bookmark to your active notes"
             onClick={onCreateNoteLink}
-            IconComponent={BookmarkIcon}
-            sx={{
-              '&:hover .MuiSvgIcon-root': {
-                color: 'success.main',
-              },
-            }}
+            IconComponent={BookmarkAddIcon}
           />
         </>
       )}

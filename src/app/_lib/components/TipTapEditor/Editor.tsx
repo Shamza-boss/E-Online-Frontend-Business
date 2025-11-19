@@ -30,6 +30,7 @@ import {
   PDF_NOTE_LINK_SELECTOR,
   PDF_NOTE_LINK_CLASS,
   PDF_NOTE_SENTINEL_ATTRIBUTE,
+  PDF_NOTE_TRAILING_PARAGRAPHS,
   parsePdfNoteLinkElement,
   type PdfNoteLinkSummary,
   type PdfNoteLinkNodeAttributes,
@@ -187,13 +188,23 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
         getHtml: () => editor?.getHTML() ?? '',
         insertPdfLink: (attrs) => {
           if (!editor) return false;
+          const trailingParagraphs = Array.from(
+            { length: PDF_NOTE_TRAILING_PARAGRAPHS },
+            () => ({
+              type: 'paragraph',
+              content: [{ type: 'hardBreak' }],
+            })
+          );
           editor
             .chain()
             .focus()
-            .insertContent({
-              type: 'pdfNoteLink',
-              attrs,
-            })
+            .insertContent([
+              {
+                type: 'pdfNoteLink',
+                attrs,
+              },
+              ...trailingParagraphs,
+            ])
             .run();
           return true;
         },

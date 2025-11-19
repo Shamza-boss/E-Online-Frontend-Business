@@ -16,7 +16,7 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import PDFControls from './PDFControls';
 import ArticleIcon from '@mui/icons-material/Article';
 import CollectionsIcon from '@mui/icons-material/Collections';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import PDFNoteLinks from './PDFNoteLinks';
 import type {
   PdfNoteLinkSummary,
@@ -726,7 +726,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
             {noteLinksEnabled && (
               <Tab
                 value="noteLinks"
-                icon={<BookmarkIcon color="success" />}
+                icon={<BookmarksIcon />}
                 iconPosition="start"
                 label={`Notes`}
                 sx={{ minHeight: 48 }}

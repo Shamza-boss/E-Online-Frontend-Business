@@ -2,25 +2,18 @@
 
 import React, { forwardRef } from 'react';
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { Box, Typography } from '@mui/material';
 import { NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react';
 import {
     PDF_NOTE_CHIP_MUI_CLASSNAMES,
     PDF_NOTE_LINK_ATTRIBUTE,
     PDF_NOTE_LINK_SALT,
-    PDF_NOTE_SENTINEL_ATTRIBUTE,
-    buildPdfNoteSentinelText,
     formatPdfNoteTimestamp,
     getPdfNoteLinkPalette,
 } from '@/app/_lib/utils/pdfNoteLinks';
 
 type PdfAttrs = Record<string, string | number | null | undefined>;
-
-type InlineSegment = {
-    key: string;
-    text?: string | null;
-    sx?: Record<string, unknown>;
-};
 
 const buildChipLabel = (options: PdfAttrs) => {
     const chipAttr = options['data-chip-label'];
@@ -73,68 +66,10 @@ const PdfNoteChipNodeView = forwardRef<
         typeof attrs['data-snippet'] === 'string' && attrs['data-snippet'].trim().length > 0
             ? attrs['data-snippet']
             : undefined;
-    const encodedPayload =
-        typeof attrs['data-pdf-payload'] === 'string' ? attrs['data-pdf-payload'] : null;
-    const sentinelText = encodedPayload ? buildPdfNoteSentinelText(encodedPayload) : null;
-
-    const inlineSegments: InlineSegment[] = [
-        {
-            key: 'chip',
-            text: label,
-            sx: { fontWeight: 600 },
-        },
-        {
-            key: 'page',
-            text: pageLabel,
-            sx: { fontWeight: 500, opacity: 0.9 },
-        },
-    ];
-
-    if (snippetText) {
-        inlineSegments.push({
-            key: 'snippet',
-            text: snippetText,
-            sx: { opacity: 0.75, fontSize: '0.9rem' },
-        });
-    }
-
-    const inlineTypography = inlineSegments
-        .filter((segment) => segment.text && `${segment.text}`.trim().length > 0)
-        .flatMap((segment, index) => {
-            const fragments: React.ReactNode[] = [];
-
-            if (index > 0) {
-                fragments.push(
-                    <Typography
-                        key={`sep-${segment.key}`}
-                        component="span"
-                        fontSize="0.8rem"
-                        aria-hidden
-                        sx={{ opacity: 0.6 }}
-                    >
-                        •
-                    </Typography>
-                );
-            }
-
-            fragments.push(
-                <Typography
-                    key={`seg-${segment.key}`}
-                    component="span"
-                    color={palette.muted}
-                    sx={segment.sx}
-                >
-                    {segment.text}
-                </Typography>
-            );
-
-            return fragments;
-        });
-
     return (
         <NodeViewWrapper
             ref={ref}
-            as="span"
+            as="div"
             role={node.attrs.role ?? 'button'}
             tabIndex={tabIndex}
             className={PDF_NOTE_CHIP_MUI_CLASSNAMES}
@@ -158,7 +93,8 @@ const PdfNoteChipNodeView = forwardRef<
                 'aria-label': ariaLabel,
             }}
             style={{
-                display: 'block',
+                display: 'flex',
+                flexDirection: 'column',
                 width: '100%',
                 boxSizing: 'border-box',
                 cursor: 'pointer',
@@ -177,18 +113,12 @@ const PdfNoteChipNodeView = forwardRef<
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1.5,
-                    flexWrap: 'wrap',
                 }}
             >
-                <Box
-                    component="span"
-                    aria-hidden={true}
+                <BookmarkIcon
                     sx={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: '999px',
-                        backgroundColor: palette.accent,
-                        boxShadow: `0 0 0 4px ${palette.halo}33`,
+                        fontSize: 16,
+                        color: palette.accent,
                         flexShrink: 0,
                     }}
                 />
@@ -196,33 +126,58 @@ const PdfNoteChipNodeView = forwardRef<
                     component="span"
                     sx={{
                         display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 1,
-                        rowGap: 0.5,
-                        alignItems: 'center',
+                        flexDirection: 'column',
+                        gap: 0.5,
                         flex: 1,
                         minWidth: 0,
                     }}
                 >
-                    {inlineTypography}
+                    <Typography
+                        component="span"
+                        color={palette.muted}
+                        fontWeight={600}
+                        sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            flexWrap: 'wrap',
+                        }}
+                    >
+                        {label}
+                        <Typography
+                            component="span"
+                            fontSize="0.8rem"
+                            sx={{ opacity: 0.75, fontWeight: 500 }}
+                        >
+                            {pageNumber ? ` · Page ${pageNumber}` : null}
+                        </Typography>
+                    </Typography>
+                    {snippetText ? (
+                        <Typography
+                            component="span"
+                            color={palette.muted}
+                            fontSize="0.85rem"
+                            sx={{ opacity: 0.75 }}
+                        >
+                            {snippetText}
+                        </Typography>
+                    ) : null}
                 </Box>
                 <Box
                     component="span"
                     sx={{
-                        display: 'flex',
+                        display: 'inline-flex',
                         alignItems: 'center',
-                        justifyContent: 'flex-end',
-                        gap: 1,
+                        gap: 0.5,
                         fontSize: '0.75rem',
-                        fontWeight: 600,
-                        letterSpacing: '0.08em',
+                        fontWeight: 500,
+                        letterSpacing: '0.05em',
                         textTransform: 'uppercase',
                         color: palette.muted,
-                        mt: 1,
                     }}
                 >
                     <LinkRoundedIcon sx={{ fontSize: 16, color: palette.muted }} />
-                    <Typography component="span" fontSize="0.75rem">
+                    <Typography component="span" fontSize="0.7rem">
                         {timestamp}
                     </Typography>
                 </Box>
@@ -236,26 +191,6 @@ const PdfNoteChipNodeView = forwardRef<
                     mt: 1.5,
                 }}
             />
-            {sentinelText ? (
-                <span
-                    {...{ [PDF_NOTE_SENTINEL_ATTRIBUTE]: 'true' }}
-                    data-link-id={attrs['data-link-id'] ?? undefined}
-                    aria-hidden={true}
-                    hidden
-                    style={{
-                        display: 'none',
-                        visibility: 'hidden',
-                        width: 0,
-                        height: 0,
-                        overflow: 'hidden',
-                        padding: 0,
-                        margin: 0,
-                    }}
-                >
-                    {sentinelText}
-                </span>
-            ) : null}
-
         </NodeViewWrapper>
     );
 });
