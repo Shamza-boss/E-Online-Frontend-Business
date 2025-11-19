@@ -23,23 +23,26 @@ export async function generatePdfThumbnail(
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const context = canvas.getContext('2d', { alpha: false, willReadFrequently: false });
+  const context = canvas.getContext('2d', {
+    alpha: false,
+    willReadFrequently: false,
+  });
   if (!context) throw new Error('Could not get canvas context');
-  
+
   // Center the rendered page in the canvas
   const offsetX = (width - scaledViewport.width) / 2;
   const offsetY = (height - scaledViewport.height) / 2;
-  
+
   // Render page
-  await page.render({ 
-    canvasContext: context, 
+  await page.render({
+    canvasContext: context,
     viewport: scaledViewport,
-    transform: offsetX || offsetY ? [1, 0, 0, 1, offsetX, offsetY] : undefined
+    transform: offsetX || offsetY ? [1, 0, 0, 1, offsetX, offsetY] : undefined,
   }).promise;
-  
+
   // Clean up
   page.cleanup();
-  
+
   // Get data URL with higher quality
   return canvas.toDataURL('image/jpeg', 0.92);
 }

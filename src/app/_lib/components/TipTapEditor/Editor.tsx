@@ -7,6 +7,7 @@ import React, {
   useRef,
   forwardRef,
   RefObject,
+  memo,
 } from 'react';
 import { useEditor } from '@tiptap/react';
 import {
@@ -26,7 +27,7 @@ import type { NoteDto } from '../../interfaces/types';
 import { debounce } from 'es-toolkit';
 import TextFragmentLoader from '@/app/dashboard/_components/_skeletonLoaders/TextSkeleton';
 
-interface EditorProps {
+export interface EditorProps {
   note?: NoteDto;
   loading: boolean;
   onSave: (content: string) => void | Promise<void>;
@@ -251,4 +252,4 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
 
 Editor.displayName = 'Editor';
 
-export default Editor;
+export default memo(Editor);

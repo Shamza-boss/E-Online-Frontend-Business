@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { CssBaseline } from '@mui/material';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { SessionProvider, useSession } from 'next-auth/react';
 import type { Session } from 'next-auth';
+import type { SessionProviderProps } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import AppTheme from './_lib/components/shared-theme/AppTheme';
 import { AlertProvider } from './_lib/components/alert/AlertProvider';
@@ -15,13 +16,22 @@ interface ProvidersProps {
 }
 
 export default function Providers({ children, session }: ProvidersProps) {
-  return (
-    <SessionProvider
-      session={session}
-      refetchOnWindowFocus
-      refetchInterval={60}
-      refetchWhenOffline={false}
+  const sessionConfig = useMemo<
+    Pick<
+      SessionProviderProps,
+      'refetchOnWindowFocus' | 'refetchInterval' | 'refetchWhenOffline'
     >
+  >(
+    () => ({
+      refetchOnWindowFocus: true,
+      refetchInterval: 60,
+      refetchWhenOffline: false,
+    }),
+    []
+  );
+
+  return (
+    <SessionProvider session={session} {...sessionConfig}>
       <SessionInvalidRedirect />
       <AppRouterCacheProvider options={{ enableCssLayer: true }}>
         <AppTheme>
@@ -33,7 +43,7 @@ export default function Providers({ children, session }: ProvidersProps) {
   );
 }
 
-function SessionInvalidRedirect() {
+const SessionInvalidRedirect = memo(function SessionInvalidRedirect() {
   const { status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -53,4 +63,4 @@ function SessionInvalidRedirect() {
   }, [pathname, router, status]);
 
   return null;
-}
+});

@@ -1,5 +1,5 @@
-import PageSkeleton from '../_components/_skeletonLoaders/PageSkeleton';
+import StudentClassCardSkeleton from '../_components/_skeletonLoaders/StudentClassCardSkeleton';
 
 export default function ManageCoursesLoading() {
-    return <PageSkeleton />;
+    return <StudentClassCardSkeleton count={12} />;
 }

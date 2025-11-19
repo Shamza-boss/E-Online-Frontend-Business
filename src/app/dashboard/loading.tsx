@@ -1,3 +1,4 @@
+import MainGridSkeleton from './_components/_skeletonLoaders/maingridLoader';
 import PageSkeleton from './_components/_skeletonLoaders/PageSkeleton';
 
 /**
@@ -8,5 +9,5 @@ import PageSkeleton from './_components/_skeletonLoaders/PageSkeleton';
  * - Server components are being fetched
  */
 export default function DashboardLoading() {
-    return <PageSkeleton />;
+    return <MainGridSkeleton />;
 }
