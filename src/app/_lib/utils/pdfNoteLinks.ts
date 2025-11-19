@@ -685,9 +685,8 @@ export const parsePdfNoteLinkElement = (
   }
 
   const sentinelElement = findNearestPdfNoteSentinel(el);
-  const sentinelEncoded = extractEncodedPayloadFromSentinelElement(
-    sentinelElement
-  );
+  const sentinelEncoded =
+    extractEncodedPayloadFromSentinelElement(sentinelElement);
   const decodedFromSentinel = decodePdfNotePayload(sentinelEncoded);
 
   if (decodedFromSentinel) {
