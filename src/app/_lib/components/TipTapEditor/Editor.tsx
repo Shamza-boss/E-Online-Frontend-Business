@@ -29,6 +29,7 @@ import TextFragmentLoader from '@/app/dashboard/_components/_skeletonLoaders/Tex
 import {
   PDF_NOTE_LINK_SELECTOR,
   PDF_NOTE_LINK_CLASS,
+  PDF_NOTE_SENTINEL_ATTRIBUTE,
   parsePdfNoteLinkElement,
   type PdfNoteLinkSummary,
   type PdfNoteLinkNodeAttributes,
@@ -290,6 +291,15 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
                 boxShadow: `0 0 0 2px ${theme.palette.primary.main}55`,
                 borderRadius: theme.shape.borderRadius,
               },
+            },
+            [`[${PDF_NOTE_SENTINEL_ATTRIBUTE}="true"]`]: {
+              display: 'none !important',
+              visibility: 'hidden',
+              pointerEvents: 'none',
+              opacity: 0,
+              width: 0,
+              height: 0,
+              overflow: 'hidden',
             },
             '@keyframes pdfNoteChipPulse': {
               '0%': {

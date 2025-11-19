@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
-import { CssBaseline } from '@mui/material';
+import { CssBaseline, GlobalStyles } from '@mui/material';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { SessionProvider, useSession } from 'next-auth/react';
 import type { Session } from 'next-auth';
@@ -9,6 +9,7 @@ import type { SessionProviderProps } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import AppTheme from './_lib/components/shared-theme/AppTheme';
 import { AlertProvider } from './_lib/components/alert/AlertProvider';
+import { PDF_NOTE_SENTINEL_ATTRIBUTE } from './_lib/utils/pdfNoteLinks';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -36,6 +37,19 @@ export default function Providers({ children, session }: ProvidersProps) {
       <AppRouterCacheProvider options={{ enableCssLayer: true }}>
         <AppTheme>
           <CssBaseline enableColorScheme />
+          <GlobalStyles
+            styles={{
+              [`[${PDF_NOTE_SENTINEL_ATTRIBUTE}="true"]`]: {
+                display: 'none !important',
+                visibility: 'hidden',
+                pointerEvents: 'none',
+                opacity: 0,
+                width: 0,
+                height: 0,
+                overflow: 'hidden',
+              },
+            }}
+          />
           <AlertProvider>{children}</AlertProvider>
         </AppTheme>
       </AppRouterCacheProvider>

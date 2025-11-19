@@ -8,6 +8,8 @@ import {
     PDF_NOTE_CHIP_MUI_CLASSNAMES,
     PDF_NOTE_LINK_ATTRIBUTE,
     PDF_NOTE_LINK_SALT,
+    PDF_NOTE_SENTINEL_ATTRIBUTE,
+    buildPdfNoteSentinelText,
     formatPdfNoteTimestamp,
     getPdfNoteLinkPalette,
 } from '@/app/_lib/utils/pdfNoteLinks';
@@ -71,6 +73,9 @@ const PdfNoteChipNodeView = forwardRef<
         typeof attrs['data-snippet'] === 'string' && attrs['data-snippet'].trim().length > 0
             ? attrs['data-snippet']
             : undefined;
+    const encodedPayload =
+        typeof attrs['data-pdf-payload'] === 'string' ? attrs['data-pdf-payload'] : null;
+    const sentinelText = encodedPayload ? buildPdfNoteSentinelText(encodedPayload) : null;
 
     const inlineSegments: InlineSegment[] = [
         {
@@ -138,6 +143,8 @@ const PdfNoteChipNodeView = forwardRef<
             {...{
                 [PDF_NOTE_LINK_ATTRIBUTE]: 'true',
                 'data-pdf-salt': attrs['data-pdf-salt'] ?? PDF_NOTE_LINK_SALT,
+                'data-pdf-payload': attrs['data-pdf-payload'] ?? undefined,
+                'data-pdf-checksum': attrs['data-pdf-checksum'] ?? undefined,
                 'data-link-id': attrs['data-link-id'] ?? undefined,
                 'data-page-number': pageNumber ?? undefined,
                 'data-label': pageLabel,
@@ -229,6 +236,25 @@ const PdfNoteChipNodeView = forwardRef<
                     mt: 1.5,
                 }}
             />
+            {sentinelText ? (
+                <span
+                    {...{ [PDF_NOTE_SENTINEL_ATTRIBUTE]: 'true' }}
+                    data-link-id={attrs['data-link-id'] ?? undefined}
+                    aria-hidden={true}
+                    hidden
+                    style={{
+                        display: 'none',
+                        visibility: 'hidden',
+                        width: 0,
+                        height: 0,
+                        overflow: 'hidden',
+                        padding: 0,
+                        margin: 0,
+                    }}
+                >
+                    {sentinelText}
+                </span>
+            ) : null}
 
         </NodeViewWrapper>
     );
