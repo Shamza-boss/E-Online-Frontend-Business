@@ -1,8 +1,6 @@
 # Performance Optimization Guide
 
-## Applied Next.js 16 Optimizations
-
-> Target stack: Next.js 16.0.3 with React 19.2.x
+## Applied Next.js 15+ Optimizations
 
 ### 1. **Next.js Configuration** (`next.config.ts`)
 

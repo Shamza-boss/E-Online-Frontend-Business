@@ -3,7 +3,6 @@ import type { NextConfig } from 'next';
 const nextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
-  swcMinify: true,
 
   // Compiler optimizations for faster builds and better runtime performance
   compiler: {
@@ -39,7 +38,7 @@ const nextConfig = {
   compress: true,
   productionBrowserSourceMaps: false,
 
-  // Experimental features for Next.js 16 and React 19
+  // Experimental features for Next.js 15+ and React 19
   experimental: {
     extensionAlias: {
       '.js': ['.tsx', '.ts', '.jsx', '.js'],
@@ -64,14 +63,33 @@ const nextConfig = {
       'react-pdf',
     ],
 
+    // Use SWC minifier for faster builds
+    swcMinify: true,
+
     // Optimize CSS
     optimizeCss: true,
 
     // Enable partial prerendering for improved performance
     ppr: false, // Set to true when ready for PPR
 
+    // Turbopack optimizations
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
+
+    // React 19 optimizations
+    reactCompiler: false, // Enable when babel-plugin-react-compiler is configured
+
     // Optimize font loading
     optimizeServerReact: true,
+
+    // Instrumentation for performance monitoring
+    instrumentationHook: false,
 
     // Optimize memory usage during builds
     workerThreads: true,

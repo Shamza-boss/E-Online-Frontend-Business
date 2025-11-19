@@ -80,6 +80,18 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   const [sidebarTab, setSidebarTab] = useState<'outline' | 'thumbnails'>('thumbnails');
 
   useEffect(() => {
+    setPageNumber((prev) => (prev === initialPage ? prev : initialPage));
+  }, [initialPage]);
+
+  useEffect(() => {
+    setScale((prev) => (prev === initialZoom ? prev : initialZoom));
+  }, [initialZoom]);
+
+  useEffect(() => {
+    setShowOutlineState((prev) => (prev === showOutline ? prev : showOutline));
+  }, [showOutline]);
+
+  useEffect(() => {
     const savedHighlights = localStorage.getItem(`pdf-highlights-${fileUrl}`);
     if (savedHighlights) {
       setHighlights(JSON.parse(savedHighlights));

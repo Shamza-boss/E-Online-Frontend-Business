@@ -1,7 +1,5 @@
 # Developer Quick Reference: Performance Optimizations
 
-> Target stack: Next.js 16.0.3 + React 19.2.x
-
 ## How to Use Optimized Components
 
 ### 1. Using Lazy-Loaded PDFViewer

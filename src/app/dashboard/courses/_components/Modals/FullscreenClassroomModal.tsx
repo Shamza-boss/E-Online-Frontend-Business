@@ -21,7 +21,7 @@ import Splitter from '@devbookhq/splitter';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import Tab from '@mui/material/Tab';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import SeeAssignmentsAndPreview from '../Homework/SeeAssignmentsAndPreview';
 import React from 'react';
 import { TransitionProps } from '@mui/material/transitions';
@@ -74,11 +74,25 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [showTextbook, setShowTextbook] = useState(false);
   const [value, setValue] = useState(currentTab);
+  const [splitSizes, setSplitSizes] = useState<number[] | undefined>();
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
     onTabChange?.(newValue);
   };
+
+  useEffect(() => {
+    setValue(currentTab);
+  }, [currentTab]);
+
+  const handleSplitResizeFinished = useCallback(
+    (_gutterIdx: number, sizes: number[]) => {
+      setSplitSizes(sizes);
+    },
+    []
+  );
+
+  const derivedSplitSizes = splitSizes ?? (value === '2' ? [30, 70] : [50, 50]);
 
   return (
     <Dialog
@@ -197,7 +211,6 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 </ConditionalTabPanel>
                 <ConditionalTabPanel value={value} index="2">
                   <PDFViewer
-                    key={`pdf-${pdfState.currentPage}`}
                     fileUrl={fileUrl}
                     initialPage={pdfState.currentPage}
                     initialZoom={pdfState.zoom}
@@ -215,7 +228,8 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
           <Splitter
             gutterClassName="custom-gutter-horizontal"
             draggerClassName="custom-dragger-horizontal"
-            initialSizes={value === '2' ? [30, 70] : [50, 50]} // Give homework more space
+            initialSizes={derivedSplitSizes}
+            onResizeFinished={handleSplitResizeFinished}
           >
             <OutlinedWrapper
               sx={{

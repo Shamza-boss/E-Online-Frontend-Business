@@ -1,36 +1,20 @@
 'use client';
-import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  Stack,
-  IconButton,
-  Tooltip,
-  Tab,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-
-import Splitter from '@devbookhq/splitter';
-import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import React from 'react';
+import { Box, useTheme, useMediaQuery } from '@mui/material';
 
 import { useSession } from 'next-auth/react';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 
 import { useClassroomNote } from '../../../_lib/hooks/useNotes';
 
-import PDFViewer from '../../../_lib/components/PDFViewer/PDFViewer';
 import FullScreenClassroomModal from './Modals/FullscreenClassroomModal';
-import Editor from '@/app/_lib/components/TipTapEditor/Editor';
-import SeeAssignmentsAndPreview from './Homework/SeeAssignmentsAndPreview';
-import ConditionalTabPanel from '@/app/_lib/components/conditionalTabPanel';
-
-import TabContext from '@mui/lab/TabContext';
-import TabList from '@mui/lab/TabList';
-import { OutlinedWrapper } from '../../../_lib/components/shared-theme/customizations/OutlinedWrapper';
 import { GutterStyles } from '@/app/_lib/components/shared-theme/customizations/SplitterComponent';
-import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
+import { useClassroomLayout } from './Class/hooks/useClassroomLayout';
+import { ClassToolbar } from './Class/components/ClassToolbar';
+import { NotesPanel } from './Class/components/NotesPanel';
+import { TabsContent } from './Class/components/TabsContent';
+import { DesktopContent } from './Class/components/DesktopContent';
+import { MobileContent } from './Class/components/MobileContent';
 
 interface Props {
   classId: string;
@@ -42,24 +26,35 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
   const isElevated = Number(session?.user?.role) === UserRole.Trainee;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [tabVal, setTab] = useState('1');
-  const [openBook, setOpenBook] = useState(false);
-  const [isFs, setFs] = useState(false);
-  const [pdfKey, setPdfKey] = useState(0);
-  const [currentPage, setPg] = useState(1);
-  const [zoom, setZoom] = useState(1);
-  const [outline, setOutline] = useState(false);
+  const {
+    tabValue,
+    setTabValue,
+    isNotesOpen,
+    toggleNotes,
+    isFullscreen,
+    toggleFullscreen,
+    exitFullscreen,
+    pdfState,
+    splitSizes,
+    onSplitResizeFinished,
+  } = useClassroomLayout();
   const { data: note, isLoading, saveNote } = useClassroomNote(classId);
 
   const handleSave = async (html: string) => {
     await saveNote({ content: html });
   };
 
-  const toggleFs = () => {
-    setFs((f) => !f);
-    if (isFs) setPdfKey((k) => k + 1);
-    else !openBook && setOpenBook(true);
-  };
+  const renderTabs = (variant: 'mobile' | 'desktop') => (
+    <TabsContent
+      variant={variant}
+      tabValue={tabValue}
+      onTabChange={setTabValue}
+      classId={classId}
+      canEdit={!isElevated}
+      fileUrl={textbookUrl}
+      pdfState={pdfState}
+    />
+  );
 
   const editorLoading = isLoading && !note;
   const noteData = note ?? undefined;
@@ -67,24 +62,17 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
   return (
     <>
       <FullScreenClassroomModal
-        open={isFs}
+        open={isFullscreen}
         canEdit={!isElevated}
         fileUrl={textbookUrl}
         isLoading={editorLoading}
-        handleClose={() => setFs(false)}
+        handleClose={exitFullscreen}
         handleSaveNote={handleSave}
         note={noteData}
-        currentTab={tabVal}
-        onTabChange={setTab}
+        currentTab={tabValue}
+        onTabChange={setTabValue}
         classId={classId}
-        pdfState={{
-          currentPage,
-          zoom,
-          outline,
-          onPageChange: setPg,
-          onZoomChange: setZoom,
-          onOutlineChange: setOutline,
-        }}
+        pdfState={pdfState}
       />
 
       <Box
@@ -98,17 +86,12 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
         {GutterStyles()}
 
         <Box sx={{ flexShrink: 0, mb: 1 }}>
-          <Stack spacing={1} direction="row" alignItems="center">
-            <Tooltip title="Fullscreen">
-              <IconButton onClick={toggleFs}>
-                {isFs ? <FullscreenExitIcon /> : <FullscreenIcon />}
-              </IconButton>
-            </Tooltip>
-
-            <Button variant="outlined" onClick={() => setOpenBook((o) => !o)}>
-              {openBook ? 'Hide' : 'Show'} notes
-            </Button>
-          </Stack>
+          <ClassToolbar
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
+            notesOpen={isNotesOpen}
+            onToggleNotes={toggleNotes}
+          />
         </Box>
         <Box
           sx={{
@@ -125,136 +108,32 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
             overflow="hidden"
           >
             {isMobile ? (
-              openBook ? (
-                <OutlinedWrapper sx={{ flex: 1, overflow: 'hidden' }}>
-                  <Editor
+              <MobileContent
+                notesOpen={isNotesOpen}
+                notesPanel={
+                  <NotesPanel
+                    note={noteData}
+                    loading={editorLoading}
+                    onSave={handleSave}
+                    sx={{ overflow: 'hidden' }}
+                  />
+                }
+                renderTabs={() => renderTabs('mobile')}
+              />
+            ) : (
+              <DesktopContent
+                notesOpen={isNotesOpen}
+                notesPanel={
+                  <NotesPanel
                     note={noteData}
                     loading={editorLoading}
                     onSave={handleSave}
                   />
-                </OutlinedWrapper>
-              ) : (
-                <OutlinedWrapper
-                  sx={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                    minHeight: 0,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <TabContext value={tabVal}>
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                      <TabList onChange={(_e, v) => setTab(v)}>
-                        <Tab label="Modules" value="1" />
-                        <Tab label="Resources" value="2" />
-                      </TabList>
-                    </Box>
-
-                    <ConditionalTabPanel value={tabVal} index="1">
-                      <SeeAssignmentsAndPreview
-                        classId={classId}
-                        canEdit={!isElevated}
-                      />
-                    </ConditionalTabPanel>
-                    <ConditionalTabPanel value={tabVal} index="2">
-                      <Box
-                        sx={{
-                          flex: 1,
-                          overflow: 'auto',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 0,
-                        }}
-                      >
-                        <PDFViewer
-                          key={`pdf-${currentPage}-${pdfKey}`}
-                          fileUrl={textbookUrl}
-                          initialPage={currentPage}
-                          initialZoom={zoom}
-                          showOutline={outline}
-                          onPageChange={setPg}
-                          onZoomChange={setZoom}
-                          onOutlineChange={setOutline}
-                        />
-                      </Box>
-                    </ConditionalTabPanel>
-                  </TabContext>
-                </OutlinedWrapper>
-              )
-            ) : (
-              // Desktop Splitter
-              <Splitter
-                gutterClassName="custom-gutter-horizontal"
-                draggerClassName="custom-dragger-horizontal"
-              >
-                {openBook && (
-                  <OutlinedWrapper
-                    sx={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      height: '100%',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Editor
-                      note={noteData}
-                      loading={editorLoading}
-                      onSave={handleSave}
-                    />
-                  </OutlinedWrapper>
-                )}
-
-                <OutlinedWrapper
-                  sx={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                    minHeight: 0,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <TabContext value={tabVal}>
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                      <TabList onChange={(_e, v) => setTab(v)}>
-                        <Tab label="Modules" value="1" />
-                        <Tab label="Resources" value="2" />
-                      </TabList>
-                    </Box>
-                    <DataGridTabPanel value="1">
-                      <Box
-                        sx={{
-                          flex: 1,
-                          overflow: 'auto',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 0,
-                        }}
-                      >
-                        <SeeAssignmentsAndPreview
-                          classId={classId}
-                          canEdit={!isElevated}
-                        />
-                      </Box>
-                    </DataGridTabPanel>
-                    <DataGridTabPanel value="2">
-                      <PDFViewer
-                        key={`pdf-${currentPage}-${pdfKey}`}
-                        fileUrl={textbookUrl}
-                        initialPage={currentPage}
-                        initialZoom={zoom}
-                        showOutline={outline}
-                        onPageChange={setPg}
-                        onZoomChange={setZoom}
-                        onOutlineChange={setOutline}
-                      />
-                    </DataGridTabPanel>
-                  </TabContext>
-                </OutlinedWrapper>
-              </Splitter>
+                }
+                renderTabs={() => renderTabs('desktop')}
+                splitSizes={splitSizes}
+                onSplitResizeFinished={onSplitResizeFinished}
+              />
             )}
           </Box>
         </Box>
