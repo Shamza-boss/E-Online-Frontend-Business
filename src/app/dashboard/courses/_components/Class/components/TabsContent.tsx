@@ -6,7 +6,9 @@ import TabList from '@mui/lab/TabList';
 import ConditionalTabPanel from '@/app/_lib/components/conditionalTabPanel';
 import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
 import SeeAssignmentsAndPreview from '../../Homework/SeeAssignmentsAndPreview';
-import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer, {
+    type PdfNoteLinkOptions,
+} from '@/app/_lib/components/PDFViewer/PDFViewer';
 import type { PdfViewState } from '../hooks/useClassroomLayout';
 
 interface TabsContentProps {
@@ -17,6 +19,7 @@ interface TabsContentProps {
     canEdit: boolean;
     fileUrl: string;
     pdfState: PdfViewState;
+    noteLinkOptions?: PdfNoteLinkOptions;
 }
 
 const AssignmentsPanel = ({
@@ -42,9 +45,11 @@ const AssignmentsPanel = ({
 const ResourcesPanel = ({
     fileUrl,
     pdfState,
+    noteLinkOptions,
 }: {
     fileUrl: string;
     pdfState: PdfViewState;
+    noteLinkOptions?: PdfNoteLinkOptions;
 }) => (
     <Box
         sx={{
@@ -63,6 +68,7 @@ const ResourcesPanel = ({
             onPageChange={pdfState.onPageChange}
             onZoomChange={pdfState.onZoomChange}
             onOutlineChange={pdfState.onOutlineChange}
+            noteLinkOptions={noteLinkOptions}
         />
     </Box>
 );
@@ -75,6 +81,7 @@ export const TabsContent: React.FC<TabsContentProps> = ({
     canEdit,
     fileUrl,
     pdfState,
+    noteLinkOptions,
 }) => {
     const renderPanel = useCallback(
         (panel: '1' | '2', children: ReactNode) => {
@@ -104,7 +111,14 @@ export const TabsContent: React.FC<TabsContentProps> = ({
                 </TabList>
             </Box>
             {renderPanel('1', <AssignmentsPanel classId={classId} canEdit={canEdit} />)}
-            {renderPanel('2', <ResourcesPanel fileUrl={fileUrl} pdfState={pdfState} />)}
+            {renderPanel(
+                '2',
+                <ResourcesPanel
+                    fileUrl={fileUrl}
+                    pdfState={pdfState}
+                    noteLinkOptions={noteLinkOptions}
+                />
+            )}
         </TabContext>
     );
 };

@@ -89,6 +89,7 @@
     "pdfjs-dist": "4.8.69",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-draggable": "^4.4.6",
     "react-hook-form": "^7.53.1",
     "react-pdf": "^9.2.1",
     "sass": "^1.80.5",

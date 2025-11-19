@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, CircularProgress, Box, Typography } from '@mui/material';
+import { TextField, Box, Typography } from '@mui/material';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
@@ -7,6 +7,7 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import ClearIcon from '@mui/icons-material/Clear';
 import BrushIcon from '@mui/icons-material/Brush';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { MenuButton, MenuControlsContainer, MenuDivider } from 'mui-tiptap';
 
 interface PDFControlsProps {
@@ -22,6 +23,8 @@ interface PDFControlsProps {
   onPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onToggleHighlight: () => void;
   onClearHighlights: () => void;
+  canCreateNoteLinks?: boolean;
+  onCreateNoteLink?: () => void;
 }
 
 const PDFControls: React.FC<PDFControlsProps> = ({
@@ -37,6 +40,8 @@ const PDFControls: React.FC<PDFControlsProps> = ({
   onPageChange,
   onToggleHighlight,
   onClearHighlights,
+  canCreateNoteLinks,
+  onCreateNoteLink,
 }) => {
   return (
     <MenuControlsContainer>
@@ -82,6 +87,23 @@ const PDFControls: React.FC<PDFControlsProps> = ({
         disabled={!hasHighlights}
         IconComponent={ClearIcon}
       />
+
+      {canCreateNoteLinks && (
+        <>
+          <MenuDivider />
+          <MenuButton
+            value="createNoteLink"
+            tooltipLabel="Add Bookmark to notes"
+            onClick={onCreateNoteLink}
+            IconComponent={BookmarkIcon}
+            sx={{
+              '&:hover .MuiSvgIcon-root': {
+                color: 'success.main',
+              },
+            }}
+          />
+        </>
+      )}
 
       <MenuDivider />
 

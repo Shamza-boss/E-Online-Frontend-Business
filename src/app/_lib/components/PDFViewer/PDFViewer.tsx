@@ -1,12 +1,13 @@
 'use client';
 import React, {
+  useCallback,
   useEffect,
   useMemo,
   useState,
   MouseEvent as ReactMouseEvent,
 } from 'react';
 import { pdfjs, Document, Page } from 'react-pdf';
-import { Box, CircularProgress, Alert, Tabs, Tab } from '@mui/material';
+import { Box, CircularProgress, Alert, Tabs, Tab, useTheme } from '@mui/material';
 import PDFOutline from './PDFOutline';
 import PDFThumbnails from './PDFThumbnails';
 import type { PDFDocumentProxy as ReactPDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
@@ -15,8 +16,33 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import PDFControls from './PDFControls';
 import ArticleIcon from '@mui/icons-material/Article';
 import CollectionsIcon from '@mui/icons-material/Collections';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import PDFNoteLinks from './PDFNoteLinks';
+import type {
+  PdfNoteLinkSummary,
+  PdfNoteLinkRequest,
+} from '@/app/_lib/utils/pdfNoteLinks';
+import { sanitizeBookmarkColor } from '@/app/_lib/utils/pdfNoteLinks';
+import BookmarkDialog, { BookmarkDialogPayload } from './BookmarkDialog';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/build/pdf.worker.mjs`;
+
+const normalizeFileUrl = (value?: string | null): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const base =
+      typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'http://localhost';
+    const normalized = new URL(value, base);
+    return `${normalized.origin}${normalized.pathname}`;
+  } catch (error) {
+    return value;
+  }
+};
 
 interface PdfViewerProps {
   fileUrl: string;
@@ -26,6 +52,7 @@ interface PdfViewerProps {
   onPageChange?: (page: number) => void;
   onZoomChange?: (zoom: number) => void;
   onOutlineChange?: (show: boolean) => void;
+  noteLinkOptions?: PdfNoteLinkOptions;
 }
 
 interface Highlight {
@@ -37,6 +64,16 @@ interface Highlight {
     width: number;
     height: number;
   };
+}
+
+export interface PdfNoteLinkOptions {
+  enabled: boolean;
+  links: PdfNoteLinkSummary[];
+  activeLinkId?: string | null;
+  onSelectLink?: (link: PdfNoteLinkSummary) => void;
+  onOpenNote?: (link: PdfNoteLinkSummary) => void;
+  onCreateLink?: (payload: PdfNoteLinkRequest) => void;
+  onUpdateLink?: (link: PdfNoteLinkSummary, payload: BookmarkDialogPayload) => void;
 }
 
 const highlightCursorStyle = {
@@ -57,6 +94,25 @@ const highlightCursorStyle = {
   },
 } as const;
 
+const findOutlineTitleForPage = (items: any[], targetPage: number): string | null => {
+  if (!items) return null;
+
+  for (const item of items) {
+    if (item?.pageNumber === targetPage && item?.title) {
+      return item.title as string;
+    }
+
+    if (item?.items?.length) {
+      const nested = findOutlineTitleForPage(item.items, targetPage);
+      if (nested) {
+        return nested;
+      }
+    }
+  }
+
+  return null;
+};
+
 const PdfViewer: React.FC<PdfViewerProps> = ({
   fileUrl,
   initialPage = 1,
@@ -65,7 +121,9 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   onPageChange,
   onZoomChange,
   onOutlineChange,
+  noteLinkOptions,
 }) => {
+  const theme = useTheme();
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState(initialPage);
   const [scale, setScale] = useState(initialZoom);
@@ -77,7 +135,45 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   );
   const [showOutlineState, setShowOutlineState] = useState(showOutline);
   const [isPageLoading, setIsPageLoading] = useState(false);
-  const [sidebarTab, setSidebarTab] = useState<'outline' | 'thumbnails'>('thumbnails');
+  const [sidebarTab, setSidebarTab] = useState<
+    'outline' | 'thumbnails' | 'noteLinks'
+  >('outline');
+  const bookmarkColorChoices = useMemo(
+    () =>
+      [
+        theme.palette.success.main,
+        theme.palette.primary.main,
+        theme.palette.secondary.main,
+        theme.palette.warning.main,
+        theme.palette.info.main,
+        theme.palette.error.main,
+        '#7b1fa2',
+        '#ff7043',
+      ].filter(Boolean),
+    [
+      theme.palette.success.main,
+      theme.palette.primary.main,
+      theme.palette.secondary.main,
+      theme.palette.warning.main,
+      theme.palette.info.main,
+      theme.palette.error.main,
+    ]
+  );
+
+  const pickRandomBookmarkColor = useCallback(() => {
+    if (!bookmarkColorChoices.length) return '#2e7d32';
+    const index = Math.floor(Math.random() * bookmarkColorChoices.length);
+    return bookmarkColorChoices[index];
+  }, [bookmarkColorChoices]);
+
+  const [bookmarkDialogState, setBookmarkDialogState] = useState({
+    open: false,
+    mode: 'create' as 'create' | 'edit',
+    initialTitle: '',
+    suggestedTitle: '',
+    initialColor: pickRandomBookmarkColor(),
+    link: null as PdfNoteLinkSummary | null,
+  });
 
   useEffect(() => {
     setPageNumber((prev) => (prev === initialPage ? prev : initialPage));
@@ -90,6 +186,12 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   useEffect(() => {
     setShowOutlineState((prev) => (prev === showOutline ? prev : showOutline));
   }, [showOutline]);
+
+  useEffect(() => {
+    if (!noteLinkOptions?.enabled && sidebarTab === 'noteLinks') {
+      setSidebarTab('thumbnails');
+    }
+  }, [noteLinkOptions?.enabled, sidebarTab]);
 
   useEffect(() => {
     const savedHighlights = localStorage.getItem(`pdf-highlights-${fileUrl}`);
@@ -105,6 +207,80 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
       standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.4.120/standard_fonts/',
     }),
     []
+  );
+
+  const noteLinksEnabled = Boolean(noteLinkOptions?.enabled);
+  const normalizedViewerFileUrl = useMemo(
+    () => normalizeFileUrl(fileUrl),
+    [fileUrl]
+  );
+  const currentOutlineTitle = useMemo(() => {
+    if (!outline || outline.length === 0) {
+      return null;
+    }
+    return findOutlineTitleForPage(outline, pageNumber);
+  }, [outline, pageNumber]);
+  const noteLinks = useMemo(() => {
+    if (!noteLinksEnabled) {
+      return [] as PdfNoteLinkSummary[];
+    }
+
+    const sourceLinks = noteLinkOptions?.links ?? [];
+    const filtered = sourceLinks.filter(
+      (link) => {
+        if (!link.fileUrl) {
+          return true;
+        }
+
+        const normalizedLinkFileUrl = normalizeFileUrl(link.fileUrl);
+        if (!normalizedLinkFileUrl || !normalizedViewerFileUrl) {
+          return true;
+        }
+
+        return normalizedLinkFileUrl === normalizedViewerFileUrl;
+      }
+    );
+
+    if (!outline?.length) {
+      return filtered;
+    }
+
+    return filtered.map((link) => {
+      if (link.outlineTitle?.trim()) {
+        return link;
+      }
+      const resolved = findOutlineTitleForPage(outline, link.pageNumber);
+      if (!resolved) {
+        return link;
+      }
+      return {
+        ...link,
+        outlineTitle: resolved,
+      };
+    });
+  }, [
+    noteLinkOptions?.links,
+    noteLinksEnabled,
+    normalizedViewerFileUrl,
+    outline,
+  ]);
+
+  const getDefaultBookmarkTitle = useCallback(
+    (link?: Pick<PdfNoteLinkSummary, 'bookmarkTitle' | 'outlineTitle' | 'pageNumber'> | null) => {
+      const explicit = link?.bookmarkTitle?.trim();
+      if (explicit) {
+        return explicit;
+      }
+
+      const outlineText = (link?.outlineTitle ?? currentOutlineTitle)?.trim();
+      if (outlineText) {
+        return `See ${outlineText}`;
+      }
+
+      const targetPage = link?.pageNumber ?? pageNumber;
+      return `Open on Page ${targetPage}`;
+    },
+    [currentOutlineTitle, pageNumber]
   );
 
   useEffect(() => {
@@ -230,6 +406,107 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
           title={highlight.content}
         />
       ));
+  };
+
+  const closeBookmarkDialog = useCallback(() => {
+    setBookmarkDialogState((prev) => ({
+      ...prev,
+      open: false,
+      link: null,
+    }));
+  }, []);
+
+  const handleCreateNoteLink = useCallback(() => {
+    if (!noteLinksEnabled || !noteLinkOptions?.onCreateLink) {
+      return;
+    }
+
+    const defaultTitle = getDefaultBookmarkTitle(null);
+    setBookmarkDialogState({
+      open: true,
+      mode: 'create',
+      initialTitle: defaultTitle,
+      suggestedTitle: defaultTitle,
+      initialColor: pickRandomBookmarkColor(),
+      link: null,
+    });
+  }, [
+    noteLinksEnabled,
+    noteLinkOptions?.onCreateLink,
+    getDefaultBookmarkTitle,
+    pickRandomBookmarkColor,
+  ]);
+
+  const handleEditBookmark = useCallback(
+    (link: PdfNoteLinkSummary) => {
+      if (!noteLinkOptions?.onUpdateLink) {
+        return;
+      }
+
+      const initialTitle = getDefaultBookmarkTitle(link);
+      setBookmarkDialogState({
+        open: true,
+        mode: 'edit',
+        initialTitle,
+        suggestedTitle: initialTitle,
+        initialColor: link.bookmarkColor || pickRandomBookmarkColor(),
+        link,
+      });
+    },
+    [noteLinkOptions?.onUpdateLink, getDefaultBookmarkTitle, pickRandomBookmarkColor]
+  );
+
+  const handleBookmarkDialogConfirm = useCallback(
+    (payload: BookmarkDialogPayload) => {
+      const normalizedColor =
+        sanitizeBookmarkColor(payload.color) || pickRandomBookmarkColor();
+
+      if (bookmarkDialogState.mode === 'create') {
+        if (noteLinksEnabled && noteLinkOptions?.onCreateLink) {
+          const pageLabel = currentOutlineTitle || `Page ${pageNumber}`;
+          noteLinkOptions.onCreateLink({
+            pageNumber,
+            pageLabel,
+            outlineTitle: currentOutlineTitle,
+            fileUrl,
+            bookmarkTitle: payload.title,
+            bookmarkColor: normalizedColor,
+          });
+          setSidebarTab('noteLinks');
+        }
+      } else if (
+        bookmarkDialogState.link &&
+        noteLinkOptions?.onUpdateLink
+      ) {
+        noteLinkOptions.onUpdateLink(bookmarkDialogState.link, {
+          ...payload,
+          color: normalizedColor,
+        });
+      }
+
+      closeBookmarkDialog();
+    },
+    [
+      bookmarkDialogState,
+      noteLinksEnabled,
+      noteLinkOptions?.onCreateLink,
+      noteLinkOptions?.onUpdateLink,
+      currentOutlineTitle,
+      pageNumber,
+      fileUrl,
+      setSidebarTab,
+      closeBookmarkDialog,
+      pickRandomBookmarkColor,
+    ]
+  );
+
+  const handleNoteLinkSelect = (link: PdfNoteLinkSummary) => {
+    if (!link) return;
+    if (link.pageNumber !== pageNumber) {
+      setIsPageLoading(true);
+      setPageNumber(link.pageNumber);
+    }
+    noteLinkOptions?.onSelectLink?.(link);
   };
 
   const onDocumentLoadSuccess = async (pdfDoc: any) => {
@@ -407,7 +684,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
       {showOutlineState && (
         <Box
           sx={{
-            width: 400,
+            width: 500,
             borderRight: 1,
             borderColor: 'divider',
             overflow: 'hidden',
@@ -432,13 +709,6 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
             }}
           >
             <Tab
-              value="thumbnails"
-              icon={<CollectionsIcon />}
-              iconPosition="start"
-              label="Pages"
-              sx={{ minHeight: 48 }}
-            />
-            <Tab
               value="outline"
               icon={<ArticleIcon />}
               iconPosition="start"
@@ -446,6 +716,22 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
               sx={{ minHeight: 48 }}
               disabled={!outline || outline.length === 0}
             />
+            <Tab
+              value="thumbnails"
+              icon={<CollectionsIcon />}
+              iconPosition="start"
+              label="Pages"
+              sx={{ minHeight: 48 }}
+            />
+            {noteLinksEnabled && (
+              <Tab
+                value="noteLinks"
+                icon={<BookmarkIcon color="success" />}
+                iconPosition="start"
+                label={`Notes`}
+                sx={{ minHeight: 48 }}
+              />
+            )}
           </Tabs>
           <Box sx={{ flex: 1, overflow: 'hidden' }}>
             {sidebarTab === 'outline' && (
@@ -461,6 +747,17 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
                 numPages={numPages}
                 currentPage={pageNumber}
                 onPageClick={handleThumbnailClick}
+              />
+            )}
+            {sidebarTab === 'noteLinks' && noteLinksEnabled && (
+              <PDFNoteLinks
+                links={noteLinks}
+                onSelect={handleNoteLinkSelect}
+                onOpenNote={noteLinkOptions?.onOpenNote}
+                activeLinkId={noteLinkOptions?.activeLinkId ?? null}
+                onEditBookmark={
+                  noteLinkOptions?.onUpdateLink ? handleEditBookmark : undefined
+                }
               />
             )}
           </Box>
@@ -494,6 +791,10 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
             onPageChange={handleGoToPage}
             onToggleHighlight={() => setIsHighlighting(!isHighlighting)}
             onClearHighlights={clearHighlights}
+            canCreateNoteLinks={
+              noteLinksEnabled && Boolean(noteLinkOptions?.onCreateLink)
+            }
+            onCreateNoteLink={handleCreateNoteLink}
           />
         </Box>
         <Box
@@ -632,8 +933,19 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
           </Box>
         </Box>
       </Box>
+      <BookmarkDialog
+        open={bookmarkDialogState.open}
+        mode={bookmarkDialogState.mode}
+        suggestedTitle={bookmarkDialogState.suggestedTitle}
+        initialTitle={bookmarkDialogState.initialTitle}
+        initialColor={bookmarkDialogState.initialColor}
+        onCancel={closeBookmarkDialog}
+        onConfirm={handleBookmarkDialogConfirm}
+      />
     </Box>
   );
 };
 
 export default React.memo(PdfViewer);
+
+export type { PdfNoteLinkSummary, PdfNoteLinkRequest } from '@/app/_lib/utils/pdfNoteLinks';

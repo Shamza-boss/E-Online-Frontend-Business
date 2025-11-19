@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 
 import { useSession } from 'next-auth/react';
@@ -15,6 +15,14 @@ import { NotesPanel } from './Class/components/NotesPanel';
 import { TabsContent } from './Class/components/TabsContent';
 import { DesktopContent } from './Class/components/DesktopContent';
 import { MobileContent } from './Class/components/MobileContent';
+import type { EditorHandle } from '@/app/_lib/components/TipTapEditor/Editor';
+import {
+  buildPdfNoteLinkHtml,
+  extractPdfNoteLinks,
+  type PdfNoteLinkRequest,
+  type PdfNoteLinkSummary,
+} from '@/app/_lib/utils/pdfNoteLinks';
+import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/PDFViewer';
 
 interface Props {
   classId: string;
@@ -26,6 +34,8 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
   const isElevated = Number(session?.user?.role) === UserRole.Trainee;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const pdfPersistKey = `${classId}:${textbookUrl}`;
+
   const {
     tabValue,
     setTabValue,
@@ -37,7 +47,7 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
     pdfState,
     splitSizes,
     onSplitResizeFinished,
-  } = useClassroomLayout();
+  } = useClassroomLayout({ pdfPersistKey });
   const { data: note, isLoading, saveNote } = useClassroomNote(classId);
 
   const handleSave = async (html: string) => {
@@ -53,11 +63,188 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
       canEdit={!isElevated}
       fileUrl={textbookUrl}
       pdfState={pdfState}
+      noteLinkOptions={noteLinkOptions}
     />
   );
 
   const editorLoading = isLoading && !note;
   const noteData = note ?? undefined;
+  const notesEditorRef = useRef<EditorHandle | null>(null);
+  const fullscreenEditorRef = useRef<EditorHandle | null>(null);
+  const [liveNoteContent, setLiveNoteContent] = useState<string>(note?.content ?? '');
+  const [activeNoteLinkId, setActiveNoteLinkId] = useState<string | null>(null);
+
+  const syncLiveNoteContent = useCallback((editor: EditorHandle) => {
+    const html = editor.getHtml();
+    if (typeof html === 'string') {
+      setLiveNoteContent(html);
+    }
+  }, [setLiveNoteContent]);
+
+  useEffect(() => {
+    setLiveNoteContent(note?.content ?? '');
+  }, [note?.content]);
+
+  const handleEditorContentChange = useCallback((html: string) => {
+    setLiveNoteContent(html);
+  }, []);
+
+  const noteLinks = useMemo(
+    () => extractPdfNoteLinks(liveNoteContent, note?.id),
+    [liveNoteContent, note?.id]
+  );
+
+  const ensureNotesVisible = useCallback(() => {
+    if (!isNotesOpen) {
+      toggleNotes();
+      return true;
+    }
+    return false;
+  }, [isNotesOpen, toggleNotes]);
+
+  const ensurePdfVisible = useCallback(() => {
+    setTabValue('2');
+    if (isMobile && isNotesOpen) {
+      toggleNotes();
+    }
+  }, [isMobile, isNotesOpen, setTabValue, toggleNotes]);
+
+  const scrollAndPulseNoteChip = useCallback((linkId: string) => {
+    if (typeof document === 'undefined') return;
+
+    requestAnimationFrame(() => {
+      const chip = document.querySelector<HTMLElement>(`[data-link-id="${linkId}"]`);
+      if (!chip) return;
+      chip.classList.remove('pdf-note-chip--pulse');
+      void chip.offsetWidth;
+      chip.classList.add('pdf-note-chip--pulse');
+      chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, []);
+
+  const focusNoteChip = useCallback(
+    (linkId: string) => {
+      const notesJustOpened = ensureNotesVisible();
+      const delay = notesJustOpened ? 350 : 0;
+      setTimeout(() => {
+        scrollAndPulseNoteChip(linkId);
+      }, delay);
+    },
+    [ensureNotesVisible, scrollAndPulseNoteChip]
+  );
+
+  const withEditorHandle = useCallback(
+    (task: (editor: EditorHandle) => void) => {
+      const immediate =
+        (isFullscreen ? fullscreenEditorRef.current : notesEditorRef.current) ??
+        notesEditorRef.current ??
+        fullscreenEditorRef.current;
+
+      if (immediate) {
+        task(immediate);
+        return;
+      }
+
+      const opened = ensureNotesVisible();
+
+      const timeout = opened ? 350 : 150;
+      setTimeout(() => {
+        const fallback = notesEditorRef.current ?? fullscreenEditorRef.current;
+        if (fallback) {
+          task(fallback);
+          return;
+        }
+        console.warn('Unable to access notebook editor to insert PDF link.');
+      }, timeout);
+    },
+    [ensureNotesVisible, isFullscreen]
+  );
+
+  const handleCreateNoteLinkRequest = useCallback(
+    (payload: PdfNoteLinkRequest) => {
+      withEditorHandle((editorHandle) => {
+        const { html, summary, attrs } = buildPdfNoteLinkHtml(payload);
+        const inserted = editorHandle.insertPdfLink?.(attrs) ?? false;
+        if (!inserted) {
+          editorHandle.insertHtml(html);
+        }
+        syncLiveNoteContent(editorHandle);
+        setActiveNoteLinkId(summary.id);
+        scrollAndPulseNoteChip(summary.id);
+      });
+    },
+    [withEditorHandle, scrollAndPulseNoteChip, syncLiveNoteContent]
+  );
+
+  const handleUpdateNoteLinkRequest = useCallback(
+    (link: PdfNoteLinkSummary, payload: { title: string; color: string }) => {
+      withEditorHandle((editorHandle) => {
+        const updated = editorHandle.updatePdfLink?.(link.id, {
+          chipLabel: payload.title,
+          chipColor: payload.color,
+        });
+        if (updated) {
+          syncLiveNoteContent(editorHandle);
+          setActiveNoteLinkId(link.id);
+          focusNoteChip(link.id);
+        }
+      });
+    },
+    [withEditorHandle, focusNoteChip, syncLiveNoteContent]
+  );
+
+  const handleNotebookPdfLinkClick = useCallback(
+    (link: PdfNoteLinkSummary) => {
+      setActiveNoteLinkId(link.id);
+      ensurePdfVisible();
+      pdfState.onPageChange(link.pageNumber);
+    },
+    [ensurePdfVisible, pdfState]
+  );
+
+  const handleOpenNoteFromSidebar = useCallback(
+    (link: PdfNoteLinkSummary) => {
+      setActiveNoteLinkId(link.id);
+      focusNoteChip(link.id);
+    },
+    [focusNoteChip]
+  );
+
+  const handleSidebarLinkSelect = useCallback(
+    (link: PdfNoteLinkSummary) => {
+      setActiveNoteLinkId(link.id);
+      ensurePdfVisible();
+      pdfState.onPageChange(link.pageNumber);
+      focusNoteChip(link.id);
+    },
+    [ensurePdfVisible, pdfState, focusNoteChip]
+  );
+
+  const noteFeaturesEnabled = !editorLoading;
+
+  const noteLinkOptions: PdfNoteLinkOptions | undefined = useMemo(() => {
+    if (!noteFeaturesEnabled) {
+      return undefined;
+    }
+
+    return {
+      enabled: true,
+      links: noteLinks,
+      activeLinkId: activeNoteLinkId,
+      onCreateLink: handleCreateNoteLinkRequest,
+      onOpenNote: handleOpenNoteFromSidebar,
+      onSelectLink: handleSidebarLinkSelect,
+      onUpdateLink: handleUpdateNoteLinkRequest,
+    };
+  }, [
+    noteFeaturesEnabled,
+    noteLinks,
+    activeNoteLinkId,
+    handleCreateNoteLinkRequest,
+    handleOpenNoteFromSidebar,
+    handleSidebarLinkSelect,
+    handleUpdateNoteLinkRequest,
+  ]);
 
   return (
     <>
@@ -73,6 +260,10 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
         onTabChange={setTabValue}
         classId={classId}
         pdfState={pdfState}
+        noteLinkOptions={noteLinkOptions}
+        editorRef={fullscreenEditorRef}
+        onEditorContentChange={handleEditorContentChange}
+        onPdfLinkClick={handleNotebookPdfLinkClick}
       />
 
       <Box
@@ -116,6 +307,9 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                     loading={editorLoading}
                     onSave={handleSave}
                     sx={{ overflow: 'hidden' }}
+                    editorRef={notesEditorRef}
+                    onContentChange={handleEditorContentChange}
+                    onPdfLinkClick={handleNotebookPdfLinkClick}
                   />
                 }
                 renderTabs={() => renderTabs('mobile')}
@@ -128,6 +322,9 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
                     note={noteData}
                     loading={editorLoading}
                     onSave={handleSave}
+                    editorRef={notesEditorRef}
+                    onContentChange={handleEditorContentChange}
+                    onPdfLinkClick={handleNotebookPdfLinkClick}
                   />
                 }
                 renderTabs={() => renderTabs('desktop')}
