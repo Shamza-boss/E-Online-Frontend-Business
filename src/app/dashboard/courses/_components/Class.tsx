@@ -109,28 +109,36 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
     }
   }, [isMobile, isNotesOpen, setTabValue, toggleNotes]);
 
-  const scrollAndPulseNoteChip = useCallback((linkId: string) => {
-    if (typeof document === 'undefined') return;
+  const scrollAndPulseNoteChip = useCallback(
+    (linkId: string, editorHandle?: EditorHandle | null) => {
+      if (typeof document === 'undefined' || typeof window === 'undefined') {
+        return;
+      }
 
-    requestAnimationFrame(() => {
-      const chip = document.querySelector<HTMLElement>(`[data-link-id="${linkId}"]`);
-      if (!chip) return;
-      chip.classList.remove('pdf-note-chip--pulse');
-      void chip.offsetWidth;
-      chip.classList.add('pdf-note-chip--pulse');
-      chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  }, []);
+      type QueryRoot = Document | HTMLElement;
+      const selector = `[data-link-id="${linkId}"]`;
+      const contexts: QueryRoot[] = [];
+      const editorRoot = editorHandle?.getRootElement?.();
+      if (editorRoot) {
+        contexts.push(editorRoot);
+      }
+      contexts.push(document);
 
-  const focusNoteChip = useCallback(
-    (linkId: string) => {
-      const notesJustOpened = ensureNotesVisible();
-      const delay = notesJustOpened ? 350 : 0;
-      setTimeout(() => {
-        scrollAndPulseNoteChip(linkId);
-      }, delay);
+      window.requestAnimationFrame(() => {
+        for (const context of contexts) {
+          const chip = context.querySelector<HTMLElement>(selector);
+          if (!chip) {
+            continue;
+          }
+          chip.classList.remove('pdf-note-chip--pulse');
+          void chip.offsetWidth;
+          chip.classList.add('pdf-note-chip--pulse');
+          chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+      });
     },
-    [ensureNotesVisible, scrollAndPulseNoteChip]
+    []
   );
 
   const withEditorHandle = useCallback(
@@ -160,6 +168,25 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
     [ensureNotesVisible, isFullscreen]
   );
 
+
+  const focusNoteChip = useCallback(
+    (linkId: string) => {
+      const notesJustOpened = ensureNotesVisible();
+      const delay = notesJustOpened ? 350 : 0;
+      const run = () =>
+        withEditorHandle((editorHandle) => {
+          scrollAndPulseNoteChip(linkId, editorHandle);
+        });
+
+      if (delay) {
+        setTimeout(run, delay);
+      } else {
+        run();
+      }
+    },
+    [ensureNotesVisible, scrollAndPulseNoteChip, withEditorHandle]
+  );
+  
   const handleCreateNoteLinkRequest = useCallback(
     (payload: PdfNoteLinkRequest) => {
       withEditorHandle((editorHandle) => {
@@ -170,7 +197,7 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
         }
         syncLiveNoteContent(editorHandle);
         setActiveNoteLinkId(summary.id);
-        scrollAndPulseNoteChip(summary.id);
+        scrollAndPulseNoteChip(summary.id, editorHandle);
       });
     },
     [withEditorHandle, scrollAndPulseNoteChip, syncLiveNoteContent]

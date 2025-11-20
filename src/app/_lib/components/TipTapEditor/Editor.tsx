@@ -27,10 +27,14 @@ import type { NoteDto } from '../../interfaces/types';
 import { debounce } from 'es-toolkit';
 import TextFragmentLoader from '@/app/dashboard/_components/_skeletonLoaders/TextSkeleton';
 import {
+  base64Encode,
+  computeChecksum,
+  decodePdfNotePayload,
   PDF_NOTE_LINK_SELECTOR,
   PDF_NOTE_LINK_CLASS,
   PDF_NOTE_SENTINEL_ATTRIBUTE,
   PDF_NOTE_TRAILING_PARAGRAPHS,
+  sanitizeBookmarkColor,
   parsePdfNoteLinkElement,
   type PdfNoteLinkSummary,
   type PdfNoteLinkNodeAttributes,
@@ -54,7 +58,16 @@ export interface EditorHandle {
       chipColor?: string;
     }
   ) => boolean;
+  getRootElement?: () => HTMLElement | null;
 }
+
+const serializePdfPayload = (payload: Record<string, unknown>) => {
+  const payloadJson = JSON.stringify(payload);
+  return {
+    encoded: base64Encode(payloadJson),
+    checksum: computeChecksum(payloadJson),
+  };
+};
 
 const Editor = forwardRef<EditorHandle, EditorProps>(
   ({ note, loading, onSave, onContentChange, onPdfLinkClick }: EditorProps, ref) => {
@@ -153,24 +166,60 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
         let changed = false;
         editor
           .chain()
-          .command(({ tr }) => {
-            editor.state.doc.descendants((node, pos) => {
+          .command(({ tr, state }) => {
+            state.doc.descendants((node, pos) => {
               if (
-                node.type.name === 'pdfNoteLink' &&
-                node.attrs['data-link-id'] === linkId
+                node.type.name !== 'pdfNoteLink' ||
+                node.attrs['data-link-id'] !== linkId
               ) {
-                const nextAttrs = { ...node.attrs };
-                if (typeof updates.chipLabel === 'string') {
-                  nextAttrs['data-chip-label'] = updates.chipLabel;
-                }
-                if (typeof updates.chipColor === 'string') {
-                  nextAttrs['data-chip-color'] = updates.chipColor;
-                }
-                tr.setNodeMarkup(pos, undefined, nextAttrs);
-                changed = true;
-                return false;
+                return true;
               }
-              return true;
+
+              const nextAttrs = { ...node.attrs };
+              const hasLabelUpdate = typeof updates.chipLabel === 'string';
+              const hasColorUpdate = typeof updates.chipColor === 'string';
+              const normalizedColor = hasColorUpdate
+                ? sanitizeBookmarkColor(updates.chipColor as string) ?? ''
+                : undefined;
+
+              if (hasLabelUpdate) {
+                nextAttrs['data-chip-label'] = updates.chipLabel as string;
+              }
+
+              if (hasColorUpdate) {
+                nextAttrs['data-chip-color'] =
+                  normalizedColor ?? nextAttrs['data-chip-color'];
+              }
+
+              if (hasLabelUpdate || hasColorUpdate) {
+                const decodedPayload = decodePdfNotePayload(
+                  nextAttrs['data-pdf-payload'],
+                  nextAttrs['data-pdf-checksum']
+                );
+
+                if (decodedPayload) {
+                  const payload = { ...decodedPayload.payload };
+
+                  if (hasLabelUpdate) {
+                    payload.bookmarkTitle = updates.chipLabel as string;
+                  }
+
+                  if (hasColorUpdate) {
+                    payload.bookmarkColor = normalizedColor || undefined;
+                  }
+
+                  const { encoded, checksum } = serializePdfPayload(payload);
+                  nextAttrs['data-pdf-payload'] = encoded;
+                  nextAttrs['data-pdf-checksum'] = checksum;
+                } else {
+                  nextAttrs['data-pdf-payload'] = null;
+                  nextAttrs['data-pdf-checksum'] = null;
+                }
+              }
+
+              tr.setNodeMarkup(pos, undefined, nextAttrs);
+              changed = true;
+              return false;
             });
             return changed;
           })
@@ -210,6 +259,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
         },
         updatePdfLink: (linkId, updates) =>
           updatePdfLinkAttributes(linkId, updates),
+        getRootElement: () => editor?.view.dom ?? null,
       };
     }
 

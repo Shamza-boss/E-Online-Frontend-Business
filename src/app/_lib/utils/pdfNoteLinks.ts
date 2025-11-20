@@ -100,7 +100,7 @@ const resolveId = (explicit?: string) => {
   return fallbackId();
 };
 
-const base64Encode = (value: string) => {
+export const base64Encode = (value: string) => {
   if (typeof Buffer !== 'undefined') {
     return Buffer.from(value, 'utf-8').toString('base64');
   }
