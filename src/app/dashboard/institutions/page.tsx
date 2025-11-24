@@ -30,6 +30,7 @@ const ManageInstitutions = () => {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        p: 3
       }}
     >
       <Box

@@ -10,7 +10,7 @@ export default function StudentClassCardSkeleton({
   count: Number | undefined;
 }) {
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
       <Grid container spacing={2}>
         {[...Array(count)].map((_, idx) => (
           <Grid key={idx} size={{ xs: 12, sm: 6, md: 3 }}>

@@ -1,9 +1,9 @@
 'use client';
-import Dashboard from './_components/Dashboard';
 import { Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { MathJaxContext } from 'better-react-mathjax';
+import DashboardComponent from './_components/Dashboard';
 
 const mathJaxConfig = {
   tex: {
@@ -25,7 +25,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Dashboard>
+    <DashboardComponent>
       <MathJaxContext version={3} config={mathJaxConfig}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Box
@@ -47,6 +47,6 @@ export default function DashboardLayout({
           </Box>
         </LocalizationProvider>
       </MathJaxContext>
-    </Dashboard>
+    </DashboardComponent>
   );
 }

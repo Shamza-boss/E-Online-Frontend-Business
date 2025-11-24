@@ -126,6 +126,7 @@ export default function StudentManagementComponent({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        p: 3,
       }}
     >
       <Box

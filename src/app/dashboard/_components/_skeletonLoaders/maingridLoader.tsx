@@ -10,7 +10,7 @@ import { Grid } from '@mui/material';
 
 export default function MainGridSkeleton() {
   return (
-    <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
+    <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' }, p: 3 }}>
       {/* Skeleton for cards */}
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         <Skeleton width="20%" height={30} />

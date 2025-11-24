@@ -352,3 +352,47 @@ export interface InstitutionTrendsDashboardDto {
   mostActiveSubjects: MostActiveClassSubjectSeriesDto;
   recentHomeworkStats: RecentHomeworkStatDto[];
 }
+
+// Settings / Profile insights
+export interface SettingsResponseDto {
+  user: SettingsUserDto;
+  stats: SettingsStatsDto;
+}
+
+export interface SettingsUserDto {
+  userId: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: UserRole | string | number | null;
+  institutionId?: string | null;
+  institutionName?: string | null;
+  status?: string | null;
+  emailVerifiedAt?: string | null;
+  passkeyEnrolledAt?: string | null;
+  firstLoginAt?: string | null;
+  enrollmentCompletedAt?: string | null;
+  createdAt?: string;
+  createdByUserId?: string | null;
+}
+
+export interface SettingsStatsDto {
+  explanation: string;
+  rating?: string | null;
+  kpis: Record<string, number>;
+  graphs: StatsGraphDto[];
+  extra: Record<string, unknown>;
+}
+
+export interface StatsGraphDto {
+  id: string;
+  title: string;
+  x: string[];
+  series: StatsGraphSeriesDto[];
+  description?: string | null;
+}
+
+export interface StatsGraphSeriesDto {
+  name: string;
+  values: number[];
+}

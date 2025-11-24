@@ -41,8 +41,8 @@ export default function MainGrid() {
       interval: 'Last 30 days',
       trend:
         institutionData?.teachers?.trend === 'up' ||
-        institutionData?.teachers?.trend === 'down' ||
-        institutionData?.teachers?.trend === 'neutral'
+          institutionData?.teachers?.trend === 'down' ||
+          institutionData?.teachers?.trend === 'neutral'
           ? institutionData?.teachers?.trend
           : 'neutral',
       data: institutionData?.teachers?.dataPoints || [],
@@ -54,8 +54,8 @@ export default function MainGrid() {
       interval: 'Last 30 days',
       trend:
         institutionData?.students?.trend === 'up' ||
-        institutionData?.students?.trend === 'down' ||
-        institutionData?.students?.trend === 'neutral'
+          institutionData?.students?.trend === 'down' ||
+          institutionData?.students?.trend === 'neutral'
           ? institutionData?.students?.trend
           : 'neutral',
       data: institutionData?.students?.dataPoints || [],
@@ -67,8 +67,8 @@ export default function MainGrid() {
       interval: 'Last 30 days',
       trend:
         institutionData?.notesCreated?.trend === 'up' ||
-        institutionData?.notesCreated?.trend === 'down' ||
-        institutionData?.notesCreated?.trend === 'neutral'
+          institutionData?.notesCreated?.trend === 'down' ||
+          institutionData?.notesCreated?.trend === 'neutral'
           ? institutionData?.notesCreated?.trend
           : 'neutral',
       data: institutionData?.notesCreated?.dataPoints || [],
@@ -80,8 +80,8 @@ export default function MainGrid() {
       interval: 'Last 30 days',
       trend:
         institutionData?.homeworkCreated?.trend === 'up' ||
-        institutionData?.homeworkCreated?.trend === 'down' ||
-        institutionData?.homeworkCreated?.trend === 'neutral'
+          institutionData?.homeworkCreated?.trend === 'down' ||
+          institutionData?.homeworkCreated?.trend === 'neutral'
           ? institutionData?.homeworkCreated?.trend
           : 'neutral',
       data: institutionData?.homeworkCreated?.dataPoints || [],
@@ -92,6 +92,7 @@ export default function MainGrid() {
   return (
     <Grid
       container
+      p={3}
       spacing={2}
       columns={12}
       sx={{
@@ -100,11 +101,6 @@ export default function MainGrid() {
         flexDirection: 'row',
       }}
     >
-      <Grid size={{ xs: 12 }}>
-        <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-          Overview
-        </Typography>
-      </Grid>
       {institutionStats.map((card, index) => (
         <Grid key={index} size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard {...card} />

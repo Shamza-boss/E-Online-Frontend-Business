@@ -186,7 +186,7 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
     },
     [ensureNotesVisible, scrollAndPulseNoteChip, withEditorHandle]
   );
-  
+
   const handleCreateNoteLinkRequest = useCallback(
     (payload: PdfNoteLinkRequest) => {
       withEditorHandle((editorHandle) => {
@@ -299,6 +299,7 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          p: 3,
         }}
       >
         {GutterStyles()}
