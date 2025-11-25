@@ -126,7 +126,7 @@ export default function SignIn() {
               type="submit"
               variant="contained"
               disabled={busy}
-              sx={{ alignSelf: 'flex-start' }}
+              fullWidth
             >
               {busy ? 'Opening passkey…' : 'Sign in with Passkey'}
             </Button>

@@ -1,13 +1,17 @@
 import { redirect } from 'next/navigation';
+import { auth } from '@/auth';
 import { getMySettings } from '@/app/_lib/actions/settings';
 import SettingsExperience from './_components/SettingsExperience';
 
-export default async function SettingsPage() {
-  const settings = await getMySettings().catch(() => null);
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-  if (!settings) {
+export default async function SettingsPage() {
+  const session = await auth();
+  if (!session) {
     redirect('/signin');
   }
 
+  const settings = await getMySettings();
   return <SettingsExperience data={settings} />;
 }
