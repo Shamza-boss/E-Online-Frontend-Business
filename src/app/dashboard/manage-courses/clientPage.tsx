@@ -10,7 +10,7 @@ export default function StudentClassesManagementClient() {
   const [open, setOpen] = useState(false);
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
       <AssignStudentsToClassModal
         open={open}
         handleClose={() => setOpen(false)}

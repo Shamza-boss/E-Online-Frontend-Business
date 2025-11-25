@@ -27,7 +27,7 @@ const platformOnlyRoutes = ['institutions'];
 // numeric roles with full access (Admin, Trainer(Teacher))
 const fullAccessRoles: UserRole[] = [UserRole.Admin, UserRole.Instructor];
 // student allowed routes
-const studentAllowed = ['', 'courses', 'library'];
+const studentAllowed = ['', 'courses', 'library', 'settings'];
 
 const mainListItems = [
   { route: '', icon: <TimelineIcon /> }, // Dashboard root route
@@ -79,12 +79,14 @@ export default function MenuContent() {
     const isLoading = isPending && clickedRoute === route;
     const isPlatformOnly = platformOnlyRoutes.includes(route);
     const hasFullAccess = fullAccessRoles.includes(roleValue);
+    const isSettingsRoute = route === 'settings';
 
     // Check if user has access to this route
     const hasAccess =
+      isSettingsRoute ||
       (isPlatformOnly && roleValue === platformOwnerRole) ||
-      (!isPlatformOnly && (hasFullAccess || studentAllowed.includes(route))) &&
-      !(route === 'courses' && roleValue === platformOwnerRole);
+      ((!isPlatformOnly && (hasFullAccess || studentAllowed.includes(route))) &&
+        !(route === 'courses' && roleValue === platformOwnerRole));
 
     // Only render if user has access
     if (!hasAccess) {

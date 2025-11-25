@@ -1,7 +1,13 @@
-import React from 'react';
+import { redirect } from 'next/navigation';
+import { getMySettings } from '@/app/_lib/actions/settings';
+import SettingsExperience from './_components/SettingsExperience';
 
-const Settings = () => {
-  return <h1>Settings</h1>;
-};
+export default async function SettingsPage() {
+  const settings = await getMySettings().catch(() => null);
 
-export default Settings;
+  if (!settings) {
+    redirect('/signin');
+  }
+
+  return <SettingsExperience data={settings} />;
+}

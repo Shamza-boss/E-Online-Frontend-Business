@@ -36,7 +36,9 @@ export const useFileUpload = (institutionId?: string) => {
 
     setUploading(true);
     try {
-      const uploadResult = await uploadTextbook(selectedUploadFile);
+      const formData = new FormData();
+      formData.append('file', selectedUploadFile);
+      const uploadResult = await uploadTextbook(formData);
       const payload: any = {
         fileKey: uploadResult.key,
         url: uploadResult.proxyDownload,

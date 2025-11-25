@@ -104,8 +104,10 @@ export default function ClassroomCreationStepper() {
 
     setUploading(true);
     try {
+      const formData = new FormData();
+      formData.append('file', file);
       const { key, proxyDownload, presignedGet, hash } =
-        await uploadTextbook(file);
+        await uploadTextbook(formData);
 
       // stash them in state…
       setTextbookKey(key);

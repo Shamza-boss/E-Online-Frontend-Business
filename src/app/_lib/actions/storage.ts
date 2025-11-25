@@ -12,11 +12,18 @@ export interface RegisterRepositoryFilePayload {
   institutionId?: string;
 }
 
-async function uploadFileToStorage(file: File): Promise<UploadResult> {
-  // 1️⃣ compute the hash
+function ensureFile(formData: FormData): File {
+  const candidate = formData.get('file');
+  if (!(candidate instanceof File)) {
+    throw new Error('No file provided for upload.');
+  }
+  return candidate;
+}
+
+async function uploadFileToStorage(formData: FormData): Promise<UploadResult> {
+  const file = ensureFile(formData);
   const hash = await hashFile(file);
 
-  // 2️⃣ build the form
   const form = new FormData();
   form.append('file', file);
   form.append('hash', hash);
@@ -41,12 +48,12 @@ async function uploadFileToStorage(file: File): Promise<UploadResult> {
   };
 }
 
-export async function uploadTextbook(file: File): Promise<UploadResult> {
-  return uploadFileToStorage(file);
+export async function uploadTextbook(formData: FormData): Promise<UploadResult> {
+  return uploadFileToStorage(formData);
 }
 
-export async function uploadPdfAsset(file: File): Promise<UploadResult> {
-  return uploadFileToStorage(file);
+export async function uploadPdfAsset(formData: FormData): Promise<UploadResult> {
+  return uploadFileToStorage(formData);
 }
 
 export async function getRepositoryFiles(): Promise<FileDto[]> {

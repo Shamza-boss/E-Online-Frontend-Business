@@ -42,6 +42,7 @@ const ClassesManagement = () => {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        p: 3
       }}
     >
       <Box sx={{ flexShrink: 0, marginBottom: 1 }}>

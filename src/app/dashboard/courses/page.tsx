@@ -10,7 +10,7 @@ export default function ClassroomPage() {
   const classes = getAllUserClassrooms();
   return (
     <SWRConfig value={{ suspense: true, fallback: { classes } }}>
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ flexGrow: 1, p: 3 }}>
         <Stack spacing={2}>
           <Suspense fallback={<StudentClassCardSkeleton count={12} />}>
             <ClassroomClasses />

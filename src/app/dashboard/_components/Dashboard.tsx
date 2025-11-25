@@ -61,14 +61,11 @@ export default function DashboardComponent(props: any) {
               sx={{
                 flexGrow: 1,
                 alignItems: 'stretch',
-                p: 2,
                 mt: { xs: 8, md: 0 },
                 overflow: 'hidden',
               }}
             >
-              <Box sx={{ flexShrink: 0, width: '100%' }}>
-                <Header />
-              </Box>
+              <Header />
               <Box
                 sx={{
                   flexGrow: 1,
