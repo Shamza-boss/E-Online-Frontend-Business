@@ -40,7 +40,7 @@ import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import ProfileSettingsCard, {
     type ProfileSettingsUser,
     formatRoleLabel,
-} from './ProfileSettingsCard';
+} from './profile/ProfileSettingsCard';
 import type {
     SettingsResponseDto,
     SettingsStatsDto,
@@ -350,7 +350,7 @@ export default function SettingsExperience({ data }: SettingsExperienceProps) {
                                     letterSpacing={2}
                                     sx={{ color: roleTheme.accent }}
                                 >
-                                    Absolute Online
+                                    Absolute Online PTY LTD
                                 </Typography>
                                 <Typography variant="h4" fontWeight={700} lineHeight={1.2}>
                                     Settings & Guidance Center

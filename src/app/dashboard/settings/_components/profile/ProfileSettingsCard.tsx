@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import LoadingButton from '@mui/lab/LoadingButton';
 import {
     Alert,
     Avatar,
@@ -15,6 +14,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Theme, alpha } from '@mui/material/styles';
+import { useSession } from 'next-auth/react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { updateProfileAction } from '../../actions';
 
@@ -54,6 +54,7 @@ export function formatRoleLabel(role: string) {
 
 export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) {
     const { showAlert } = useAlert();
+    const { update: updateSession } = useSession();
     const initialFirstName = (user.firstName ?? '').trim();
     const initialLastName = (user.lastName ?? '').trim();
     const [firstName, setFirstName] = React.useState(initialFirstName);
@@ -67,9 +68,15 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
     React.useEffect(() => {
         const normalizedFirst = (user.firstName ?? '').trim();
         const normalizedLast = (user.lastName ?? '').trim();
-        setFirstName(normalizedFirst);
-        setLastName(normalizedLast);
-        setSavedNames({ first: normalizedFirst, last: normalizedLast });
+
+        setFirstName((prev) => (prev === normalizedFirst ? prev : normalizedFirst));
+        setLastName((prev) => (prev === normalizedLast ? prev : normalizedLast));
+        setSavedNames((prev) => {
+            if (prev.first === normalizedFirst && prev.last === normalizedLast) {
+                return prev;
+            }
+            return { first: normalizedFirst, last: normalizedLast };
+        });
     }, [user.firstName, user.lastName]);
 
     const hasChanges = firstName.trim() !== savedNames.first || lastName.trim() !== savedNames.last;
@@ -93,6 +100,23 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
                 setSavedNames({ first: updated.firstName, last: updated.lastName });
                 setFirstName(updated.firstName);
                 setLastName(updated.lastName);
+                const displayName = `${updated.firstName} ${updated.lastName}`.trim();
+                if (typeof updateSession === 'function') {
+                    try {
+                        const nextSession = await updateSession({
+                            user: {
+                                ...user,
+                                firstName: updated.firstName,
+                                lastName: updated.lastName,
+                                name: displayName,
+                            },
+                        });
+                    } catch (sessionError) {
+                        console.error('[ProfileSettings] session update failed', sessionError);
+                    }
+                } else {
+                    console.warn('[ProfileSettings] updateSession is unavailable in this context');
+                }
                 showAlert('success', 'Your profile was updated successfully.');
             } catch (error: unknown) {
                 const message =
@@ -197,7 +221,7 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
                             >
                                 Reset
                             </Button>
-                            <LoadingButton
+                            <Button
                                 type="submit"
                                 variant="contained"
                                 loading={isPending}
@@ -205,7 +229,7 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
                                 sx={{ px: 4 }}
                             >
                                 Save changes
-                            </LoadingButton>
+                            </Button>
                         </Stack>
                     </Box>
                 </Stack>

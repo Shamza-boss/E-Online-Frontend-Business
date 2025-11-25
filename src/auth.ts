@@ -96,9 +96,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       const extended = token as ExtendedToken;
       const nowSeconds = Math.floor(Date.now() / 1000);
+
+      if (trigger === 'update' && session?.user) {
+        const updatedFirst = (session.user as Partial<Session['user']>)
+          ?.firstName;
+        const updatedLast = (session.user as Partial<Session['user']>)
+          ?.lastName;
+        const updatedName = (session.user as Partial<Session['user']>)?.name;
+
+        if (updatedFirst !== undefined) token.firstName = updatedFirst;
+        if (updatedLast !== undefined) token.lastName = updatedLast;
+        if (updatedName !== undefined) token.name = updatedName;
+      }
 
       const api = process.env.BASE_API_URL;
       const email = user?.email ?? token.email;
@@ -142,7 +154,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
-      const signingSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+      const signingSecret =
+        process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
       const primaryId =
         token.userId ?? token.appUserId ?? token.sub ?? user?.id ?? undefined;
       if (signingSecret && primaryId) {
