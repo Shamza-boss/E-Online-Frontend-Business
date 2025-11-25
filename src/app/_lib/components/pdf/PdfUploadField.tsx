@@ -76,7 +76,9 @@ export const PdfUploadField: React.FC<PdfUploadFieldProps> = ({
     setUploading(true);
 
     try {
-      const result = await uploadPdfAsset(file);
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await uploadPdfAsset(formData);
 
       const nextMeta: PdfMeta = {
         provider: value?.provider?.trim() || 'r2',
