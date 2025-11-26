@@ -1,10 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  registerRepositoryFile,
-  uploadTextbook,
-} from '@/app/_lib/actions/storage';
+import { registerRepositoryFile } from '@/app/_lib/actions/storage';
+import { uploadTextbook } from '@/app/_lib/services/storageUpload';
 import { generatePdfThumbnail } from '@/app/_lib/utils/pdfThumbnail';
 
 export const useFileUpload = (institutionId?: string) => {
@@ -36,9 +34,7 @@ export const useFileUpload = (institutionId?: string) => {
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', selectedUploadFile);
-      const uploadResult = await uploadTextbook(formData);
+      const uploadResult = await uploadTextbook(selectedUploadFile);
       const payload: any = {
         fileKey: uploadResult.key,
         url: uploadResult.proxyDownload,

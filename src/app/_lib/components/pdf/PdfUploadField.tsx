@@ -15,7 +15,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { PdfMeta } from '../../interfaces/types';
-import { uploadPdfAsset } from '../../actions/storage';
+import { uploadPdfAsset } from '../../services/storageUpload';
 import PDFViewer from '../PDFViewer/PDFViewer';
 
 interface PdfUploadFieldProps {
@@ -76,9 +76,7 @@ export const PdfUploadField: React.FC<PdfUploadFieldProps> = ({
     setUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const result = await uploadPdfAsset(formData);
+      const result = await uploadPdfAsset(file);
 
       const nextMeta: PdfMeta = {
         provider: value?.provider?.trim() || 'r2',

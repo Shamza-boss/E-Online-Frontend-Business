@@ -33,7 +33,7 @@ import { getAllAcademics } from '@/app/_lib/actions/academics';
 import { getAllSubjects } from '@/app/_lib/actions/subjects';
 import { getUsers } from '@/app/_lib/actions/users';
 import { PagedResult } from '@/app/_lib/interfaces/pagination';
-import { uploadTextbook } from '@/app/_lib/actions/storage';
+import { uploadTextbook } from '@/app/_lib/services/storageUpload';
 
 const steps = ['Textbook Upload', 'Classroom Details'];
 
@@ -104,10 +104,8 @@ export default function ClassroomCreationStepper() {
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
       const { key, proxyDownload, presignedGet, hash } =
-        await uploadTextbook(formData);
+        await uploadTextbook(file);
 
       // stash them in state…
       setTextbookKey(key);
