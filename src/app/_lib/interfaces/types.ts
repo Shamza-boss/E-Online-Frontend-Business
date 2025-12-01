@@ -166,6 +166,7 @@ export interface AcademicLevelDto {
   name: string;
   country: string;
   educationSystem: string;
+  institutionId?: string;
 }
 
 export interface ClassDto {

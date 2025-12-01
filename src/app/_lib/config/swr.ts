@@ -106,7 +106,7 @@ export function createCustomFetcher<T>(
  * @example
  * const { data } = useSWR('/classrooms', proxyFetcher<Classroom[]>);
  */
-export const proxyFetcher = async <T>(endpoint: string): Promise<T> => {
+export const proxyFetcher = async <T>(endpoint: string): Promise<T | null> => {
   const normalized = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   const url = `/api/proxy/${normalized}`;
 
@@ -121,7 +121,7 @@ export const proxyFetcher = async <T>(endpoint: string): Promise<T> => {
   }
 
   const text = await response.text();
-  return text ? JSON.parse(text) : null;
+  return text ? (JSON.parse(text) as T) : null;
 };
 
 /**
@@ -129,8 +129,8 @@ export const proxyFetcher = async <T>(endpoint: string): Promise<T> => {
  */
 export function createProxyFetcher<T>(
   baseEndpoint: string
-): Fetcher<T, Record<string, unknown> | undefined> {
-  return async (params?: Record<string, unknown>): Promise<T> => {
+): Fetcher<T | null, Record<string, unknown> | undefined> {
+  return async (params?: Record<string, unknown>): Promise<T | null> => {
     const normalized = baseEndpoint.startsWith('/')
       ? baseEndpoint.slice(1)
       : baseEndpoint;
@@ -158,7 +158,7 @@ export function createProxyFetcher<T>(
     }
 
     const text = await response.text();
-    return text ? JSON.parse(text) : null;
+    return text ? (JSON.parse(text) as T) : null;
   };
 }
 

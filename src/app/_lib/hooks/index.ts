@@ -2,7 +2,7 @@
  * Hooks barrel export
  *
  * Import hooks with cleaner paths:
- * import { useAssetUpload, useDashboard, useErrorHandler } from '@/hooks';
+ * import { useAssetUpload, useSystemDashboard, useErrorHandler } from '@/hooks';
  */
 
 export { useAssetUpload } from './useAssetUpload';
@@ -13,9 +13,9 @@ export type {
   UseAssetUploadOptions,
 } from './useAssetUpload';
 
-export { useAuthActions } from './useAuthActions';
-export { useDashboard } from './useDashboard';
+export { default as useAuthActions } from './useAuthActions';
+export { useSystemDashboard, useInstitutionDashboard } from './useDashboard';
 export { useErrorHandler } from './useErrorHandler';
 export { useNavigationLoading } from './useNavigationLoading';
-export { useNotes } from './useNotes';
-export { useResizeSync } from './useResizeSync';
+export { useClassroomNote, useClassroomNotesForTeacher } from './useNotes';
+export { default as useResizeSync } from './useResizeSync';

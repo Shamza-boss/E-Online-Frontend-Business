@@ -90,6 +90,16 @@ const StudentManagementTable = () => {
     { field: 'email', headerName: 'Email', flex: 1, minWidth: 200 },
   ];
 
+  const dataGridSlotProps = useMemo(
+    () => ({
+      loadingOverlay: {
+        variant: 'linear-progress' as const,
+        noRowsVariant: 'linear-progress' as const,
+      },
+    }),
+    []
+  );
+
   return (
     <Box flexGrow={1}>
       <Stack spacing={2}>

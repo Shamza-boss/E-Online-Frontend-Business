@@ -5,7 +5,7 @@
  * import { hashFile, generatePdfThumbnail } from '@/utils';
  */
 
-export { currentUser } from './currentUser';
+export { getCurrentUser } from './currentUser';
 export * from './gradeCalculator';
 export * from './pdfNoteLinks';
 export { generatePdfThumbnail } from './pdfThumbnail';

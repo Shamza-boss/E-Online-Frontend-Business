@@ -368,6 +368,16 @@ export default function InstitutionUserDataGrid() {
     },
   ];
 
+  const dataGridSlotProps = React.useMemo(
+    () => ({
+      loadingOverlay: {
+        variant: 'linear-progress' as const,
+        noRowsVariant: 'linear-progress' as const,
+      },
+    }),
+    []
+  );
+
   return (
     <>
       <EDataGrid
