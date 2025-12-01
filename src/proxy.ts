@@ -1,67 +1,98 @@
+/**
+ * Middleware Proxy
+ *
+ * Handles authentication and role-based access control for protected routes.
+ * This runs on every matched request before the route handler.
+ *
+ * @see https://nextjs.org/docs/app/building-your-application/routing/middleware
+ */
+
 import { NextResponse } from 'next/server';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { auth } from '@/auth';
 import type { NextRequest } from 'next/server';
 
-// Map dashboard sub-paths to allowed roles
-const accessRules: Record<string, UserRole[]> = {
+// Route access rules - maps paths to allowed roles
+const ACCESS_RULES: Readonly<Record<string, readonly UserRole[]>> = {
   '/dashboard/institutions': [UserRole.PlatformAdmin],
   '/dashboard/management': [UserRole.Admin, UserRole.Instructor],
   '/dashboard/manage-courses': [UserRole.Admin, UserRole.Instructor],
   '/dashboard/courses': [UserRole.Admin, UserRole.Instructor, UserRole.Trainee],
-};
+} as const;
 
-// Next.js 16 proxy function
+// Error pages that require a referer
+const PROTECTED_ERROR_PAGES = ['/error/forbidden', '/error/server-error'];
+
+/**
+ * Parse user role from session
+ *
+ * Handles both number and string representations of roles
+ */
+function parseUserRole(rawRole: unknown): UserRole | null {
+  if (typeof rawRole === 'number') {
+    return rawRole as UserRole;
+  }
+
+  if (typeof rawRole === 'string') {
+    const trimmed = rawRole.trim();
+    if (trimmed === '') return null;
+
+    const parsed = parseInt(trimmed, 10);
+    return Number.isNaN(parsed) ? null : (parsed as UserRole);
+  }
+
+  return null;
+}
+
+/**
+ * Check if user role has access to a path
+ */
+function hasAccess(pathname: string, userRole: UserRole): boolean {
+  for (const [rulePath, allowedRoles] of Object.entries(ACCESS_RULES)) {
+    if (pathname.startsWith(rulePath)) {
+      return allowedRoles.includes(userRole);
+    }
+  }
+  // No rule = allow access
+  return true;
+}
+
+/**
+ * Middleware proxy function
+ *
+ * Validates authentication and authorization for protected routes
+ */
 export async function proxy(request: NextRequest) {
   const { nextUrl } = request;
-  const pathname = nextUrl.pathname;
+  const { pathname } = nextUrl;
 
-  // Allow direct navigation to error pages only if coming from somewhere
-  if (pathname === '/error/forbidden' || pathname === '/error/server-error') {
+  // Protect error pages from direct access
+  if (PROTECTED_ERROR_PAGES.includes(pathname)) {
     const referer = request.headers.get('referer');
     if (!referer) {
       return NextResponse.rewrite(new URL('/not-found', request.url));
     }
+    return NextResponse.next();
   }
 
-  // Get session using NextAuth's auth() function
+  // Authenticate
   const session = await auth();
-
-  // Check if user is authenticated
   if (!session) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // Robust role extraction (could be number or string)
-  const rawRole = session.user?.role;
-  let userRole: UserRole | null = null;
-
-  if (typeof rawRole === 'number') {
-    userRole = rawRole as UserRole;
-  } else if (rawRole != null && typeof rawRole === 'string') {
-    const trimmed = String(rawRole).trim();
-    if (trimmed !== '') {
-      const parsed = parseInt(trimmed, 10);
-      if (!Number.isNaN(parsed)) userRole = parsed as UserRole;
-    }
-  }
-
-  if (userRole == null) {
-    // If we cannot determine role, treat as unauthenticated (forces fresh login & enrichment)
+  // Parse and validate role
+  const userRole = parseUserRole(session.user?.role);
+  if (userRole === null) {
+    // Force re-login if role is invalid
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // Path-based access control
-  for (const rulePath in accessRules) {
-    if (pathname.startsWith(rulePath)) {
-      const allowedRoles = accessRules[rulePath];
-      if (!allowedRoles.includes(userRole)) {
-        return NextResponse.redirect(new URL('/error/forbidden', request.url));
-      }
-    }
+  // Authorize
+  if (!hasAccess(pathname, userRole)) {
+    return NextResponse.redirect(new URL('/error/forbidden', request.url));
   }
 
-  // Allow the request to proceed
   return NextResponse.next();
 }
 

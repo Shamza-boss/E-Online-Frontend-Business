@@ -198,19 +198,19 @@ export default function InstitutionUserDataGrid() {
         (previous) =>
           previous
             ? {
-                ...previous,
-                items: previous.items.map((entry) =>
-                  entry.institution?.id === id
-                    ? {
-                        ...entry,
-                        institution: {
-                          ...entry.institution,
-                          isActive: nextStatus,
-                        },
-                      }
-                    : entry
-                ),
-              }
+              ...previous,
+              items: previous.items.map((entry) =>
+                entry.institution?.id === id
+                  ? {
+                    ...entry,
+                    institution: {
+                      ...entry.institution,
+                      isActive: nextStatus,
+                    },
+                  }
+                  : entry
+              ),
+            }
             : previous,
         false
       );
@@ -387,12 +387,7 @@ export default function InstitutionUserDataGrid() {
         rowCount={rowCount}
         loading={institutionsLoading || institutionsValidating}
         onRowDoubleClick={handleRowDoubleClick}
-        slotProps={{
-          loadingOverlay: {
-            variant: 'linear-progress',
-            noRowsVariant: 'linear-progress',
-          },
-        }}
+        slotProps={dataGridSlotProps}
       />
       <ManageInstitutionModal
         open={manageModalOpen}

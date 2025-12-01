@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es2022"
-    ],
+    "lib": ["dom", "dom.iterable", "es2022"],
     "noImplicitAny": true,
     "noImplicitThis": true,
     "strictNullChecks": true,
@@ -28,9 +24,16 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/components/*": ["./src/app/_lib/components/*"],
+      "@/hooks/*": ["./src/app/_lib/hooks/*"],
+      "@/actions/*": ["./src/app/_lib/actions/*"],
+      "@/services/*": ["./src/app/_lib/services/*"],
+      "@/interfaces/*": ["./src/app/_lib/interfaces/*"],
+      "@/utils/*": ["./src/app/_lib/utils/*"],
+      "@/config/*": ["./src/app/_lib/config/*"]
     }
   },
   "include": [
@@ -42,7 +45,5 @@
     "src/app/_lib/components/PDFViewer/pdf-viewer.tsx",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

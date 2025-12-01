@@ -32,10 +32,12 @@ export const useManagementState = () => {
 
   const handleCloseAcademicsCreator = async () => {
     setOpnAcademicsCreator(false);
+    await mutate('academics');
   };
 
   const handleCloseSubjectCreator = async () => {
     setOpnSubjectCreator(false);
+    await mutate('subjects');
   };
 
   return {

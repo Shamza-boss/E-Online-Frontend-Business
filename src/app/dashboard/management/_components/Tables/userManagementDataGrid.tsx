@@ -79,7 +79,7 @@ export default function UserManagementDataGrid({
   const [searchTerm, setSearchTermState] = React.useState('');
   const [rowCount, setRowCount] = React.useState(0);
   const { data: session } = useSession();
-  const { showAlert } = useAlert();
+  const alert = useAlert();
   const handleSearch = React.useCallback((term: string) => {
     setSearchTermState(term);
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
@@ -101,13 +101,13 @@ export default function UserManagementDataGrid({
     () =>
       active
         ? [
-            'users',
-            paginationModel.page,
-            paginationModel.pageSize,
-            sortField ?? '',
-            sortDirection ?? '',
-            normalizedSearchKey,
-          ]
+          'users',
+          paginationModel.page,
+          paginationModel.pageSize,
+          sortField ?? '',
+          sortDirection ?? '',
+          normalizedSearchKey,
+        ]
         : null,
     [
       active,
@@ -299,19 +299,19 @@ export default function UserManagementDataGrid({
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget?.userId) {
-      showAlert('error', 'Unable to determine which user to delete.');
+      alert.error('Unable to determine which user to delete.');
       return;
     }
     setIsDeleting(true);
     try {
       await deleteUser(deleteTarget.userId);
-      showAlert('success', 'User deleted successfully');
+      alert.success('User deleted successfully');
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
       await mutateUsers();
     } catch (err: any) {
       const message = err?.message || 'Failed to delete user.';
-      showAlert('error', message);
+      alert.error(message);
     } finally {
       setIsDeleting(false);
     }
@@ -323,18 +323,28 @@ export default function UserManagementDataGrid({
   ) => {
     try {
       await updateUser(newRow as UserDto);
-      showAlert('success', 'User details updated successfully');
+      alert.success('User details updated successfully');
       await mutateUsers();
       return { ...newRow };
     } catch (err: any) {
-      showAlert('error', `Failed to update user: ${err.message}`);
+      alert.error(`Failed to update user: ${err.message}`);
       return oldRow;
     }
   };
 
   const handleRowUpdateError = (error: Error) => {
-    showAlert('error', `Failed to update row: ${error.message}`);
+    alert.error(`Failed to update row: ${error.message}`);
   };
+
+  const dataGridSlotProps = React.useMemo(
+    () => ({
+      loadingOverlay: {
+        variant: 'linear-progress' as const,
+        noRowsVariant: 'linear-progress' as const,
+      },
+    }),
+    []
+  );
 
   return (
     <>
@@ -360,26 +370,19 @@ export default function UserManagementDataGrid({
         processRowUpdate={processRowUpdate}
         onProcessRowUpdateError={handleRowUpdateError}
         loading={usersLoading || usersValidating}
-        slotProps={{
-          loadingOverlay: {
-            variant: 'linear-progress',
-            noRowsVariant: 'linear-progress',
-          },
-        }}
+        slotProps={dataGridSlotProps}
       />
       <ConfirmDialog
         open={deleteDialogOpen}
         onCancel={handleCloseDeleteDialog}
         onConfirm={handleConfirmDelete}
-        title={`Remove ${
-          deleteTarget
-            ? `${
-                `${deleteTarget.firstName ?? ''} ${deleteTarget.lastName ?? ''}`.trim() ||
-                deleteTarget.email ||
-                'person'
-              }`
-            : 'person'
-        }`}
+        title={`Remove ${deleteTarget
+          ? `${`${deleteTarget.firstName ?? ''} ${deleteTarget.lastName ?? ''}`.trim() ||
+          deleteTarget.email ||
+          'person'
+          }`
+          : 'person'
+          }`}
         description="This action cannot be undone. The selected person will be permanently removed from the platform if you continue."
         confirmText={isDeleting ? 'Deleting…' : 'Delete'}
         disableCancel={isDeleting}

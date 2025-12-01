@@ -224,7 +224,8 @@ const ManageInstitutionModal: React.FC<ManageInstitutionModalProps> = ({
         </DialogContent>
         {!loading && !error && (
           <DialogActions sx={{ px: 3, py: 2 }}>
-            <Button onClick={handleClose} disabled={saving}>
+            <Button
+              variant="contained" color='warning' onClick={handleClose} disabled={saving}>
               Cancel
             </Button>
             <Button type="submit" variant="contained" disabled={saving}>

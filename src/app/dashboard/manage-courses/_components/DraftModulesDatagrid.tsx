@@ -288,12 +288,7 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
         },
       }}
       slots={{ noRowsOverlay: NoRowsOverlay }}
-      slotProps={{
-        loadingOverlay: {
-          variant: 'linear-progress',
-          noRowsVariant: 'linear-progress',
-        },
-      }}
+      slotProps={dataGridSlotProps}
     />
   );
 };

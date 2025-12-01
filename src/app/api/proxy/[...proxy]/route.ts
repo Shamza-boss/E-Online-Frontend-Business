@@ -1,90 +1,174 @@
-// app/api/proxy/[...proxy]/route.ts
+/**
+ * API Proxy Route Handler
+ *
+ * Proxies requests to the backend API with authentication.
+ * Handles both JSON and multipart/form-data (file uploads).
+ *
+ * @route /api/proxy/[...proxy]
+ */
+
 import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import {
+  PROXY_STRIP_HEADERS,
+  MULTIPART_CONTENT_TYPE,
+  BODYLESS_METHODS,
+} from '@/lib/api';
 
-// Proxy route should always be dynamic and uncached
+// Route segment config - always dynamic, never cached
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const runtime = 'nodejs';
 
 const BACKEND_URL = process.env.BASE_API_URL;
 
-async function proxyRequest(req: NextRequest, params: string[]) {
+// Types
+type ProxyContext = { params: Promise<{ proxy: string[] }> };
+
+/**
+ * Build the target URL for the backend API
+ */
+function buildTargetUrl(path: string[], searchParams: string): string {
+  const endpoint = path.join('/');
+  const base = `${BACKEND_URL}/api/${endpoint}`;
+  return searchParams ? `${base}${searchParams}` : base;
+}
+
+/**
+ * Prepare headers for the proxied request
+ */
+function prepareHeaders(originalHeaders: Headers, authToken?: string): Headers {
+  const headers = new Headers(originalHeaders);
+
+  // Remove headers that shouldn't be forwarded
+  for (const header of PROXY_STRIP_HEADERS) {
+    headers.delete(header);
+  }
+
+  // Set or remove authorization
+  if (authToken) {
+    headers.set('Authorization', `Bearer ${authToken}`);
+  } else {
+    headers.delete('authorization');
+  }
+
+  return headers;
+}
+
+/**
+ * Check if the request is a multipart/form-data request
+ */
+function isMultipartRequest(contentType: string | null): boolean {
+  return contentType?.includes(MULTIPART_CONTENT_TYPE) ?? false;
+}
+
+/**
+ * Prepare the request body based on content type
+ */
+async function prepareBody(
+  req: NextRequest,
+  headers: Headers
+): Promise<ArrayBuffer | string | undefined> {
+  const contentType = req.headers.get('content-type');
+
+  // Handle file uploads - pass through as-is
+  if (isMultipartRequest(contentType)) {
+    // Preserve the original content-type (includes boundary)
+    if (contentType) {
+      headers.set('content-type', contentType);
+    }
+    return req.arrayBuffer();
+  }
+
+  // Handle JSON and other text-based content
+  const raw = await req.text();
+
+  if (!raw) return undefined;
+
+  // Try to parse as JSON and wrap in dto
+  try {
+    const parsed = JSON.parse(raw);
+    return JSON.stringify({ dto: parsed });
+  } catch {
+    // Not JSON, pass through as-is
+    return raw;
+  }
+}
+
+/**
+ * Main proxy handler
+ */
+async function proxyRequest(
+  req: NextRequest,
+  pathSegments: string[]
+): Promise<NextResponse> {
+  // Validate backend URL is configured
+  if (!BACKEND_URL) {
+    console.error('[Proxy] BASE_API_URL is not configured');
+    return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
+  }
+
+  // Authenticate the request
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const path = params.join('/');
-  let url = `${BACKEND_URL}/api/${path}`;
-  const qs = req.nextUrl.search;
-  if (qs) url += qs;
+  // Build target URL
+  const url = buildTargetUrl(pathSegments, req.nextUrl.search);
 
-  const headers = new Headers(req.headers);
-  headers.delete('host');
-  headers.delete('connection');
-  headers.delete('content-length');
-  headers.delete('cookie');
-  headers.delete('set-cookie');
+  // Prepare headers
+  const headers = prepareHeaders(req.headers, session.apiAccessToken);
 
-  if (session.apiAccessToken) {
-    headers.set('Authorization', `Bearer ${session.apiAccessToken}`);
-  } else {
-    headers.delete('authorization');
-  }
-
+  // Build fetch options
   const init: RequestInit = {
     method: req.method,
     headers,
   };
-  // only include body for non-GET/HEAD
-  if (!['GET', 'HEAD'].includes(req.method)) {
-    const raw = await req.text();
-    try {
-      const parsed = JSON.parse(raw);
-      init.body = JSON.stringify({ dto: parsed });
-    } catch {
-      init.body = raw;
-    }
+
+  // Add body for non-GET/HEAD requests
+  const method = req.method as (typeof BODYLESS_METHODS)[number];
+  if (!BODYLESS_METHODS.includes(method)) {
+    init.body = await prepareBody(req, headers);
   }
 
-  const res = await fetch(url, init);
+  try {
+    const response = await fetch(url, init);
 
-  const body = await res.arrayBuffer();
-  const response = new NextResponse(body, { status: res.status });
-  res.headers.forEach((value, key) => response.headers.set(key, value));
-  return response;
+    // Stream the response back
+    const body = await response.arrayBuffer();
+    const proxyResponse = new NextResponse(body, { status: response.status });
+
+    // Copy response headers
+    response.headers.forEach((value, key) => {
+      proxyResponse.headers.set(key, value);
+    });
+
+    return proxyResponse;
+  } catch (error) {
+    console.error('[Proxy] Request failed:', error);
+    return NextResponse.json(
+      { error: 'Backend request failed' },
+      { status: 502 }
+    );
+  }
 }
 
-export async function GET(
+/**
+ * Extract params and delegate to proxy handler
+ */
+async function handleRequest(
   req: NextRequest,
-  context: { params: Promise<{ proxy: string[] }> }
-) {
+  context: ProxyContext
+): Promise<NextResponse> {
   const { proxy } = await context.params;
   return proxyRequest(req, proxy);
 }
 
-export async function POST(
-  req: NextRequest,
-  context: { params: Promise<{ proxy: string[] }> }
-) {
-  const { proxy } = await context.params;
-  return proxyRequest(req, proxy);
-}
-
-export async function PUT(
-  req: NextRequest,
-  context: { params: Promise<{ proxy: string[] }> }
-) {
-  const { proxy } = await context.params;
-  return proxyRequest(req, proxy);
-}
-
-export async function DELETE(
-  req: NextRequest,
-  context: { params: Promise<{ proxy: string[] }> }
-) {
-  const { proxy } = await context.params;
-  return proxyRequest(req, proxy);
-}
+// HTTP method handlers
+export const GET = handleRequest;
+export const POST = handleRequest;
+export const PUT = handleRequest;
+export const DELETE = handleRequest;
+export const PATCH = handleRequest;

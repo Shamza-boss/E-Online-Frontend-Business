@@ -126,8 +126,18 @@ export default function StudentDatagridTable({
   };
 
   const handleRowUpdateError = (error: Error) => {
-    showAlert('error', `Failed to update row: ${error.message}`);
+    showAlert('error', `Failed to update student: ${error.message}`);
   };
+
+  const dataGridSlotProps = React.useMemo(
+    () => ({
+      loadingOverlay: {
+        variant: 'linear-progress' as const,
+        noRowsVariant: 'linear-progress' as const,
+      },
+    }),
+    []
+  );
 
   return (
     <EDataGrid
@@ -145,12 +155,7 @@ export default function StudentDatagridTable({
       processRowUpdate={processRowUpdate}
       onProcessRowUpdateError={handleRowUpdateError}
       loading={isLoading}
-      slotProps={{
-        loadingOverlay: {
-          variant: 'linear-progress',
-          noRowsVariant: 'linear-progress',
-        },
-      }}
+      slotProps={dataGridSlotProps}
     />
   );
 }

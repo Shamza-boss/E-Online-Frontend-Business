@@ -3,6 +3,7 @@
 import { createAcademics } from '@/app/_lib/actions/academics';
 import { AcademicLevelDto } from '@/app/_lib/interfaces/types';
 import { academicsSchema } from '@/app/_lib/schemas/management';
+import { getCurrentUser } from '@/app/_lib/utils/currentUser';
 import { parseWithZod } from '@conform-to/zod';
 
 export async function SubmitAcademics(prevState: unknown, formData: FormData) {
@@ -19,8 +20,16 @@ export async function SubmitAcademics(prevState: unknown, formData: FormData) {
   };
 
   try {
-    await createAcademics(newAcademics);
-    return newAcademics;
+    const currentUser = await getCurrentUser();
+    if (!currentUser?.institutionId) {
+      throw new Error('An institution is required to create academic levels.');
+    }
+
+    const created = await createAcademics({
+      ...newAcademics,
+      institutionId: currentUser.institutionId,
+    });
+    return (created as AcademicLevelDto) ?? newAcademics;
   } catch (error: any) {
     return error;
   }

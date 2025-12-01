@@ -130,12 +130,7 @@ const StudentManagementTable = () => {
             disableRowSelectionOnClick
             pageSizeOptions={[10, 20, 50, 100]}
             loading={studentsLoading}
-            slotProps={{
-              loadingOverlay: {
-                variant: 'linear-progress',
-                noRowsVariant: 'linear-progress',
-              },
-            }}
+            slotProps={dataGridSlotProps}
             slots={{
               noResultsOverlay: CustomNoResultsOverlay,
             }}

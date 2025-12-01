@@ -19,8 +19,6 @@ import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import SaveIcon from '@mui/icons-material/Save';
 import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { TransitionProps } from '@mui/material/transitions';
-import '@excalidraw/excalidraw/index.css';
-import { sanitizeExcalidrawElements } from './sanitizeElements';
 
 const Excalidraw = dynamic(
   () => import('@excalidraw/excalidraw').then((m) => m.Excalidraw),

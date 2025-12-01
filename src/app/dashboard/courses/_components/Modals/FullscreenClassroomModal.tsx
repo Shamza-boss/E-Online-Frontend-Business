@@ -116,7 +116,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
       onClose={handleClose}
       slotProps={{ transition: Transition }}
       keepMounted
-      title="Classroom Fullscreen Mode"
+      title="Course Fullscreen Mode"
     >
       <AppBar
         position="static"
@@ -285,7 +285,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
             >
               <TabContext value={value}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                  <TabList onChange={handleChange} aria-label="classroom tabs">
+                  <TabList onChange={handleChange} aria-label="course tabs">
                     <Tab label="Modules" value="1" />
                     <Tab label="Resources" value="2" />
                   </TabList>
