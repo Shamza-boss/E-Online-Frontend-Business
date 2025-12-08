@@ -41,6 +41,7 @@ import ProfileSettingsCard, {
     type ProfileSettingsUser,
     formatRoleLabel,
 } from './profile/ProfileSettingsCard';
+import SubscriptionSettingsPanel from './subscription/SubscriptionSettingsPanel';
 import type {
     SettingsResponseDto,
     SettingsStatsDto,
@@ -339,7 +340,7 @@ export default function SettingsExperience({ data }: SettingsExperienceProps) {
                         <Box display="flex" alignItems="center" gap={1.5}>
                             <Box
                                 component="img"
-                                src="/assets/absolute-rocket.svg"
+                                src="/assets/absolute-rocket.webp"
                                 alt="Absolute Online rocket"
                                 sx={{ width: 110, height: 110, opacity: 0.9 }}
                             />
@@ -397,7 +398,12 @@ export default function SettingsExperience({ data }: SettingsExperienceProps) {
                             }}
                         >
                             <Stack spacing={2}>
-                                {tab === 'profile' && <ProfileSettingsCard user={profileUser} />}
+                                {tab === 'profile' ? (
+                                    <>
+                                        <ProfileSettingsCard user={profileUser} />
+                                        <SubscriptionSettingsPanel />
+                                    </>
+                                ) : null}
                                 {tab === 'insights' && (
                                     <InsightsPanel stats={stats} roleTheme={roleTheme} roleLabel={roleLabel} />
                                 )}
@@ -979,18 +985,6 @@ function RocketBackdrop({ pointer }: { pointer: Pointer }) {
                     transform: 'rotate(-8deg)',
                 }}
             />
-            {/* <Box
-                sx={{
-                    position: 'absolute',
-                    inset: '-10%',
-                    opacity: 0.12,
-                    filter: 'blur(6px)',
-                    backgroundImage: 'url(/assets/absolute-rocket.svg)',
-                    backgroundSize: '32px 48px',
-                    backgroundRepeat: 'repeat',
-                    mixBlendMode: 'soft-light',
-                }}
-            /> */}
             <MotionBox
                 sx={{
                     position: 'absolute',
@@ -1011,7 +1005,7 @@ function RocketBackdrop({ pointer }: { pointer: Pointer }) {
             {rocketPositions.map((rocket) => (
                 <motion.img
                     key={rocket.id}
-                    src="/assets/absolute-rocket.svg"
+                    src="/assets/absolute-rocket.webp"
                     alt=""
                     aria-hidden
                     style={{

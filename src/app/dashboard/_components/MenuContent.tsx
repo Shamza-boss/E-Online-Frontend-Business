@@ -17,12 +17,13 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import DomainAddIcon from '@mui/icons-material/DomainAdd';
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
 import { routeLabels } from '@/app/_lib/common/functions';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 
 const platformOwnerRole = UserRole.PlatformAdmin;
 
-const platformOnlyRoutes = ['institutions'];
+const platformOnlyRoutes = ['institutions', 'billing'];
 
 // numeric roles with full access (Admin, Trainer(Teacher))
 const fullAccessRoles: UserRole[] = [UserRole.Admin, UserRole.Instructor];
@@ -32,6 +33,7 @@ const studentAllowed = ['', 'courses', 'library', 'settings'];
 const mainListItems = [
   { route: '', icon: <TimelineIcon /> }, // Dashboard root route
   { route: 'institutions', icon: <DomainAddIcon /> }, // Institutions route
+  { route: 'billing', icon: <CreditCardIcon /> },
   { route: 'management', icon: <ManageAccountsIcon /> },
   { route: 'manage-courses', icon: <AssignmentIcon /> },
   { route: 'courses', icon: <SchoolIcon /> },
@@ -82,11 +84,14 @@ export default function MenuContent() {
     const isSettingsRoute = route === 'settings';
 
     // Check if user has access to this route
+    const blockedForPlatformOwner =
+      roleValue === platformOwnerRole && (route === 'courses' || route === 'library');
+
     const hasAccess =
       isSettingsRoute ||
       (isPlatformOnly && roleValue === platformOwnerRole) ||
-      ((!isPlatformOnly && (hasFullAccess || studentAllowed.includes(route))) &&
-        !(route === 'courses' && roleValue === platformOwnerRole));
+      (!isPlatformOnly && !blockedForPlatformOwner &&
+        (hasFullAccess || studentAllowed.includes(route)));
 
     // Only render if user has access
     if (!hasAccess) {

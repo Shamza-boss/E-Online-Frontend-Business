@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef } from 'react';
 import {
   Box,
@@ -8,9 +10,11 @@ import {
   Paper,
   Stack,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {
   VideoMeta,
   VideoUploadResponse,
@@ -20,6 +24,7 @@ import {
 import { createDirectUpload, getVideoMeta } from '../../actions/stream';
 import StudentClassCardSkeleton from '@/app/dashboard/_components/_skeletonLoaders/StudentClassCardSkeleton';
 import VideoCardThumbnail from '@/app/_lib/components/video/VideoCardThumbnail';
+import { useCreatorAccess } from '@/app/_lib/hooks/useCreatorAccess';
 
 interface Props {
   value?: VideoMeta;
@@ -32,6 +37,7 @@ export const VideoUploadField: React.FC<Props> = ({
   onChange,
   disabled,
 }) => {
+  const { creatorEnabled, loading: accessLoading } = useCreatorAccess();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -181,8 +187,8 @@ export const VideoUploadField: React.FC<Props> = ({
 
   const formattedDuration = value?.durationSeconds
     ? `${Math.floor((value.durationSeconds || 0) / 60)}:${String(
-        Math.floor((value.durationSeconds || 0) % 60)
-      ).padStart(2, '0')}`
+      Math.floor((value.durationSeconds || 0) % 60)
+    ).padStart(2, '0')}`
     : null;
 
   const sizeLabel = value?.sizeBytes
@@ -223,6 +229,32 @@ export const VideoUploadField: React.FC<Props> = ({
       sx={{ fontWeight: 600 }}
     />
   );
+
+  if (accessLoading) {
+    return (
+      <Paper sx={{ p: 2 }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <CircularProgress size={20} />
+          <Typography variant="body2" color="text.secondary">
+            Checking video permissions…
+          </Typography>
+        </Stack>
+      </Paper>
+    );
+  }
+
+  if (!creatorEnabled) {
+    return (
+      <Alert
+        severity="info"
+        icon={<InfoOutlinedIcon fontSize="small" />}
+        sx={{ mt: 1 }}
+      >
+        Video uploads are unavailable because your institution's subscription does not include the Creator add-on.
+        Contact an administrator to enable video creation and playback.
+      </Alert>
+    );
+  }
 
   return (
     <Box>

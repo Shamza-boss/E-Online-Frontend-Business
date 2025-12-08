@@ -1,9 +1,14 @@
 'use server';
 
 import { createInstitution } from '@/app/_lib/actions/institutions';
-import { InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
+import {
+  InstitutionWithAdminDto,
+  SubscriptionFeatureFlag,
+  SubscriptionPlan,
+} from '@/app/_lib/interfaces/types';
 import { institutionSchema } from '@/app/_lib/schemas/management';
 import { parseWithZod } from '@conform-to/zod';
+import { planToFeatureFlag } from '@/app/_lib/utils/subscriptions';
 
 export async function SubmitInstitution(
   prevState: unknown,
@@ -15,11 +20,27 @@ export async function SubmitInstitution(
     return submission.reply();
   }
 
+  const rawPlan = (formData.get('subscriptionPlan') as SubscriptionPlan) ?? 'Standard';
+  const normalizedPlan: SubscriptionPlan =
+    rawPlan === 'Enterprise' ? 'Enterprise' : 'Standard';
+
+  const creatorEnabledValue = formData.get('creatorEnabled');
+  const creatorEnabled =
+    creatorEnabledValue === 'on' ||
+    creatorEnabledValue === 'true' ||
+    creatorEnabledValue === '1';
+
+  const normalizedFeatures: SubscriptionFeatureFlag = planToFeatureFlag(
+    normalizedPlan
+  );
+
   const newInstitution = {
     institution: {
       name: formData.get('institutionName') as string,
       adminEmail: formData.get('adminEmail') as string,
       isActive: true,
+      plan: normalizedFeatures,
+      creatorEnabled,
     },
     admin: {
       firstName: formData.get('adminFirstName') as string,
@@ -27,6 +48,8 @@ export async function SubmitInstitution(
       email: formData.get('adminEmail') as string,
     },
   } as InstitutionWithAdminDto;
+
+  console.log('Creating institution with data:', newInstitution);
 
   try {
     await createInstitution(newInstitution);

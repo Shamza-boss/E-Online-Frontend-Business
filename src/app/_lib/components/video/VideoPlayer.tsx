@@ -1,8 +1,12 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Alert, CircularProgress } from '@mui/material';
 import Image from 'next/image';
 import { VideoMeta } from '../../interfaces/types';
 import { signPlayback } from '../../actions/stream';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { useCreatorAccess } from '@/app/_lib/hooks/useCreatorAccess';
 
 interface Props {
   video: VideoMeta;
@@ -10,11 +14,21 @@ interface Props {
 }
 
 export const VideoPlayer: React.FC<Props> = ({ video, title }) => {
+  const { creatorEnabled, loading: accessLoading } = useCreatorAccess();
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (accessLoading) return;
+
+    if (!creatorEnabled) {
+      setIframeSrc(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     const fetchPlaybackUrl = async () => {
       //   if (video.status !== 'ready' || !video.uid) {
       //     // For non-ready videos, still attempt to show something useful
@@ -40,7 +54,29 @@ export const VideoPlayer: React.FC<Props> = ({ video, title }) => {
     };
 
     fetchPlaybackUrl();
-  }, [video.uid, video.status]);
+  }, [accessLoading, creatorEnabled, video.uid, video.status]);
+
+  if (accessLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Loading video permissions…</Typography>
+      </Box>
+    );
+  }
+
+  if (!creatorEnabled) {
+    return (
+      <Alert
+        severity="info"
+        icon={<InfoOutlinedIcon fontSize="small" />}
+        sx={{ mb: 2 }}
+      >
+        Video playback is disabled because this institution&apos;s subscription does not include the Creator add-on.
+        Contact your administrator to enable video streaming.
+      </Alert>
+    );
+  }
 
   if (loading) {
     return (

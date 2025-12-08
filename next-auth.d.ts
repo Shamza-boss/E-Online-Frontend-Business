@@ -1,6 +1,9 @@
 import type { DefaultSession } from 'next-auth';
 import type { UserRole } from './src/app/_lib/Enums/UserRole';
-import type { UserDto } from './src/app/_lib/interfaces/types';
+import type {
+  SubscriptionPlan,
+  UserDto,
+} from './src/app/_lib/interfaces/types';
 
 // A narrowed subset of UserDto we store on session & token (id kept for convenience)
 export interface AuthUserClaims {
@@ -12,6 +15,12 @@ export interface AuthUserClaims {
   role: UserRole | null;
   institutionId?: string;
   institutionName?: string;
+  subscription?: string | null;
+  subscriptionLabel?: string | null;
+  subscriptionPlan?: SubscriptionPlan | null;
+  creatorEnabled?: boolean;
+  isInstitutionActive?: boolean | null;
+  primaryAdminEmail?: string | null;
 }
 
 declare module 'next-auth' {

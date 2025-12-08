@@ -61,6 +61,26 @@ export default function SignIn() {
         return;
       }
 
+      const resolvedUser = await existsRes.json();
+      const isInstitutionActive =
+        resolvedUser?.isInstitutionActive ??
+        resolvedUser?.IsInstitutionActive ??
+        true;
+      if (!isInstitutionActive) {
+        const primaryAdminEmail =
+          resolvedUser?.primaryAdminEmail ??
+          resolvedUser?.PrimaryAdminEmail ??
+          null;
+        const isPrimaryAdmin =
+          typeof primaryAdminEmail === 'string' &&
+          primaryAdminEmail.trim().toLowerCase() === normalizedEmail;
+        const message = isPrimaryAdmin
+          ? 'Your institution is inactive. Please contact AbsoluteOnline for assistance.'
+          : 'Your institution is inactive. Please contact your institution administrator.';
+        showAlert('error', message);
+        return;
+      }
+
       const hp = await fetch(
         `/api/auth/has-passkey?email=${encodeURIComponent(normalizedEmail)}`,
         { cache: 'no-store' }

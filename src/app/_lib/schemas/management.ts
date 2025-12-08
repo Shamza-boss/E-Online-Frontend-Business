@@ -1,6 +1,20 @@
 import { UserRole } from '../Enums/UserRole';
 import { z } from 'zod';
 
+export const subscriptionPlanSchema = z.enum(['Standard', 'Enterprise']);
+
+const checkboxBooleanSchema = z.preprocess((value) => {
+  if (value === 'on' || value === 'true' || value === '1') {
+    return true;
+  }
+
+  if (value === 'false' || value === '0') {
+    return false;
+  }
+
+  return false;
+}, z.boolean());
+
 export const classroomSchema = z.object({
   name: z.string().nonempty('Class name is required'),
   teacherId: z.string().nonempty('Instructor is required'),
@@ -54,4 +68,6 @@ export const institutionSchema = z.object({
     .string()
     .email('Invalid email format')
     .nonempty('Admin email is required'),
+  subscriptionPlan: subscriptionPlanSchema,
+  creatorEnabled: checkboxBooleanSchema,
 });
