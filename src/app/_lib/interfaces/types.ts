@@ -134,6 +134,7 @@ export interface Question {
   id: string;
   questionText: string;
   type: 'video' | 'pdf' | 'radio' | 'multi-select';
+  displayOrder?: string;
   options?: string[];
   required: boolean;
   weight: number; // Each question must have a weight.

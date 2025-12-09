@@ -15,12 +15,14 @@ import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionText
 interface QuestionPreviewPanelProps {
   question?: Question;
   questionIndex: number;
+  questionNumber?: string;
   computeTotalWeight: (question: Question) => number;
 }
 
 const QuestionPreviewPanel: React.FC<QuestionPreviewPanelProps> = ({
   question,
   questionIndex,
+  questionNumber,
   computeTotalWeight,
 }) => {
   if (!question) {
@@ -52,7 +54,7 @@ const QuestionPreviewPanel: React.FC<QuestionPreviewPanelProps> = ({
             }}
           >
             <Typography variant={textVariant} sx={{ fontWeight: 600 }}>
-              {numbering}.
+              {numbering}
             </Typography>
             <QuestionTextDisplay
               content={node.questionText}
@@ -138,7 +140,7 @@ const QuestionPreviewPanel: React.FC<QuestionPreviewPanelProps> = ({
               alignItems: 'baseline',
             }}
           >
-            <Typography variant={textVariant}>{numbering}.</Typography>
+            <Typography variant={textVariant}>{numbering}</Typography>
             <QuestionTextDisplay
               content={node.questionText}
               fallback="Untitled question"
@@ -201,7 +203,7 @@ const QuestionPreviewPanel: React.FC<QuestionPreviewPanelProps> = ({
                         '.MuiFormControlLabel-label': {
                           fontWeight:
                             Array.isArray(node.correctAnswers) &&
-                            node.correctAnswers.includes(option)
+                              node.correctAnswers.includes(option)
                               ? 600
                               : undefined,
                         },
@@ -263,7 +265,8 @@ const QuestionPreviewPanel: React.FC<QuestionPreviewPanelProps> = ({
     );
   };
 
-  return <>{renderQuestion(question, (questionIndex + 1).toString())}</>;
+  const numberingLabel = questionNumber ?? (questionIndex + 1).toString();
+  return <>{renderQuestion(question, numberingLabel)}</>;
 };
 
 export default QuestionPreviewPanel;
