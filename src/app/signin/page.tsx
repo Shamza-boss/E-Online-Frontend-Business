@@ -6,7 +6,7 @@ import { buildDashboardRedirectForSignedInUser } from '@/app/_lib/utils/alreadyS
 export default async function Home() {
   const session = await auth();
   if (session?.user) {
-    redirect(buildDashboardRedirectForSignedInUser(session) as any);
+    redirect(buildDashboardRedirectForSignedInUser(session));
   }
   return <SignInComponent />;
 }

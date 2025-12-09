@@ -13,9 +13,8 @@ export const GutterStyles = () => {
           width: '5px !important',
           alignSelf: 'center  !important',
           borderRadius: '100px',
-          backgroundColor: `${
-            theme.palette.mode === 'dark' ? 'white' : 'black'
-          } !important`,
+          backgroundColor: `${theme.palette.mode === 'dark' ? 'white' : 'black'
+            } !important`,
           '&:hover': {
             cursor: 'col-resize !important',
           },

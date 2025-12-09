@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { NextPage } from 'next';
 import {
   Dialog,
@@ -29,6 +29,7 @@ import Splitter from '@devbookhq/splitter';
 import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
 import QuestionEditorPanel from '../FormBuilder/QuestionEditorPanel';
 import QuestionPreviewPanel from '../FormBuilder/QuestionPreviewPanel';
+import { GutterStyles } from '@/app/_lib/components/shared-theme/customizations/SplitterComponent';
 import {
   buildValidatedHomework,
   createLeafQuestion,
@@ -81,6 +82,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const [hydrated, setHydrated] = useState(false);
   const [activeHomeworkId, setActiveHomeworkId] = useState<string | null>(null);
   const [prefillSource, setPrefillSource] = useState<string | null>(null);
+  const [splitSizes, setSplitSizes] = useState<number[] | undefined>();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -568,6 +570,13 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const isEditing = Boolean(activeHomeworkId);
   const modalTitle = isEditing ? 'Edit module' : 'Create module';
 
+  const handleSplitResizeFinished = useCallback(
+    (_gutterIdx: number, sizes: number[]) => {
+      setSplitSizes(sizes);
+    },
+    []
+  );
+
   return (
     <Dialog
       fullScreen
@@ -676,9 +685,12 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             gap: 2,
           }}
         >
+          {GutterStyles()}
           <Splitter
             gutterClassName="custom-gutter-horizontal"
             draggerClassName="custom-dragger-horizontal"
+            initialSizes={splitSizes ?? [50, 50]}
+            onResizeFinished={handleSplitResizeFinished}
           >
             <Box
               sx={{

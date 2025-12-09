@@ -63,9 +63,9 @@ export default function ExcalidrawModal({
       fullScreen
       open={open}
       onClose={onClose}
-      slotProps={{ transition: Transition }}
+      slots={{ transition: Transition }}
       keepMounted
-      title="Excalidraw Editor"
+      aria-labelledby="excalidraw-editor-title"
     >
       <AppBar
         position="static"
@@ -87,7 +87,11 @@ export default function ExcalidrawModal({
               <FullscreenExitIcon />
             </IconButton>
           </Tooltip>
-          <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+          <Typography
+            id="excalidraw-editor-title"
+            variant="h6"
+            sx={{ ml: 2, flex: 1 }}
+          >
             Excalidraw Editor
           </Typography>
           {!readonly && (
