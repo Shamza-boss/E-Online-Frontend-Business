@@ -15,9 +15,11 @@ import type { NextRequest } from 'next/server';
 // Route access rules - maps paths to allowed roles
 const ACCESS_RULES: Readonly<Record<string, readonly UserRole[]>> = {
   '/dashboard/institutions': [UserRole.PlatformAdmin],
+  '/dashboard/billing': [UserRole.PlatformAdmin],
   '/dashboard/management': [UserRole.Admin, UserRole.Instructor],
   '/dashboard/manage-courses': [UserRole.Admin, UserRole.Instructor],
   '/dashboard/courses': [UserRole.Admin, UserRole.Instructor, UserRole.Trainee],
+  '/dashboard/library': [UserRole.Admin, UserRole.Instructor, UserRole.Trainee],
 } as const;
 
 // Error pages that require a referer

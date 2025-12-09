@@ -86,14 +86,8 @@ async function prepareBody(
 
   if (!raw) return undefined;
 
-  // Try to parse as JSON and wrap in dto
-  try {
-    const parsed = JSON.parse(raw);
-    return JSON.stringify({ dto: parsed });
-  } catch {
-    // Not JSON, pass through as-is
-    return raw;
-  }
+  // Forward JSON payloads exactly as received to align with backend DTO expectations
+  return raw;
 }
 
 /**
@@ -136,9 +130,13 @@ async function proxyRequest(
   try {
     const response = await fetch(url, init);
 
-    // Stream the response back
-    const body = await response.arrayBuffer();
-    const proxyResponse = new NextResponse(body, { status: response.status });
+    // Some HTTP codes (204/205/304) are defined to have no body.
+    const status = response.status;
+    const isBodylessStatus = status === 204 || status === 205 || status === 304;
+
+    const proxyResponse = isBodylessStatus
+      ? new NextResponse(null, { status })
+      : new NextResponse(await response.arrayBuffer(), { status });
 
     // Copy response headers
     response.headers.forEach((value, key) => {

@@ -155,10 +155,14 @@ export async function serverFetch<T>(
   try {
     const response = await fetch(fetchUrl, fetchOpts);
 
-    // Handle 401 - redirect to sign in
+    // Handle 401 - redirect to sign in (only on server)
     if (response.status === 401) {
       console.error('[Auth] Session expired or invalid');
-      redirect('/signin');
+      if (isServer) {
+        redirect('/signin');
+      } else {
+        throw new Error('Unauthorized');
+      }
     }
 
     // Handle other errors
@@ -170,7 +174,9 @@ export async function serverFetch<T>(
         url: fetchUrl,
         body: text.slice(0, 200),
       });
-      redirect(`/error/server-error?ref=${ref}`);
+      const error = new Error(`API Error ${response.status}: ${text.slice(0, 100)}`);
+      error.name = 'ApiError';
+      throw error;
     }
 
     // Handle empty responses
@@ -183,7 +189,9 @@ export async function serverFetch<T>(
     if (error instanceof DOMException && error.name === 'AbortError') {
       const ref = generateErrorRef();
       console.error(`[API Timeout – ${ref}]`, { url: fetchUrl });
-      redirect(`/error/server-error?ref=${ref}`);
+      const timeoutError = new Error(`Request timeout: ${fetchUrl}`);
+      timeoutError.name = 'TimeoutError';
+      throw timeoutError;
     }
 
     // Re-throw redirect errors
@@ -191,7 +199,7 @@ export async function serverFetch<T>(
       throw error;
     }
 
-    // Log and redirect for other errors
+    // Log and throw for other errors
     const ref = generateErrorRef();
     console.error(`[API Error – ${ref}]`, { error, url: fetchUrl });
     throw error;

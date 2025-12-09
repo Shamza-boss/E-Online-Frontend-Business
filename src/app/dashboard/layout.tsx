@@ -9,11 +9,14 @@
  * - Date picker localization
  */
 
+import { useCallback, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { MathJaxContext } from 'better-react-mathjax';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import DashboardComponent from './_components/Dashboard';
+import { AUTH_NOTICE_QUERY_KEY } from '@/app/_lib/utils/alreadySignedInNotice';
 
 // MathJax configuration for LaTeX-style math rendering
 const MATHJAX_CONFIG = {
@@ -49,8 +52,30 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
+  const noticeParam = searchParams.get(AUTH_NOTICE_QUERY_KEY);
+  const searchParamString = searchParams.toString();
+
+  useEffect(() => {
+    if (!noticeParam) return;
+    setAuthNotice(noticeParam);
+    const params = new URLSearchParams(searchParamString);
+    params.delete(AUTH_NOTICE_QUERY_KEY);
+    const query = params.toString();
+    const target = query ? `${pathname}?${query}` : pathname || '/dashboard';
+    router.replace(target, { scroll: false });
+  }, [noticeParam, pathname, router, searchParamString]);
+
+  const handleDismissNotice = useCallback(() => setAuthNotice(null), []);
+
   return (
-    <DashboardComponent>
+    <DashboardComponent
+      noticeMessage={authNotice}
+      onDismissNotice={handleDismissNotice}
+    >
       <MathJaxContext version={3} config={MATHJAX_CONFIG}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Box sx={layoutStyles.container}>

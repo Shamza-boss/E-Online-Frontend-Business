@@ -15,7 +15,11 @@ import Stack from '@mui/material/Stack';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
-import { InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
+import {
+  InstitutionWithAdminDto,
+  SubscriptionPlan,
+} from '@/app/_lib/interfaces/types';
+import { featureFlagToPlan } from '@/app/_lib/utils/subscriptions';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
 import {
   activateInstitution,
@@ -23,7 +27,7 @@ import {
   getInstitutions,
 } from '@/app/_lib/actions/institutions';
 import { format } from 'date-fns';
-import { Chip, FormControlLabel, FormLabel } from '@mui/material';
+import { Chip, FormControlLabel } from '@mui/material';
 import ManageInstitutionModal from '../Modals/ManageInstitutionModal';
 import {
   PagedResult,
@@ -65,6 +69,8 @@ type InstitutionGridRow = {
   adminFirstName?: string;
   adminLastName?: string;
   adminName: string;
+  plan: SubscriptionPlan;
+  creatorEnabled?: boolean;
 };
 
 export default function InstitutionUserDataGrid() {
@@ -254,6 +260,10 @@ export default function InstitutionUserDataGrid() {
           .join(' ')
           .trim();
 
+        const normalizedPlan: SubscriptionPlan = featureFlagToPlan(
+          institution.plan
+        );
+
         return {
           id: institution.id,
           name: institution.name,
@@ -263,6 +273,8 @@ export default function InstitutionUserDataGrid() {
           updatedAt: institution.updatedAt,
           adminFirstName: admin?.firstName ?? '',
           adminLastName: admin?.lastName ?? '',
+          plan: normalizedPlan,
+          creatorEnabled: Boolean(institution.creatorEnabled),
         };
       });
   }, [institutionsPage?.items]);
@@ -288,6 +300,35 @@ export default function InstitutionUserDataGrid() {
       flex: 1,
       minWidth: 200,
       editable: false,
+    },
+    {
+      field: 'plan',
+      headerName: 'Plan',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Chip
+          size="small"
+          color="primary"
+          variant="outlined"
+          label={params.value ?? '—'}
+          sx={{ ml: 1 }}
+        />
+      ),
+    },
+    {
+      field: 'creatorEnabled',
+      headerName: 'Creator Add-on',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Chip
+          size="small"
+          color={params.value ? 'success' : 'default'}
+          label={params.value ? 'Enabled' : 'Disabled'}
+          sx={{ ml: 1 }}
+        />
+      ),
     },
     {
       field: 'isActive',

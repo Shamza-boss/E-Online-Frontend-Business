@@ -17,5 +17,9 @@ export async function getCurrentUser() {
     role: u.role ?? null,
     institutionId: u.institutionId ?? null,
     institutionName: u.institutionName ?? null,
+    subscription: u.subscription ?? null,
+    subscriptionLabel: u.subscriptionLabel ?? null,
+    subscriptionPlan: u.subscriptionPlan ?? null,
+    creatorEnabled: u.creatorEnabled ?? false,
   } as const;
 }

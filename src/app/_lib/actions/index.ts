@@ -22,11 +22,26 @@ export {
   deleteClassroom,
 } from './classrooms';
 
+// Classrooms (Client-safe)
+export * from './classrooms.client';
+
 // Dashboard
 export * from './dashboard';
 
 // Homework
 export * from './homework';
+
+// Homework (Client-safe)
+export * from './homework.client';
+
+// Settings
+export * from './settings';
+
+// Settings (Client-safe)
+export * from './settings.client';
+
+// Users (Client-safe)
+export * from './users.client';
 
 // Institutions
 export * from './institutions';

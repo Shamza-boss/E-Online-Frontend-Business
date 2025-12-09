@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getMySettings } from '@/app/_lib/actions/settings';
 import SettingsExperience from './_components/SettingsExperience';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +11,5 @@ export default async function SettingsPage() {
     redirect('/signin');
   }
 
-  const settings = await getMySettings();
-  return <SettingsExperience data={settings} />;
+  return <SettingsExperience />;
 }

@@ -4,7 +4,6 @@ import { memo, useCallback } from 'react';
 import {
     Box,
     Button,
-    CardActionArea,
     CardMedia,
     Chip,
     Skeleton,
@@ -42,32 +41,43 @@ function LibraryCard({
 
     return (
         <StyledCard variant="outlined" tabIndex={0}>
-            <CardActionArea sx={{ flexGrow: 1 }}>
-                {isLoadingThumbnail || !thumbnail ? (
-                    <Skeleton
-                        variant="rectangular"
-                        sx={{
-                            width: '100%',
-                            height: '75.5%',
-                            borderBottom: '1px solid',
-                            borderColor: 'divider',
-                            boxShadow: '0 1px 4px #0002',
-                            objectFit: 'cover',
-                        }}
-                        animation="wave"
-                    />
-                ) : (
-                    <CardMedia
-                        component="img"
-                        alt={`${extractName(file.fileKey)} image`}
-                        src={thumbnail}
-                        sx={{
-                            aspectRatio: '16 / 9',
-                            borderBottom: '1px solid',
-                            borderColor: 'divider',
-                        }}
-                    />
-                )}
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Box
+                    sx={{
+                        width: '100%',
+                        aspectRatio: '16 / 9',
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        overflow: 'hidden',
+                        position: 'relative',
+                    }}
+                >
+                    {isLoadingThumbnail || !thumbnail ? (
+                        <Skeleton
+                            variant="rectangular"
+                            sx={{
+                                width: '100%',
+                                height: '100%',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                            }}
+                            animation="wave"
+                        />
+                    ) : (
+                        <Box
+                            component="img"
+                            alt={`${extractName(file.fileKey)} image`}
+                            src={thumbnail}
+                            sx={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                display: 'block',
+                            }}
+                        />
+                    )}
+                </Box>
                 <StyledCardContent sx={{ padding: 2 }}>
                     <Typography variant="h6" sx={{ pr: 1, minWidth: 0 }} noWrap>
                         {file.fileName || extractName(file.fileKey)}
@@ -103,7 +113,7 @@ function LibraryCard({
                         View
                     </Button>
                 </Box>
-            </CardActionArea>
+            </Box>
         </StyledCard>
     );
 }

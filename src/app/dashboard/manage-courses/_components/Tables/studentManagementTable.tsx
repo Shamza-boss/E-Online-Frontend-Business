@@ -18,12 +18,7 @@ import useSWR from 'swr';
 import { GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
 import EDataGrid from '../../../_components/EDataGrid';
 
-import { getAllStudents } from '../../../../_lib/actions/users';
-import {
-  EnrollStudents,
-  getAllUsersInClassroom,
-  getAllClassroomsAndData,
-} from '../../../../_lib/actions/classrooms';
+import { EnrollStudents, getAllStudentsClient, getAllClassroomsAndDataClient, getAllUsersInClassroomClient } from '../../../../_lib/actions';
 import {
   UserDto,
   EnrollStudentsDto,
@@ -40,17 +35,17 @@ const StudentManagementTable = () => {
   const [classId, setClassId] = useState<string>('');
 
   const { data: students, isLoading: studentsLoading } = useSWR<UserDto[]>(
-    'students',
-    getAllStudents
+    'all-students',
+    getAllStudentsClient
   );
 
   const { data: classRooms, isLoading: classesLoading } = useSWR<
     ClassroomDetailsDto[]
-  >('getAvailableClasses', getAllClassroomsAndData);
+  >('all-classrooms-details', getAllClassroomsAndDataClient);
 
   const { data: enrolledStudents = [] } = useSWR<UserDto[]>(
-    classId ? ['classroomUsers', classId] : null,
-    () => getAllUsersInClassroom(classId)
+    classId ? ['classroom-users', classId] : null,
+    () => getAllUsersInClassroomClient(classId)
   );
 
   // Filter eligible students (not already enrolled)

@@ -114,7 +114,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
       fullScreen
       open={open}
       onClose={handleClose}
-      slotProps={{ transition: Transition }}
+      slots={{ transition: Transition }}
       keepMounted
       title="Course Fullscreen Mode"
     >

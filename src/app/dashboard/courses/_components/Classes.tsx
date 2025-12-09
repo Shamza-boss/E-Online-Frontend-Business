@@ -1,22 +1,30 @@
-'use client';
-
 import { getAllUserClassrooms } from '@/app/_lib/actions/classrooms';
 import ClassCard from '@/app/_lib/components/shared-theme/customizations/card';
 import { ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import Box from '@mui/material/Box';
-import useSWR from 'swr';
 import { SchoolRounded } from '@mui/icons-material';
 import ErrorLayout from '../../_components/ErrorLayout';
 import Link from 'next/link';
 
-export default function ClassroomClasses() {
-  const { data: result } = useSWR<ClassroomDetailsDto[]>(
-    'classes',
-    getAllUserClassrooms,
-    { suspense: true }
-  );
+export default async function ClassroomClasses() {
+  let classes: ClassroomDetailsDto[] = [];
 
-  const classes = Array.isArray(result) ? result : [];
+  try {
+    const result = await getAllUserClassrooms();
+    classes = Array.isArray(result) ? result : [];
+  } catch (error) {
+    console.error('Unable to load classrooms', error);
+    return (
+      <ErrorLayout
+        icon={<SchoolRounded sx={{ fontSize: 80 }} />}
+        title="Courses unavailable"
+        description="We couldn't load your courses just now. Please refresh the page."
+        actionLabel="Back to Dashboard"
+        actionHref="/dashboard"
+        tone="error"
+      />
+    );
+  }
 
   if (classes.length === 0) {
     return (

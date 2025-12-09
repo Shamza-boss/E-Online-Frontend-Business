@@ -12,6 +12,10 @@ import {
   IconButton,
   TextField,
   Typography,
+  MenuItem,
+  FormControlLabel,
+  Switch,
+  Stack,
 } from '@mui/material';
 import useSWR from 'swr';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
@@ -19,7 +23,15 @@ import {
   getInstitutionWithAdmin,
   updateInstitutionWithAdmin,
 } from '@/app/_lib/actions/institutions';
-import { InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
+import {
+  InstitutionWithAdminDto,
+  SubscriptionFeatureFlag,
+  SubscriptionPlan,
+} from '@/app/_lib/interfaces/types';
+import {
+  featureFlagToPlan,
+  planToFeatureFlag,
+} from '@/app/_lib/utils/subscriptions';
 
 interface ManageInstitutionModalProps {
   open: boolean;
@@ -41,6 +53,8 @@ const ManageInstitutionModal: React.FC<ManageInstitutionModalProps> = ({
   const [adminFirstName, setAdminFirstName] = React.useState('');
   const [adminLastName, setAdminLastName] = React.useState('');
   const [adminEmail, setAdminEmail] = React.useState('');
+  const [subscriptionPlan, setSubscriptionPlan] = React.useState<SubscriptionPlan>('Standard');
+  const [creatorEnabled, setCreatorEnabled] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
 
   const shouldFetch = open && Boolean(institutionId);
@@ -58,6 +72,8 @@ const ManageInstitutionModal: React.FC<ManageInstitutionModalProps> = ({
       setAdminFirstName('');
       setAdminLastName('');
       setAdminEmail('');
+      setSubscriptionPlan('Standard');
+      setCreatorEnabled(false);
       return;
     }
 
@@ -66,6 +82,9 @@ const ManageInstitutionModal: React.FC<ManageInstitutionModalProps> = ({
       setAdminFirstName(data.admin?.firstName ?? '');
       setAdminLastName(data.admin?.lastName ?? '');
       setAdminEmail(data.admin?.email ?? data.institution?.adminEmail ?? '');
+      const currentPlan = featureFlagToPlan(data.institution?.plan);
+      setSubscriptionPlan(currentPlan);
+      setCreatorEnabled(Boolean(data.institution?.creatorEnabled));
     }
   }, [data, open]);
 
@@ -80,6 +99,10 @@ const ManageInstitutionModal: React.FC<ManageInstitutionModalProps> = ({
       return;
     }
 
+    const normalizedPlan: SubscriptionFeatureFlag = planToFeatureFlag(
+      subscriptionPlan
+    );
+
     const baseInstitution = data?.institution ?? {
       id: institutionId,
       name: institutionName,
@@ -87,6 +110,8 @@ const ManageInstitutionModal: React.FC<ManageInstitutionModalProps> = ({
       createdAt: '',
       updatedAt: '',
       isActive: true,
+      plan: normalizedPlan,
+      creatorEnabled,
     };
 
     const payload: InstitutionWithAdminDto = {
@@ -94,6 +119,8 @@ const ManageInstitutionModal: React.FC<ManageInstitutionModalProps> = ({
         ...baseInstitution,
         name: institutionName.trim(),
         adminEmail: adminEmail.trim(),
+        plan: normalizedPlan,
+        creatorEnabled,
       },
       admin: {
         firstName: adminFirstName.trim(),
@@ -175,6 +202,36 @@ const ManageInstitutionModal: React.FC<ManageInstitutionModalProps> = ({
                   sx={fieldWidth}
                   margin="normal"
                 />
+                <TextField
+                  select
+                  label="Subscription Plan"
+                  value={subscriptionPlan}
+                  onChange={(event) =>
+                    setSubscriptionPlan(
+                      event.target.value === 'Enterprise' ? 'Enterprise' : 'Standard'
+                    )
+                  }
+                  required
+                  sx={fieldWidth}
+                  margin="normal"
+                >
+                  <MenuItem value="Standard">Standard</MenuItem>
+                  <MenuItem value="Enterprise">Enterprise</MenuItem>
+                </TextField>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={creatorEnabled}
+                        onChange={(_, checked) => setCreatorEnabled(checked)}
+                      />
+                    }
+                    label="Creator add-on"
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Enable when the institution uses premium creator tooling.
+                  </Typography>
+                </Stack>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="body2" color="text.secondary">
                   Update the institution name or assign a different admin email

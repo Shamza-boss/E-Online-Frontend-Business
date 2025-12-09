@@ -1,5 +1,84 @@
 import { UserRole } from '../Enums/UserRole';
 
+export type SubscriptionPlan = 'Standard' | 'Enterprise';
+
+export enum SubscriptionFeatureFlag {
+  None = 0,
+  Standard = 1,
+  Enterprise = 2,
+  Creator = 4,
+}
+
+export interface InstitutionSubscriptionPayload {
+  plan: SubscriptionFeatureFlag;
+  creatorEnabled: boolean;
+}
+
+export interface BillingRateDto {
+  baseMonthlyPrice: number;
+  enterpriseBaseUsers: number;
+  enterpriseOveragePricePerUser: number;
+  creatorAddonMonthlyPrice: number;
+  plan: SubscriptionFeatureFlag;
+  creatorEnabled: boolean;
+}
+
+export interface SubscriptionInfoDto {
+  subscription: string;
+  activeUsers: number;
+  allowedUsers: number;
+  overageUsers: number;
+}
+
+export interface BillingSummaryDto {
+  institutionName: string;
+  subscription: string;
+  year: number;
+  month: number;
+  activeUsers: number;
+  enrolledUsers: number;
+  allowedUsers: number;
+  overageUsers: number;
+  baseMonthlyPrice: number;
+  addonsMonthlyPrice: number;
+  overagePrice: number;
+  totalPrice: number;
+}
+
+export interface BillingUsageSummary {
+  enrolledUsersPeak: number;
+  activeUsersPeak: number;
+  storedVideoMinutes: number;
+  deliveredVideoMinutes: number;
+  pdfStorageGb: number;
+  pdfDownloads: number;
+  cpuSeconds: number;
+  memoryGbSeconds: number;
+  volumeGbSeconds: number;
+  egressGb: number;
+  objectStorageGbMonthFraction: number;
+}
+
+export interface BillingCostSummary {
+  cloudflareStoredUsd: number;
+  cloudflareDeliveredUsd: number;
+  railwayCpuUsd: number;
+  railwayMemoryUsd: number;
+  railwayVolumeUsd: number;
+  railwayEgressUsd: number;
+  railwayObjectStorageUsd: number;
+  totalUsd: number;
+}
+
+export interface BillingProjectionDto {
+  year: number;
+  month: number;
+  usage: BillingUsageSummary;
+  costsUsd: BillingCostSummary;
+  chargeTotal: number;
+  expectedMargin: number;
+}
+
 //Homework
 export interface VideoMeta {
   provider: string;
@@ -235,6 +314,10 @@ export interface UserDto {
   lastName: string;
   email: string;
   role: UserRole | null;
+  subscription?: string | null;
+  subscriptionLabel?: string | null;
+  subscriptionPlan?: SubscriptionPlan | null;
+  creatorEnabled?: boolean;
 }
 
 export interface AssignmentDetailsDto {
@@ -268,10 +351,16 @@ export interface InstitutionWithAdminDto {
 export interface InstitutionDto {
   id: string;
   name: string;
-  adminEmail: string;
+  adminEmail?: string | null;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
   isActive: boolean;
+  plan: SubscriptionFeatureFlag;
+  creatorEnabled: boolean;
+  billingStatus?: string | null;
+  lastPaymentDate?: string | null;
+  nextInvoiceDate?: string | null;
+  currentInvoiceTotal?: number | null;
 }
 
 export interface NewAdminDto {
@@ -375,6 +464,10 @@ export interface SettingsUserDto {
   enrollmentCompletedAt?: string | null;
   createdAt?: string;
   createdByUserId?: string | null;
+  subscription?: string | null;
+  subscriptionLabel?: string | null;
+  subscriptionPlan?: SubscriptionPlan | null;
+  creatorEnabled?: boolean;
 }
 
 export interface SettingsStatsDto {

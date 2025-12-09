@@ -102,6 +102,7 @@
   "devDependencies": {
     "@types/node": "^22",
     "@types/pdfjs-dist": "^2.10.377",
+    "baseline-browser-mapping": "^2.8.32",
     "cross-env": "^7.0.3",
     "depcheck": "^1.4.7",
     "eslint": "^9.15.0",

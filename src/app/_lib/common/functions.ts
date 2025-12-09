@@ -14,6 +14,7 @@ export const routeLabels: Record<string, string> = {
   '': 'Dashboard',
   management: 'Management',
   institutions: 'Institutions',
+  billing: 'Billing',
   'manage-courses': 'Manage courses',
   library: 'Library',
   courses: 'My courses',

@@ -148,6 +148,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               institutionName ??
               token.institutionName ??
               'Absolute Online PTY LTD';
+            token.subscription = u.subscription ?? token.subscription ?? null;
+            token.subscriptionLabel =
+              u.subscriptionLabel ?? token.subscriptionLabel ?? null;
+            token.subscriptionPlan =
+              u.subscriptionPlan ?? token.subscriptionPlan ?? null;
+            if (u.creatorEnabled !== undefined) {
+              token.creatorEnabled = u.creatorEnabled;
+            }
+            const rawInstitutionActive =
+              u.isInstitutionActive ?? u.IsInstitutionActive;
+            if (rawInstitutionActive !== undefined) {
+              token.isInstitutionActive = rawInstitutionActive;
+            }
+            const rawPrimaryAdminEmail =
+              u.primaryAdminEmail ?? u.PrimaryAdminEmail;
+            if (rawPrimaryAdminEmail !== undefined) {
+              token.primaryAdminEmail = rawPrimaryAdminEmail;
+            }
           }
         } catch (e) {
           console.error('[auth][jwt] resolve error', e);
@@ -222,8 +240,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.role = t.role as Session['user']['role'];
         if (t.institutionId) session.user.institutionId = t.institutionId;
         if (t.institutionName) session.user.institutionName = t.institutionName;
+        if (t.isInstitutionActive !== undefined) {
+          session.user.isInstitutionActive = t.isInstitutionActive ?? null;
+        }
+        if (t.primaryAdminEmail !== undefined) {
+          session.user.primaryAdminEmail = t.primaryAdminEmail ?? null;
+        }
       }
       if (t.apiAccessToken) session.apiAccessToken = t.apiAccessToken;
+      if ('subscription' in t) {
+        session.user.subscription = t.subscription ?? null;
+      }
+      if ('subscriptionLabel' in t) {
+        session.user.subscriptionLabel = t.subscriptionLabel ?? null;
+      }
+      if ('subscriptionPlan' in t) {
+        session.user.subscriptionPlan = t.subscriptionPlan ?? null;
+      }
+      if ('creatorEnabled' in t) {
+        session.user.creatorEnabled = t.creatorEnabled ?? false;
+      }
       return session as Session;
     },
   },

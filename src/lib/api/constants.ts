@@ -16,8 +16,8 @@ export const PROXY_STRIP_HEADERS = [
 // Headers to preserve for file uploads
 export const MULTIPART_CONTENT_TYPE = 'multipart/form-data';
 
-// Default timeout for API requests (ms)
-export const DEFAULT_TIMEOUT = 15_000;
+// Default timeout for API requests (ms) - Increased for slow local development
+export const DEFAULT_TIMEOUT = 30_000;
 
 // Retry configuration
 export const RETRY_CONFIG = {
