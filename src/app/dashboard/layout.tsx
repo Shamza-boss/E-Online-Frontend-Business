@@ -15,6 +15,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { MathJaxContext } from 'better-react-mathjax';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import type { Route } from 'next';
 import DashboardComponent from './_components/Dashboard';
 import { AUTH_NOTICE_QUERY_KEY } from '@/app/_lib/utils/alreadySignedInNotice';
 
@@ -65,7 +66,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const params = new URLSearchParams(searchParamString);
     params.delete(AUTH_NOTICE_QUERY_KEY);
     const query = params.toString();
-    const target = query ? `${pathname}?${query}` : pathname || '/dashboard';
+    const target = (query ? `${pathname}?${query}` : pathname || '/dashboard') as Route;
     router.replace(target, { scroll: false });
   }, [noticeParam, pathname, router, searchParamString]);
 
