@@ -8,3 +8,5 @@
 export { fetchPaginatedResource, DEFAULT_PAGE_SIZE } from './paginationService';
 
 export { uploadTextbook, uploadPdfAsset } from './storageUpload';
+
+export { clientFetch, swrFetcher } from './clientFetch';

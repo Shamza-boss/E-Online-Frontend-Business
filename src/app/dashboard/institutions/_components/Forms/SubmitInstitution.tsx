@@ -49,8 +49,6 @@ export async function SubmitInstitution(
     },
   } as InstitutionWithAdminDto;
 
-  console.log('Creating institution with data:', newInstitution);
-
   try {
     await createInstitution(newInstitution);
     return {
@@ -58,7 +56,9 @@ export async function SubmitInstitution(
       institution: newInstitution.institution.name,
     };
   } catch (error: any) {
-    console.error('Institution creation error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Institution creation error:', error);
+    }
     return {
       success: false,
       error: error.message || 'Failed to create institution',

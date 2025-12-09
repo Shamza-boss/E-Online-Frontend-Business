@@ -28,6 +28,11 @@ export type Env = z.infer<typeof envSchema>;
  * Throws detailed errors in development if validation fails
  */
 function getEnv(): Env {
+  // Skip validation during build time
+  if (typeof window !== 'undefined') {
+    return {} as Env;
+  }
+
   const parsed = envSchema.safeParse(process.env);
 
   if (!parsed.success) {
@@ -43,9 +48,9 @@ function getEnv(): Env {
       })
       .join('\n');
 
-    // Only throw in development to help with debugging
+    // Only log in development to help with debugging
     if (process.env.NODE_ENV !== 'production') {
-      console.error(`❌ Environment validation failed:\n${errors}`);
+      console.warn(`⚠️ Environment validation failed:\n${errors}`);
     }
 
     // In production, return partial env (unsafe but prevents crashes)

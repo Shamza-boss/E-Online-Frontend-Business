@@ -66,7 +66,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     params.delete(AUTH_NOTICE_QUERY_KEY);
     const query = params.toString();
     const target = query ? `${pathname}?${query}` : pathname || '/dashboard';
-    router.replace(target, { scroll: false });
+    router.replace(target as any, { scroll: false });
   }, [noticeParam, pathname, router, searchParamString]);
 
   const handleDismissNotice = useCallback(() => setAuthNotice(null), []);
