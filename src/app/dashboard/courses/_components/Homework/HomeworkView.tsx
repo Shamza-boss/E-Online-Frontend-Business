@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -13,13 +13,11 @@ import {
   Checkbox,
   Box,
   Stack,
-  Pagination,
   Dialog,
   DialogTitle,
   DialogContent,
   IconButton,
 } from '@mui/material';
-import PaginationItem from '@mui/material/PaginationItem';
 import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import {
@@ -31,6 +29,8 @@ import { format } from 'date-fns';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
+import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
+import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
 
 const formatFileSize = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return null;
@@ -66,8 +66,10 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
     key?: string | null;
   } | null>(null);
 
-  const questionCount = homework.questions.length;
-  const currentQuestion = homework.questions[currentQuestionIndex];
+  const sortedQuestions = useMemo(
+    () => sortQuestionTreeByDisplayOrder(homework.questions),
+    [homework.questions]
+  );
 
   const handleChange = (questionId: string, value: any) => {
     if (!readOnly) {
@@ -159,7 +161,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
     );
   };
 
-  const renderQuestion = (
+  const renderQuestionNode = (
     node: Question,
     numbering: string,
     depth: number = 1
@@ -217,7 +219,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
               node.pdf
             )}
           {node.subquestions.map((sub, idx) =>
-            renderQuestion(sub, `${numbering}.${idx + 1}`, depth + 1)
+            renderQuestionNode(sub, `${numbering}.${idx + 1}`, depth + 1)
           )}
         </Box>
       );
@@ -366,37 +368,24 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
           {homework.description}
         </Typography>
         <form onSubmit={handleSubmit}>
-          {questionCount > 0 ? (
-            <>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ mb: 2 }}
-              >
-                <Typography variant="subtitle1">
-                  Viewing Question {currentQuestionIndex + 1} of {questionCount}
-                </Typography>
-                <Pagination
-                  count={questionCount}
-                  page={currentQuestionIndex + 1}
-                  onChange={(_, page) => setCurrentQuestionIndex(page - 1)}
-                  renderItem={(item) => (
-                    <PaginationItem {...item} page={`Question ${item.page}`} />
-                  )}
-                />
-              </Stack>
-              {currentQuestion &&
-                renderQuestion(
-                  currentQuestion,
-                  (currentQuestionIndex + 1).toString()
-                )}
-            </>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              No questions to display.
-            </Typography>
-          )}
+          <PaginatedQuestionLayout
+            questions={sortedQuestions}
+            currentIndex={currentQuestionIndex}
+            onIndexChange={setCurrentQuestionIndex}
+            renderQuestion={(question, numbering) =>
+              renderQuestionNode(question, numbering)
+            }
+            summaryLabel={(index, total) => (
+              <Typography variant="subtitle1">
+                Viewing Question {index + 1} of {total}
+              </Typography>
+            )}
+            emptyState={
+              <Typography variant="body2" color="text.secondary">
+                No questions to display.
+              </Typography>
+            }
+          />
         </form>
       </Paper>
       <Dialog
