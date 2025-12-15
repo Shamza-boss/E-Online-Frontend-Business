@@ -4,12 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 export const ALLOWED_TYPES: readonly Question['type'][] = [
   'video',
   'pdf',
-  'radio',
+  'single-select',
   'multi-select',
 ];
 
 export const isChoiceType = (type: Question['type']) =>
-  type === 'radio' || type === 'multi-select';
+  type === 'single-select' || type === 'multi-select';
 
 export interface QuestionMeta {
   question: Question;
@@ -109,8 +109,7 @@ const normalizeOptions = (
 const normalizeChoiceNode = (
   question: Question,
   path: string,
-  errors: string[],
-  depth: number
+  errors: string[]
 ): Question => {
   const sanitizedType = (question.type ?? '').trim() as Question['type'];
   const sanitizedText = (question.questionText ?? '').trim();
@@ -137,32 +136,10 @@ const normalizeChoiceNode = (
     errors.push(`${path}: Weight must be greater than zero.`);
   }
 
-  let sanitizedSubquestions = [...(question.subquestions ?? [])];
-  if (depth >= 2 && sanitizedSubquestions.length > 0) {
+  if (question.subquestions && question.subquestions.length > 0) {
     errors.push(
-      `${path}: Nesting deeper than two levels under a media section is not allowed.`
+      `${path}: Atomic questions cannot contain subquestions; nested items were removed.`
     );
-    sanitizedSubquestions = [];
-  }
-
-  if (sanitizedSubquestions.length > 0) {
-    if (question.options && question.options.some((opt) => opt.trim().length)) {
-      errors.push(
-        `${path}: Questions that contain nested items cannot define options; options were cleared.`
-      );
-    }
-
-    const processedChildren = sanitizedSubquestions.map((child, idx) =>
-      normalizeChoiceNode(child, `${path}.${idx + 1}`, errors, depth + 1)
-    );
-
-    return {
-      ...base,
-      options: undefined,
-      correctAnswer: undefined,
-      correctAnswers: undefined,
-      subquestions: processedChildren,
-    };
   }
 
   const { sanitized, errors: optionErrors } = normalizeOptions(
@@ -174,7 +151,7 @@ const normalizeChoiceNode = (
 
   const availableOptions = sanitized ?? [];
 
-  if (base.type === 'radio') {
+  if (base.type === 'single-select') {
     const candidate = (question.correctAnswer ?? '').trim();
     let normalizedAnswer: string | undefined = undefined;
 
@@ -202,42 +179,52 @@ const normalizeChoiceNode = (
     };
   }
 
-  const rawAnswers = Array.isArray(question.correctAnswers)
-    ? question.correctAnswers
-    : typeof question.correctAnswer === 'string' && question.correctAnswer
-      ? [question.correctAnswer]
-      : [];
+  if (base.type === 'multi-select') {
+    const rawAnswers = Array.isArray(question.correctAnswers)
+      ? question.correctAnswers
+      : typeof question.correctAnswer === 'string' && question.correctAnswer
+        ? [question.correctAnswer]
+        : [];
 
-  const trimmedAnswers = rawAnswers
-    .map((answer) => (answer ?? '').trim())
-    .filter((answer) => answer.length > 0);
+    const trimmedAnswers = rawAnswers
+      .map((answer) => (answer ?? '').trim())
+      .filter((answer) => answer.length > 0);
 
-  const uniqueAnswers: string[] = [];
-  const seen = new Set<string>();
+    const uniqueAnswers: string[] = [];
+    const seen = new Set<string>();
 
-  for (const answer of trimmedAnswers) {
-    const match = availableOptions.find(
-      (option) => option.toLowerCase() === answer.toLowerCase()
-    );
-
-    if (!match) {
-      errors.push(
-        `${path}: Each correct answer must match one of the provided options.`
+    for (const answer of trimmedAnswers) {
+      const match = availableOptions.find(
+        (option) => option.toLowerCase() === answer.toLowerCase()
       );
-      continue;
+
+      if (!match) {
+        errors.push(
+          `${path}: Each correct answer must match one of the provided options.`
+        );
+        continue;
+      }
+
+      const key = match.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueAnswers.push(match);
+      }
     }
 
-    const key = match.toLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      uniqueAnswers.push(match);
+    if (uniqueAnswers.length === 0) {
+      errors.push(
+        `${path}: Select at least one correct answer for this multi-select question.`
+      );
     }
-  }
 
-  if (uniqueAnswers.length === 0) {
-    errors.push(
-      `${path}: Select at least one correct answer for this multi-select question.`
-    );
+    return {
+      ...base,
+      options: availableOptions,
+      subquestions: [],
+      correctAnswer: undefined,
+      correctAnswers: uniqueAnswers,
+    };
   }
 
   return {
@@ -245,7 +232,7 @@ const normalizeChoiceNode = (
     options: availableOptions,
     subquestions: [],
     correctAnswer: undefined,
-    correctAnswers: uniqueAnswers,
+    correctAnswers: undefined,
   };
 };
 
@@ -259,15 +246,29 @@ const normalizeSectionQuestion = (
   const sanitizedText = (question.questionText ?? '').trim();
   const subquestions = question.subquestions ?? [];
 
-  if (subquestions.length === 0) {
+  const processedSubquestions = subquestions
+    .map((sub, idx) => {
+      const childType = (sub.type ?? '').trim() as Question['type'];
+      if (!isChoiceType(childType)) {
+        errors.push(
+          `${path}.${idx + 1}: Only single-select or multi-select questions are allowed inside a ${label.toLowerCase()} section.`
+        );
+        return null;
+      }
+
+      return normalizeChoiceNode(
+        { ...sub, type: childType },
+        `${path}.${idx + 1}`,
+        errors
+      );
+    })
+    .filter(Boolean) as Question[];
+
+  if (processedSubquestions.length === 0) {
     errors.push(
       `${path}: A ${label.toLowerCase()} section must contain at least one subquestion.`
     );
   }
-
-  const processedSubquestions = subquestions.map((sub, idx) =>
-    normalizeChoiceNode(sub, `${path}.${idx + 1}`, errors, 1)
-  );
 
   if (sectionType === 'pdf') {
     const pdfMeta = question.pdf;
@@ -351,10 +352,10 @@ const normalizeRootQuestion = (
         questionText: (question.questionText ?? '').trim(),
         video: undefined,
         pdf: undefined,
+        subquestions: [],
       },
       path,
-      errors,
-      0
+      errors
     );
   }
 
@@ -437,7 +438,7 @@ export const buildValidatedHomework = (
 export const createLeafQuestion = (): Question => ({
   id: uuidv4(),
   questionText: '',
-  type: 'radio',
+  type: 'single-select',
   options: ['', ''],
   required: false,
   weight: 1,

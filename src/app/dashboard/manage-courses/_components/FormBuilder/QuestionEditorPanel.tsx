@@ -493,7 +493,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     }
 
     const options = target.options ?? [];
-    const isRadio = target.type === 'radio';
+    const isRadio = target.type === 'single-select';
 
     const handleToggle = (option: string, checked: boolean) => {
       if (isRadio) {

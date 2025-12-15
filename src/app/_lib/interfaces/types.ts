@@ -133,7 +133,7 @@ export interface CreateUploadDto {
 export interface Question {
   id: string;
   questionText: string;
-  type: 'video' | 'pdf' | 'radio' | 'multi-select';
+  type: 'video' | 'pdf' | 'single-select' | 'multi-select';
   displayOrder?: string;
   options?: string[];
   required: boolean;
