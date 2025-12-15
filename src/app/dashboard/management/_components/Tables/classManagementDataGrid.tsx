@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import {
   GridActionsCellItem,
   GridColDef,
@@ -16,6 +16,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import useSWR from 'swr';
 import {
   AcademicLevelDto,
   ClassroomDetailsDto,
@@ -28,15 +29,11 @@ import {
   getClassroomsAndData,
   updateClassroom,
 } from '@/app/_lib/actions/classrooms';
-import useSWR from 'swr';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { useSession } from 'next-auth/react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
-import {
-  PagedResult,
-  PaginationParams,
-} from '@/app/_lib/interfaces/pagination';
+import { PagedResult } from '@/app/_lib/interfaces/pagination';
 import { getUsers } from '@/app/_lib/actions/users';
 import { getAllAcademics } from '@/app/_lib/actions/academics';
 import { getAllSubjects } from '@/app/_lib/actions/subjects';
@@ -78,24 +75,22 @@ export default function ClassManagementDataGrid({
   const userRole = Number(session?.user?.role);
   const isElevated = userRole === UserRole.Admin;
 
-  const { showAlert } = useAlert();
-  const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
-    {}
-  );
-  const [deleteTarget, setDeleteTarget] =
-    React.useState<ClassroomDetailsDto | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [isDeleting, setIsDeleting] = React.useState(false);
-  const [paginationModel, setPaginationModel] =
-    React.useState<GridPaginationModel>({
-      page: 0,
-      pageSize: DEFAULT_PAGE_SIZE,
-    });
-  const [sortModel, setSortModel] = React.useState<GridSortModel>([]);
-  const [searchTerm, setSearchTermState] = React.useState('');
-  const [rowCount, setRowCount] = React.useState(0);
+  const alert = useAlert();
+  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+  const rowModesModelRef = useRef<GridRowModesModel>(rowModesModel);
+  rowModesModelRef.current = rowModesModel;
+  const [deleteTarget, setDeleteTarget] = useState<ClassroomDetailsDto | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
+  const [sortModel, setSortModel] = useState<GridSortModel>([]);
+  const [searchTerm, setSearchTermState] = useState('');
+  const [rowCount, setRowCount] = useState(0);
 
-  const handleSearch = React.useCallback((term: string) => {
+  const handleSearch = useCallback((term: string) => {
     setSearchTermState(term);
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, []);
@@ -112,99 +107,68 @@ export default function ClassManagementDataGrid({
   const sortDirection = sortModel[0]?.sort ?? null;
   const normalizedSearchKey = sanitizeOptionalInput(searchTerm) ?? '';
 
-  const classesKey = React.useMemo(
+  // SWR for classes with server-side pagination
+  const classesKey = useMemo(
     () =>
       active
         ? [
-            'classes',
-            paginationModel.page,
-            paginationModel.pageSize,
-            sortField ?? '',
-            sortDirection ?? '',
-            normalizedSearchKey,
-          ]
+          'classes',
+          paginationModel.page,
+          paginationModel.pageSize,
+          sortField,
+          sortDirection,
+          normalizedSearchKey,
+        ]
         : null,
-    [
-      active,
-      paginationModel.page,
-      paginationModel.pageSize,
-      sortField,
-      sortDirection,
-      normalizedSearchKey,
-    ]
+    [active, paginationModel.page, paginationModel.pageSize, sortField, sortDirection, normalizedSearchKey]
   );
+
+  const classesFetcher = useCallback(async () => {
+    const params: any = {
+      pageNumber: paginationModel.page + 1,
+      pageSize: paginationModel.pageSize || DEFAULT_PAGE_SIZE,
+    };
+    if (sortField) {
+      params.sortBy = sortField;
+      params.sortDirection = sortDirection === 'asc' || sortDirection === 'desc' ? sortDirection : 'asc';
+    }
+    if (normalizedSearchKey) {
+      params.searchTerm = normalizedSearchKey;
+    }
+    return getClassroomsAndData(params);
+  }, [paginationModel.page, paginationModel.pageSize, sortField, sortDirection, normalizedSearchKey]);
 
   const {
     data: classesResult,
     isLoading: classLoading,
-    isValidating: classValidating,
     mutate: mutateClasses,
   } = useSWR<PagedResult<ClassroomDetailsDto>>(
     classesKey,
-    () => {
-      const pageIndex = paginationModel.page;
-      const size = Number.isFinite(paginationModel.pageSize)
-        ? paginationModel.pageSize
-        : DEFAULT_PAGE_SIZE;
-      const orderBy = sortField ?? null;
-      const normalizedDirection = sanitizeOptionalInput(sortDirection);
-      const orderDirection =
-        normalizedDirection === 'asc' || normalizedDirection === 'desc'
-          ? normalizedDirection
-          : undefined;
-      const sanitizedSearch = normalizedSearchKey;
-
-      const requestParams: PaginationParams = {
-        pageNumber: pageIndex + 1,
-        pageSize: size,
-      };
-
-      if (orderBy) {
-        requestParams.sortBy = orderBy;
-        requestParams.sortDirection = orderDirection ?? 'asc';
-      }
-
-      if (sanitizedSearch) {
-        requestParams.searchTerm = sanitizedSearch;
-      }
-
-      return getClassroomsAndData(requestParams);
-    },
-    {
-      keepPreviousData: true,
-      revalidateOnFocus: active,
-    }
+    classesFetcher
   );
 
-  React.useEffect(() => {
+  // Update row count when data changes
+  useEffect(() => {
     if (typeof classesResult?.totalCount === 'number') {
       setRowCount(classesResult.totalCount);
     }
   }, [classesResult?.totalCount]);
 
-  const { data: users } = useSWR<PagedResult<UserDto>>(
-    ['users', 'instructors'],
-    () =>
-      getUsers({
-        pageNumber: 1,
-        pageSize: 100,
-        sortBy: 'lastName',
-        sortDirection: 'asc',
-      }),
-    {
-      revalidateOnMount: true,
-    }
-  );
-  const { data: academics } = useSWR<AcademicLevelDto[]>(
-    'academics',
-    getAllAcademics,
-    { revalidateOnMount: true }
-  );
-  const { data: subjects } = useSWR<SubjectDto[]>('subjects', getAllSubjects, {
-    revalidateOnMount: true,
-  });
+  // SWR fetchers for lookup data
+  const usersFetcher = useCallback(() => getUsers({
+    pageNumber: 1,
+    pageSize: 100,
+    sortBy: 'lastName',
+    sortDirection: 'asc',
+  }), []);
 
-  const instructorUsers = React.useMemo(
+  // SWR for lookup data (users, academics, subjects)
+  const { data: users } = useSWR<PagedResult<UserDto>>('users-instructors', usersFetcher);
+
+  const { data: academics } = useSWR<AcademicLevelDto[]>('academics', getAllAcademics);
+  const { data: subjects } = useSWR<SubjectDto[]>('subjects', getAllSubjects);
+
+  const instructorUsers = useMemo(
     () =>
       (users?.items ?? []).filter(
         (user): user is UserDto & { userId: string } =>
@@ -213,7 +177,7 @@ export default function ClassManagementDataGrid({
     [users]
   );
 
-  const teacherOptions = React.useMemo<{ value: string; label: string }[]>(
+  const teacherOptions = useMemo<{ value: string; label: string }[]>(
     () =>
       instructorUsers.map((teacher) => ({
         value: teacher.userId,
@@ -224,7 +188,7 @@ export default function ClassManagementDataGrid({
     [instructorUsers]
   );
 
-  const teacherLabelMap = React.useMemo(() => {
+  const teacherLabelMap = useMemo(() => {
     const map = new Map<string, string>();
     teacherOptions.forEach((opt) => {
       map.set(opt.value, opt.label);
@@ -232,7 +196,7 @@ export default function ClassManagementDataGrid({
     return map;
   }, [teacherOptions]);
 
-  const academicOptions = React.useMemo<{ value: string; label: string }[]>(
+  const academicOptions = useMemo<{ value: string; label: string }[]>(
     () =>
       (academics ?? [])
         .filter((academic): academic is AcademicLevelDto & { id: string } =>
@@ -245,7 +209,7 @@ export default function ClassManagementDataGrid({
     [academics]
   );
 
-  const academicLabelMap = React.useMemo(() => {
+  const academicLabelMap = useMemo(() => {
     const map = new Map<string, string>();
     academicOptions.forEach((opt) => {
       map.set(opt.value, opt.label);
@@ -253,7 +217,7 @@ export default function ClassManagementDataGrid({
     return map;
   }, [academicOptions]);
 
-  const subjectOptions = React.useMemo<
+  const subjectOptions = useMemo<
     Array<{ value: string; label: string; code: string; subjectName: string }>
   >(
     () =>
@@ -270,12 +234,12 @@ export default function ClassManagementDataGrid({
     [subjects]
   );
 
-  const subjectValueOptions = React.useMemo(
+  const subjectValueOptions = useMemo(
     () => subjectOptions.map(({ value, label }) => ({ value, label })),
     [subjectOptions]
   );
 
-  const subjectLabelMap = React.useMemo(() => {
+  const subjectLabelMap = useMemo(() => {
     const map = new Map<
       string,
       { label: string; code: string; name: string }
@@ -290,7 +254,7 @@ export default function ClassManagementDataGrid({
     return map;
   }, [subjectOptions]);
 
-  const rows = React.useMemo(
+  const rows = useMemo(
     () =>
       (classesResult?.items ?? []).map((row) => ({
         ...row,
@@ -301,22 +265,28 @@ export default function ClassManagementDataGrid({
     [classesResult?.items]
   );
 
-  const handleEditClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-  };
+  const handleEditClick = useCallback((id: GridRowId) => () => {
+    setRowModesModel((prev) => ({ ...prev, [id]: { mode: GridRowModes.Edit } }));
+  }, []);
 
-  const handleSaveClick = (id: GridRowId) => async () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  };
+  const handleSaveClick = useCallback((id: GridRowId) => () => {
+    setRowModesModel((prev) => ({ ...prev, [id]: { mode: GridRowModes.View } }));
+  }, []);
 
-  const handleCancelClick = (id: GridRowId) => () => {
-    setRowModesModel({
-      ...rowModesModel,
+  const handleCancelClick = useCallback((id: GridRowId) => () => {
+    setRowModesModel((prev) => ({
+      ...prev,
       [id]: { mode: GridRowModes.View, ignoreModifications: true },
-    });
-  };
+    }));
+  }, []);
 
-  const columns: GridColDef[] = [
+  const handlePromptDelete = useCallback((row: ClassroomDetailsDto) => {
+    if (!isElevated) return;
+    setDeleteTarget(row);
+    setDeleteDialogOpen(true);
+  }, [isElevated]);
+
+  const columns: GridColDef[] = useMemo(() => [
     {
       field: 'classroomName',
       headerName: 'Course name',
@@ -409,7 +379,7 @@ export default function ClassManagementDataGrid({
       headerName: 'Actions',
       width: 140,
       getActions: ({ id, row }: GridRowParams<ClassroomDetailsDto>) => {
-        const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
+        const isInEditMode = rowModesModelRef.current[id]?.mode === GridRowModes.Edit;
         if (isInEditMode) {
           return [
             <GridActionsCellItem
@@ -452,42 +422,48 @@ export default function ClassManagementDataGrid({
         ];
       },
     },
-  ];
+  ], [
+    isElevated,
+    teacherOptions,
+    teacherLabelMap,
+    academicOptions,
+    academicLabelMap,
+    subjectValueOptions,
+    subjectLabelMap,
+    handleSaveClick,
+    handleCancelClick,
+    handleEditClick,
+    handlePromptDelete,
+  ]);
 
-  const handlePromptDelete = (row: ClassroomDetailsDto) => {
-    if (!isElevated) return;
-    setDeleteTarget(row);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleCloseDeleteDialog = () => {
+  const handleCloseDeleteDialog = useCallback(() => {
     if (isDeleting) return;
     setDeleteDialogOpen(false);
     setDeleteTarget(null);
-  };
+  }, [isDeleting]);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!deleteTarget?.classroomId) {
-      showAlert('error', 'Unable to determine which classroom to delete.');
+      alert.error('Unable to determine which course to delete.');
       return;
     }
 
     setIsDeleting(true);
     try {
       await deleteClassroom(deleteTarget.classroomId);
-      showAlert('success', 'Classroom deleted successfully');
+      alert.success('Course deleted successfully');
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
       await mutateClasses();
     } catch (err: any) {
-      const message = err?.message || 'Failed to delete classroom.';
-      showAlert('error', message);
+      const message = err?.message || 'Failed to delete course.';
+      alert.error(message);
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [deleteTarget?.classroomId, alert, mutateClasses]);
 
-  const processRowUpdate = async (
+  const processRowUpdate = useCallback(async (
     newRow: GridRowModel,
     oldRow: GridRowModel
   ) => {
@@ -510,7 +486,7 @@ export default function ClassManagementDataGrid({
       const subjectId = mergedRow.subjectId ?? '';
 
       if (!mergedRow.classroomId) {
-        throw new Error('Missing classroom identifier.');
+        throw new Error('Missing course identifier.');
       }
 
       if (!academicLevelId || !subjectId) {
@@ -550,19 +526,40 @@ export default function ClassManagementDataGrid({
         subjectCode: updatedSubject?.subjectCode ?? mergedRow.subjectCode,
       };
 
-      showAlert('success', 'Classroom updated successfully');
+      alert.success('Course updated successfully');
       await mutateClasses();
       return updatedRow;
     } catch (err: any) {
-      const message = err?.message || 'Failed to update classroom.';
-      showAlert('error', message);
+      const message = err?.message || 'Failed to update course.';
+      alert.error(message);
       return oldRow;
     }
-  };
+  }, [instructorUsers, academics, subjects, alert, mutateClasses]);
 
-  const handleRowUpdateError = (error: Error) => {
-    showAlert('error', `Failed to update row: ${error.message}`);
-  };
+  const handleRowUpdateError = useCallback((error: Error) => {
+    alert.error(`Failed to update row: ${error.message}`);
+  }, [alert]);
+
+  const dataGridSlotProps = useMemo(
+    () => ({
+      loadingOverlay: {
+        variant: 'linear-progress' as const,
+        noRowsVariant: 'linear-progress' as const,
+      },
+    }),
+    []
+  );
+
+  const pageSizeOptions = useMemo(() => [10, 20, 50], []);
+
+  const confirmButtonProps = useMemo(() => ({ variant: 'contained' as const }), []);
+
+  const getRowClassName = useCallback(
+    (params: any) => params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd',
+    []
+  );
+
+  const getRowId = useCallback((r: any) => r.classroomId, []);
 
   return (
     <>
@@ -570,15 +567,13 @@ export default function ClassManagementDataGrid({
         checkboxSelection={isElevated}
         rows={rows}
         columns={columns}
-        getRowId={(r) => r.classroomId}
-        getRowClassName={(params) =>
-          params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
-        }
+        getRowId={getRowId}
+        getRowClassName={getRowClassName}
         editMode="row"
         paginationMode="server"
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}
-        pageSizeOptions={[10, 20, 50]}
+        pageSizeOptions={pageSizeOptions}
         rowCount={rowCount}
         sortingMode="server"
         sortModel={sortModel}
@@ -587,24 +582,19 @@ export default function ClassManagementDataGrid({
         onRowModesModelChange={setRowModesModel}
         processRowUpdate={processRowUpdate}
         onProcessRowUpdateError={handleRowUpdateError}
-        loading={classLoading || classValidating}
-        slotProps={{
-          loadingOverlay: {
-            variant: 'linear-progress',
-            noRowsVariant: 'linear-progress',
-          },
-        }}
+        loading={classLoading}
+        slotProps={dataGridSlotProps}
       />
       <ConfirmDialog
         open={deleteDialogOpen}
         onCancel={handleCloseDeleteDialog}
         onConfirm={handleConfirmDelete}
-        title={`Remove ${deleteTarget?.classroomName?.trim() || 'classroom'}`}
-        description="This action cannot be undone. The selected classroom will be permanently removed if you continue."
+        title={`Remove ${deleteTarget?.classroomName?.trim() || 'course'}`}
+        description="This action cannot be undone. The selected course will be permanently removed if you continue."
         confirmText={isDeleting ? 'Deleting…' : 'Delete'}
         disableCancel={isDeleting}
         disableConfirm={isDeleting}
-        confirmButtonProps={{ variant: 'contained' }}
+        confirmButtonProps={confirmButtonProps}
       />
     </>
   );

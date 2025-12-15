@@ -1,5 +1,84 @@
 import { UserRole } from '../Enums/UserRole';
 
+export type SubscriptionPlan = 'Standard' | 'Enterprise';
+
+export enum SubscriptionFeatureFlag {
+  None = 0,
+  Standard = 1,
+  Enterprise = 2,
+  Creator = 4,
+}
+
+export interface InstitutionSubscriptionPayload {
+  plan: SubscriptionFeatureFlag;
+  creatorEnabled: boolean;
+}
+
+export interface BillingRateDto {
+  baseMonthlyPrice: number;
+  enterpriseBaseUsers: number;
+  enterpriseOveragePricePerUser: number;
+  creatorAddonMonthlyPrice: number;
+  plan: SubscriptionFeatureFlag;
+  creatorEnabled: boolean;
+}
+
+export interface SubscriptionInfoDto {
+  subscription: string;
+  activeUsers: number;
+  allowedUsers: number;
+  overageUsers: number;
+}
+
+export interface BillingSummaryDto {
+  institutionName: string;
+  subscription: string;
+  year: number;
+  month: number;
+  activeUsers: number;
+  enrolledUsers: number;
+  allowedUsers: number;
+  overageUsers: number;
+  baseMonthlyPrice: number;
+  addonsMonthlyPrice: number;
+  overagePrice: number;
+  totalPrice: number;
+}
+
+export interface BillingUsageSummary {
+  enrolledUsersPeak: number;
+  activeUsersPeak: number;
+  storedVideoMinutes: number;
+  deliveredVideoMinutes: number;
+  pdfStorageGb: number;
+  pdfDownloads: number;
+  cpuSeconds: number;
+  memoryGbSeconds: number;
+  volumeGbSeconds: number;
+  egressGb: number;
+  objectStorageGbMonthFraction: number;
+}
+
+export interface BillingCostSummary {
+  cloudflareStoredUsd: number;
+  cloudflareDeliveredUsd: number;
+  railwayCpuUsd: number;
+  railwayMemoryUsd: number;
+  railwayVolumeUsd: number;
+  railwayEgressUsd: number;
+  railwayObjectStorageUsd: number;
+  totalUsd: number;
+}
+
+export interface BillingProjectionDto {
+  year: number;
+  month: number;
+  usage: BillingUsageSummary;
+  costsUsd: BillingCostSummary;
+  chargeTotal: number;
+  expectedMargin: number;
+}
+
 //Homework
 export interface VideoMeta {
   provider: string;
@@ -55,6 +134,7 @@ export interface Question {
   id: string;
   questionText: string;
   type: 'video' | 'pdf' | 'radio' | 'multi-select';
+  displayOrder?: string;
   options?: string[];
   required: boolean;
   weight: number; // Each question must have a weight.
@@ -166,6 +246,7 @@ export interface AcademicLevelDto {
   name: string;
   country: string;
   educationSystem: string;
+  institutionId?: string;
 }
 
 export interface ClassDto {
@@ -234,6 +315,10 @@ export interface UserDto {
   lastName: string;
   email: string;
   role: UserRole | null;
+  subscription?: string | null;
+  subscriptionLabel?: string | null;
+  subscriptionPlan?: SubscriptionPlan | null;
+  creatorEnabled?: boolean;
 }
 
 export interface AssignmentDetailsDto {
@@ -250,18 +335,33 @@ export interface GradeDetailDto {
   comment: string;
 }
 
+export interface InstitutionAdminDto extends NewAdminDto {
+  userId?: string;
+  institutionId?: string;
+  role?: UserRole | null;
+  status?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface InstitutionWithAdminDto {
   institution: InstitutionDto;
-  admin: NewAdminDto;
+  admin: InstitutionAdminDto | null;
 }
 
 export interface InstitutionDto {
   id: string;
   name: string;
-  adminEmail: string;
+  adminEmail?: string | null;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
   isActive: boolean;
+  plan: SubscriptionFeatureFlag;
+  creatorEnabled: boolean;
+  billingStatus?: string | null;
+  lastPaymentDate?: string | null;
+  nextInvoiceDate?: string | null;
+  currentInvoiceTotal?: number | null;
 }
 
 export interface NewAdminDto {
@@ -342,4 +442,52 @@ export interface InstitutionTrendsDashboardDto {
   gradePerformanceTrends: GradePerformanceLableTrendDto;
   mostActiveSubjects: MostActiveClassSubjectSeriesDto;
   recentHomeworkStats: RecentHomeworkStatDto[];
+}
+
+// Settings / Profile insights
+export interface SettingsResponseDto {
+  user: SettingsUserDto;
+  stats: SettingsStatsDto;
+}
+
+export interface SettingsUserDto {
+  userId: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: UserRole | string | number | null;
+  institutionId?: string | null;
+  institutionName?: string | null;
+  status?: string | null;
+  emailVerifiedAt?: string | null;
+  passkeyEnrolledAt?: string | null;
+  firstLoginAt?: string | null;
+  enrollmentCompletedAt?: string | null;
+  createdAt?: string;
+  createdByUserId?: string | null;
+  subscription?: string | null;
+  subscriptionLabel?: string | null;
+  subscriptionPlan?: SubscriptionPlan | null;
+  creatorEnabled?: boolean;
+}
+
+export interface SettingsStatsDto {
+  explanation: string;
+  rating?: string | null;
+  kpis: Record<string, number>;
+  graphs: StatsGraphDto[];
+  extra: Record<string, unknown>;
+}
+
+export interface StatsGraphDto {
+  id: string;
+  title: string;
+  x: string[];
+  series: StatsGraphSeriesDto[];
+  description?: string | null;
+}
+
+export interface StatsGraphSeriesDto {
+  name: string;
+  values: number[];
 }

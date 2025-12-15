@@ -126,6 +126,7 @@ export default function StudentManagementComponent({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        p: 3,
       }}
     >
       <Box
@@ -182,7 +183,7 @@ export default function StudentManagementComponent({
 
           <TabContext value={value}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <TabList onChange={handleChange} aria-label="manage classroom">
+              <TabList onChange={handleChange} aria-label="manage courses">
                 <Tab label="Trainees" value="1" />
                 <Tab label="All modules" value="2" />
               </TabList>

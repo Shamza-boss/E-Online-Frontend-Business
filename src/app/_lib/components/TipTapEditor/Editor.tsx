@@ -7,6 +7,7 @@ import React, {
   useRef,
   forwardRef,
   RefObject,
+  memo,
 } from 'react';
 import { useEditor } from '@tiptap/react';
 import {
@@ -17,7 +18,7 @@ import {
   LinkBubbleMenu,
   TableBubbleMenu,
 } from 'mui-tiptap';
-import { Box, Fade, Typography } from '@mui/material';
+import { Box, Fade, Typography, GlobalStyles } from '@mui/material';
 import { Lock, LockOpen, TextFields } from '@mui/icons-material';
 import useExtensions from './useExtensions';
 import EditorMenuControls from './EditorMenuControls';
@@ -25,18 +26,51 @@ import type { EditorOptions } from '@tiptap/core';
 import type { NoteDto } from '../../interfaces/types';
 import { debounce } from 'es-toolkit';
 import TextFragmentLoader from '@/app/dashboard/_components/_skeletonLoaders/TextSkeleton';
+import {
+  base64Encode,
+  computeChecksum,
+  decodePdfNotePayload,
+  PDF_NOTE_LINK_SELECTOR,
+  PDF_NOTE_LINK_CLASS,
+  PDF_NOTE_SENTINEL_ATTRIBUTE,
+  PDF_NOTE_TRAILING_PARAGRAPHS,
+  sanitizeBookmarkColor,
+  parsePdfNoteLinkElement,
+  type PdfNoteLinkSummary,
+  type PdfNoteLinkNodeAttributes,
+} from '@/app/_lib/utils/pdfNoteLinks';
 
-interface EditorProps {
+export interface EditorProps {
   note?: NoteDto;
   loading: boolean;
   onSave: (content: string) => void | Promise<void>;
+  onContentChange?: (html: string) => void;
+  onPdfLinkClick?: (link: PdfNoteLinkSummary) => void;
 }
 export interface EditorHandle {
   insertHtml: (html: string) => void;
+  getHtml: () => string;
+  insertPdfLink?: (attrs: PdfNoteLinkNodeAttributes) => boolean;
+  updatePdfLink?: (
+    linkId: string,
+    updates: {
+      chipLabel?: string;
+      chipColor?: string;
+    }
+  ) => boolean;
+  getRootElement?: () => HTMLElement | null;
 }
 
+const serializePdfPayload = (payload: Record<string, unknown>) => {
+  const payloadJson = JSON.stringify(payload);
+  return {
+    encoded: base64Encode(payloadJson),
+    checksum: computeChecksum(payloadJson),
+  };
+};
+
 const Editor = forwardRef<EditorHandle, EditorProps>(
-  ({ note, loading, onSave }: EditorProps, ref) => {
+  ({ note, loading, onSave, onContentChange, onPdfLinkClick }: EditorProps, ref) => {
     const [editable, setEditable] = useState(true);
     const [showMenuBar, setShowMenuBar] = useState(true);
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | null>(
@@ -56,6 +90,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
       editorProps: {},
       onUpdate: ({ editor }) => {
         const content = editor.getHTML();
+        onContentChange?.(content);
         if (content !== note?.content) {
           debouncedSaveRef.current(content);
         }
@@ -93,11 +128,138 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
       }
     }, []);
 
+    const handlePdfLinkActivation = useCallback(
+      (event: MouseEvent | KeyboardEvent) => {
+        if (!onPdfLinkClick) return;
+        const target = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+          PDF_NOTE_LINK_SELECTOR
+        );
+        if (!target) return;
+
+        if (
+          event instanceof KeyboardEvent &&
+          event.type === 'keydown' &&
+          event.key !== 'Enter' &&
+          event.key !== ' '
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const payload = parsePdfNoteLinkElement(target);
+        if (!payload) return;
+
+        onPdfLinkClick(payload);
+      },
+      [onPdfLinkClick]
+    );
+
+    const updatePdfLinkAttributes = useCallback(
+      (
+        linkId: string,
+        updates: { chipLabel?: string; chipColor?: string }
+      ): boolean => {
+        if (!editor) return false;
+
+        let changed = false;
+        editor
+          .chain()
+          .command(({ tr, state }) => {
+            state.doc.descendants((node, pos) => {
+              if (
+                node.type.name !== 'pdfNoteLink' ||
+                node.attrs['data-link-id'] !== linkId
+              ) {
+                return true;
+              }
+
+              const nextAttrs = { ...node.attrs };
+              const hasLabelUpdate = typeof updates.chipLabel === 'string';
+              const hasColorUpdate = typeof updates.chipColor === 'string';
+              const normalizedColor = hasColorUpdate
+                ? sanitizeBookmarkColor(updates.chipColor as string) ?? ''
+                : undefined;
+
+              if (hasLabelUpdate) {
+                nextAttrs['data-chip-label'] = updates.chipLabel as string;
+              }
+
+              if (hasColorUpdate) {
+                nextAttrs['data-chip-color'] =
+                  normalizedColor ?? nextAttrs['data-chip-color'];
+              }
+
+              if (hasLabelUpdate || hasColorUpdate) {
+                const decodedPayload = decodePdfNotePayload(
+                  nextAttrs['data-pdf-payload'],
+                  nextAttrs['data-pdf-checksum']
+                );
+
+                if (decodedPayload) {
+                  const payload = { ...decodedPayload.payload };
+
+                  if (hasLabelUpdate) {
+                    payload.bookmarkTitle = updates.chipLabel as string;
+                  }
+
+                  if (hasColorUpdate) {
+                    payload.bookmarkColor = normalizedColor || undefined;
+                  }
+
+                  const { encoded, checksum } = serializePdfPayload(payload);
+                  nextAttrs['data-pdf-payload'] = encoded;
+                  nextAttrs['data-pdf-checksum'] = checksum;
+                } else {
+                  nextAttrs['data-pdf-payload'] = null;
+                  nextAttrs['data-pdf-checksum'] = null;
+                }
+              }
+
+              tr.setNodeMarkup(pos, undefined, nextAttrs);
+              changed = true;
+              return false;
+            });
+            return changed;
+          })
+          .run();
+        return changed;
+      },
+      [editor]
+    );
+
     if (ref) {
       (ref as RefObject<EditorHandle | null>).current = {
         insertHtml: (html: string) => {
           if (editor) editor.commands.insertContent(html);
         },
+        getHtml: () => editor?.getHTML() ?? '',
+        insertPdfLink: (attrs) => {
+          if (!editor) return false;
+          const trailingParagraphs = Array.from(
+            { length: PDF_NOTE_TRAILING_PARAGRAPHS },
+            () => ({
+              type: 'paragraph',
+              content: [{ type: 'hardBreak' }],
+            })
+          );
+          editor
+            .chain()
+            .focus()
+            .insertContent([
+              {
+                type: 'pdfNoteLink',
+                attrs,
+              },
+              ...trailingParagraphs,
+            ])
+            .run();
+          return true;
+        },
+        updatePdfLink: (linkId, updates) =>
+          updatePdfLinkAttributes(linkId, updates),
+        getRootElement: () => editor?.view.dom ?? null,
       };
     }
 
@@ -110,6 +272,19 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
         },
       });
     }, [editor, handleDrop, handlePaste]);
+
+    useEffect(() => {
+      if (!editor || !onPdfLinkClick) return;
+      const clickListener = (event: MouseEvent) => handlePdfLinkActivation(event);
+      const keyListener = (event: KeyboardEvent) => handlePdfLinkActivation(event);
+      const dom = editor.view.dom;
+      dom.addEventListener('click', clickListener);
+      dom.addEventListener('keydown', keyListener);
+      return () => {
+        dom.removeEventListener('click', clickListener);
+        dom.removeEventListener('keydown', keyListener);
+      };
+    }, [editor, onPdfLinkClick, handlePdfLinkActivation]);
 
     const saveContent = useCallback(
       async (content: string) => {
@@ -159,6 +334,49 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
 
     return (
       <RichTextEditorProvider editor={editor}>
+        <GlobalStyles
+          styles={(theme) => ({
+            [`.${PDF_NOTE_LINK_CLASS}`]: {
+              display: 'block',
+              width: '100%',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              userSelect: 'none',
+              backgroundColor: 'transparent',
+              transition: 'opacity 0.2s ease',
+              '&:hover': {
+                opacity: 0.85,
+              },
+              '&:focus-visible': {
+                outline: 'none',
+                boxShadow: `0 0 0 2px ${theme.palette.primary.main}55`,
+                borderRadius: theme.shape.borderRadius,
+              },
+            },
+            [`[${PDF_NOTE_SENTINEL_ATTRIBUTE}="true"]`]: {
+              display: 'none !important',
+              visibility: 'hidden',
+              pointerEvents: 'none',
+              opacity: 0,
+              width: 0,
+              height: 0,
+              overflow: 'hidden',
+            },
+            '@keyframes pdfNoteChipPulse': {
+              '0%': {
+                transform: 'scale(0.98)',
+                boxShadow: `0 0 0 0 ${theme.palette.primary.main}55`,
+              },
+              '100%': {
+                transform: 'scale(1)',
+                boxShadow: 'none',
+              },
+            },
+            '.pdf-note-chip--pulse': {
+              animation: 'pdfNoteChipPulse 1s ease-out',
+            },
+          })}
+        />
         <Box
           sx={{
             display: 'flex',
@@ -251,4 +469,4 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
 
 Editor.displayName = 'Editor';
 
-export default Editor;
+export default memo(Editor);

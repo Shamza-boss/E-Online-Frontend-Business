@@ -21,8 +21,8 @@ import {
 import {
   getAssignmentById,
   submitHomework,
-  getStudentAssignments,
-} from '../../../../_lib/actions/homework';
+  getStudentAssignmentsClient,
+} from '../../../../_lib/actions';
 import HomeworkView from './HomeworkView';
 import HomeworkReview from './HomeworkReview';
 import GradedHomeworkComponent from '../../../../_lib/components/homework/GradedHomeworkComponent';
@@ -46,16 +46,18 @@ export default function SeeAssignmentsAndPreview({
     'graded' | 'submitted' | 'pending'
   >('pending');
 
-  const fetchAssignments = async () => {
-    const allAssignments = await getStudentAssignments(session?.user.id || '');
-    return allAssignments.filter((a) => a.classroomId === classId);
-  };
-
-  const { data, isLoading } = useSWR<HomeworkAssignmentDto[]>(
-    'homeworkForClass',
-    fetchAssignments,
+  const userId = session?.user.id;
+  const { data: allAssignments, isLoading } = useSWR<HomeworkAssignmentDto[]>(
+    userId ? ['student-assignments', userId] : null,
+    () => getStudentAssignmentsClient(userId!),
     { revalidateOnFocus: true }
   );
+
+  // Filter assignments for this classroom
+  const data = useMemo(() => {
+    return allAssignments?.filter((a) => a.classroomId === classId);
+  }, [allAssignments, classId]);
+
   const [activeTab, setActiveTab] = useState(0);
 
   const getStatusAndTab = (

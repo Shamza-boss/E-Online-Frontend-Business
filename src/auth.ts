@@ -1,12 +1,14 @@
 // src/auth.ts
 import NextAuth, { type Session } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
+import { SignJWT } from 'jose';
 import Passkey from '@auth/core/providers/passkey';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/app/_lib/prisma';
 const isDev = process.env.NODE_ENV === 'development';
 
 const SESSION_MAX_AGE_SECONDS = 60 * 15; // 15 minutes hard session timeout
+const API_TOKEN_TTL = '15m';
 
 type ExtendedToken = JWT & {
   sessionIssuedAt?: number;
@@ -94,9 +96,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       const extended = token as ExtendedToken;
       const nowSeconds = Math.floor(Date.now() / 1000);
+
+      if (trigger === 'update' && session?.user) {
+        const updatedFirst = (session.user as Partial<Session['user']>)
+          ?.firstName;
+        const updatedLast = (session.user as Partial<Session['user']>)
+          ?.lastName;
+        const updatedName = (session.user as Partial<Session['user']>)?.name;
+
+        if (updatedFirst !== undefined) token.firstName = updatedFirst;
+        if (updatedLast !== undefined) token.lastName = updatedLast;
+        if (updatedName !== undefined) token.name = updatedName;
+      }
 
       const api = process.env.BASE_API_URL;
       const email = user?.email ?? token.email;
@@ -131,10 +145,62 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.firstName = u.firstName ?? token.firstName ?? undefined;
             token.lastName = u.lastName ?? token.lastName ?? undefined;
             token.institutionName =
-              institutionName ?? token.institutionName ?? undefined;
+              institutionName ??
+              token.institutionName ??
+              'Absolute Online PTY LTD';
+            token.subscription = u.subscription ?? token.subscription ?? null;
+            token.subscriptionLabel =
+              u.subscriptionLabel ?? token.subscriptionLabel ?? null;
+            token.subscriptionPlan =
+              u.subscriptionPlan ?? token.subscriptionPlan ?? null;
+            if (u.creatorEnabled !== undefined) {
+              token.creatorEnabled = u.creatorEnabled;
+            }
+            const rawInstitutionActive =
+              u.isInstitutionActive ?? u.IsInstitutionActive;
+            if (rawInstitutionActive !== undefined) {
+              token.isInstitutionActive = rawInstitutionActive;
+            }
+            const rawPrimaryAdminEmail =
+              u.primaryAdminEmail ?? u.PrimaryAdminEmail;
+            if (rawPrimaryAdminEmail !== undefined) {
+              token.primaryAdminEmail = rawPrimaryAdminEmail;
+            }
           }
         } catch (e) {
           console.error('[auth][jwt] resolve error', e);
+        }
+      }
+
+      const signingSecret =
+        process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+      const primaryId =
+        token.userId ?? token.appUserId ?? token.sub ?? user?.id ?? undefined;
+      if (signingSecret && primaryId) {
+        try {
+          const key = new TextEncoder().encode(signingSecret);
+          const claims: Record<string, unknown> = {
+            userId: primaryId,
+          };
+          if (token.role != null) claims.role = token.role;
+          if (token.institutionId != null)
+            claims.institutionId = token.institutionId;
+
+          const audience = process.env.APP_AUDIENCE ?? 'api';
+          const issuer =
+            process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? ORIGIN;
+
+          token.apiAccessToken = await new SignJWT(claims)
+            .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+            .setSubject(String(primaryId))
+            .setAudience(audience)
+            .setIssuer(issuer)
+            .setExpirationTime(API_TOKEN_TTL)
+            .setIssuedAt()
+            .sign(key);
+        } catch (err) {
+          console.error('[auth][jwt] api token signing failed', err);
+          delete token.apiAccessToken;
         }
       }
       if (user) {
@@ -174,6 +240,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.role = t.role as Session['user']['role'];
         if (t.institutionId) session.user.institutionId = t.institutionId;
         if (t.institutionName) session.user.institutionName = t.institutionName;
+        if (t.isInstitutionActive !== undefined) {
+          session.user.isInstitutionActive = t.isInstitutionActive ?? null;
+        }
+        if (t.primaryAdminEmail !== undefined) {
+          session.user.primaryAdminEmail = t.primaryAdminEmail ?? null;
+        }
+      }
+      if (t.apiAccessToken) session.apiAccessToken = t.apiAccessToken;
+      if ('subscription' in t) {
+        session.user.subscription = t.subscription ?? null;
+      }
+      if ('subscriptionLabel' in t) {
+        session.user.subscriptionLabel = t.subscriptionLabel ?? null;
+      }
+      if ('subscriptionPlan' in t) {
+        session.user.subscriptionPlan = t.subscriptionPlan ?? null;
+      }
+      if ('creatorEnabled' in t) {
+        session.user.creatorEnabled = t.creatorEnabled ?? false;
       }
       return session as Session;
     },

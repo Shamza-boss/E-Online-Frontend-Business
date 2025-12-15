@@ -6,13 +6,14 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import {
-  TextField,
-  Typography,
-  Stack,
+  Box,
   Button,
   Divider,
-  Link,
   FormControl,
+  Link,
+  Stack,
+  TextField,
+  Typography,
 } from '@mui/material';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 
@@ -28,23 +29,23 @@ export default function SignIn() {
 
   const {
     control,
-    getValues,
+    handleSubmit,
     formState: { errors },
   } = useForm<Form>({
     resolver: yupResolver(schema),
     defaultValues: { email: '' },
   });
 
-  const onSignIn = async () => {
-    const email = (getValues('email') || '').trim().toLowerCase();
-    if (!email) {
+  const onSubmit = async ({ email }: Form) => {
+    const normalizedEmail = (email ?? '').trim().toLowerCase();
+    if (!normalizedEmail) {
       showAlert('error', 'Please enter your email');
       return;
     }
 
     setBusy(true);
     try {
-      const existsRes = await fetch(`/api/auth/resolve/${email}`, {
+      const existsRes = await fetch(`/api/auth/resolve/${normalizedEmail}`, {
         cache: 'no-store',
       });
 
@@ -53,41 +54,57 @@ export default function SignIn() {
           'error',
           'No account found. Please contact your institution administrator.'
         );
-        setBusy(false);
         return;
       }
       if (!existsRes.ok) {
         showAlert('error', 'Unable to verify your account. Try again.');
-        setBusy(false);
         return;
       }
 
-      // 2) Check whether this email already has a passkey registered in Prisma
+      const resolvedUser = await existsRes.json();
+      const isInstitutionActive =
+        resolvedUser?.isInstitutionActive ??
+        resolvedUser?.IsInstitutionActive ??
+        true;
+      if (!isInstitutionActive) {
+        const primaryAdminEmail =
+          resolvedUser?.primaryAdminEmail ??
+          resolvedUser?.PrimaryAdminEmail ??
+          null;
+        const isPrimaryAdmin =
+          typeof primaryAdminEmail === 'string' &&
+          primaryAdminEmail.trim().toLowerCase() === normalizedEmail;
+        const message = isPrimaryAdmin
+          ? 'Your institution is inactive. Please contact AbsoluteOnline for assistance.'
+          : 'Your institution is inactive. Please contact your institution administrator.';
+        showAlert('error', message);
+        return;
+      }
+
       const hp = await fetch(
-        `/api/auth/has-passkey?email=${encodeURIComponent(email)}`,
-        {
-          cache: 'no-store',
-        }
+        `/api/auth/has-passkey?email=${encodeURIComponent(normalizedEmail)}`,
+        { cache: 'no-store' }
       ).then((r) => r.json());
 
       if (!hp.existsInPrisma || !hp.hasPasskey) {
-        // First time login in this app → send to signup to create a passkey
         showAlert(
           'info',
           'First time with this account. Please complete registration.'
         );
-        window.location.href = `/signup?email=${encodeURIComponent(email)}`;
+        window.location.href = `/signup?email=${encodeURIComponent(
+          normalizedEmail
+        )}`;
         return;
       }
 
-      // 3) Proceed to authenticate via WebAuthn (no extra page)
       await passkeySignIn(
         'passkey',
         { redirect: true, callbackUrl: '/dashboard' },
-        { email }
+        { email: normalizedEmail }
       );
     } catch (e: any) {
       showAlert('error', e?.message ?? 'Passkey sign-in failed');
+    } finally {
       setBusy(false);
     }
   };
@@ -99,25 +116,42 @@ export default function SignIn() {
           Sign In
         </Typography>
 
-        <FormControl fullWidth>
-          <Controller
-            name="email"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Email"
-                placeholder="you@school.edu"
-                error={!!errors.email}
-                helperText={errors.email?.message ?? ' '}
+        <Box
+          component="form"
+          noValidate
+          autoComplete="on"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <Stack spacing={2}>
+            <FormControl fullWidth>
+              <Controller
+                name="email"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    type="email"
+                    label="Email"
+                    placeholder="you@school.edu"
+                    autoComplete="email"
+                    error={!!errors.email}
+                    helperText={errors.email?.message ?? ' '}
+                    inputProps={{ 'aria-label': 'Email address' }}
+                  />
+                )}
               />
-            )}
-          />
-        </FormControl>
+            </FormControl>
 
-        <Button variant="contained" onClick={onSignIn} disabled={busy}>
-          {busy ? 'Opening passkey…' : 'Sign in with Passkey'}
-        </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={busy}
+              fullWidth
+            >
+              {busy ? 'Opening passkey…' : 'Sign in with Passkey'}
+            </Button>
+          </Stack>
+        </Box>
 
         <Divider />
         <Typography textAlign="center">

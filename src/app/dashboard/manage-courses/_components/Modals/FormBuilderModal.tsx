@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { NextPage } from 'next';
 import {
   Dialog,
@@ -16,6 +16,9 @@ import {
   Stack,
   FormControlLabel,
   Switch,
+  Stepper,
+  Step,
+  StepLabel,
 } from '@mui/material';
 import Alert from '@mui/material/Alert';
 import CloseIcon from '@mui/icons-material/Close';
@@ -29,6 +32,7 @@ import Splitter from '@devbookhq/splitter';
 import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
 import QuestionEditorPanel from '../FormBuilder/QuestionEditorPanel';
 import QuestionPreviewPanel from '../FormBuilder/QuestionPreviewPanel';
+import { GutterStyles } from '@/app/_lib/components/shared-theme/customizations/SplitterComponent';
 import {
   buildValidatedHomework,
   createLeafQuestion,
@@ -56,6 +60,7 @@ const QUESTION_TYPES = [
 ] as const;
 
 const FORM_STORAGE_KEY = 'form_builder_modal_state_v3';
+const BUILDER_STEPS = ['Module details', 'Create questions'] as const;
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & { children: React.ReactElement<any> },
@@ -81,6 +86,8 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const [hydrated, setHydrated] = useState(false);
   const [activeHomeworkId, setActiveHomeworkId] = useState<string | null>(null);
   const [prefillSource, setPrefillSource] = useState<string | null>(null);
+  const [splitSizes, setSplitSizes] = useState<number[] | undefined>();
+  const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -189,6 +196,12 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       setPrefillSource(null);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      setActiveStep(0);
+    }
+  }, [open, activeHomeworkId]);
 
   useEffect(() => {
     setCurrentQuestionIndex((idx) => {
@@ -567,6 +580,23 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
 
   const isEditing = Boolean(activeHomeworkId);
   const modalTitle = isEditing ? 'Edit module' : 'Create module';
+  const totalSteps = BUILDER_STEPS.length;
+  const goToStep = (next: number) =>
+    setActiveStep((prev) => {
+      const clamped = Math.max(0, Math.min(next, totalSteps - 1));
+      return clamped === prev ? prev : clamped;
+    });
+  const handleNextStep = () => goToStep(activeStep + 1);
+  const handlePreviousStep = () => goToStep(activeStep - 1);
+  const canAdvanceToBuilder = Boolean(formTitle.trim()) && Boolean(dueDate);
+  const onDetailsStep = activeStep === 0;
+
+  const handleSplitResizeFinished = useCallback(
+    (_gutterIdx: number, sizes: number[]) => {
+      setSplitSizes(sizes);
+    },
+    []
+  );
 
   return (
     <Dialog
@@ -574,6 +604,15 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       open={open}
       onClose={onClose}
       slots={{ transition: Transition }}
+      slotProps={{
+        paper: {
+          sx: {
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: 'background.default',
+          },
+        },
+      }}
     >
       <AppBar sx={{ position: 'relative' }}>
         <Toolbar>
@@ -602,9 +641,27 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           </Button>
         </Toolbar>
       </AppBar>
-      <Box sx={{ p: 2, m: 2 }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          p: { xs: 2, md: 3 },
+          pt: { xs: 2, md: 3 },
+          gap: 2,
+          height: '100%',
+          overflow: 'hidden',
+        }}
+      >
+        <Stepper activeStep={activeStep} alternativeLabel>
+          {BUILDER_STEPS.map((label) => (
+            <Step key={label}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
         {validationErrors.length > 0 && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error">
             <Box component="ul" sx={{ pl: 2, m: 0 }}>
               {validationErrors.map((error, idx) => (
                 <li key={idx}>{error}</li>
@@ -612,130 +669,216 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             </Box>
           </Alert>
         )}
-        <TextField
-          label="Title"
-          fullWidth
-          margin="normal"
-          value={formTitle}
-          onChange={(e) => setFormTitle(e.target.value)}
-        />
-        <TextField
-          label="Description"
-          fullWidth
-          margin="normal"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <TextField
-          label="Due Date"
-          type="date"
-          fullWidth
-          margin="normal"
-          slotProps={{ inputLabel: { shrink: true } }}
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
-        <FormControlLabel
-          sx={{ mt: 1 }}
-          control={
-            <Switch
-              checked={hasExpiry}
-              onChange={(event) => {
-                const enabled = event.target.checked;
-                setHasExpiry(enabled);
-                if (!enabled) {
-                  setExpiryDate('');
-                }
-              }}
-            />
-          }
-          label="Module expires"
-        />
-        {hasExpiry && (
-          <TextField
-            label="Expiry Date"
-            type="date"
-            fullWidth
-            margin="normal"
-            slotProps={{ inputLabel: { shrink: true } }}
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-            helperText="When the module expires it will move back to draft."
-          />
-        )}
-        <Paper sx={{ p: 1, mt: 2, mb: 2 }}>
-          <Typography variant="h6">Create questions below</Typography>
-        </Paper>
 
-        <Box
-          sx={{
-            mt: 2,
-            minHeight: { xs: 420, md: 540 },
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-          }}
-        >
-          <Splitter
-            gutterClassName="custom-gutter-horizontal"
-            draggerClassName="custom-dragger-horizontal"
-          >
-            <Box
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {onDetailsStep ? (
+            <Paper
               sx={{
+                p: { xs: 2, md: 4 },
+                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                height: '100%',
-                pr: { xs: 0, md: 2 },
+                gap: 2,
+                maxWidth: 960,
+                mx: 'auto',
+                overflow: 'auto',
               }}
             >
-              <Box sx={{ flex: 1, overflow: 'auto' }}>
-                <PaginatedQuestionLayout
-                  questions={questions}
-                  currentIndex={currentQuestionIndex}
-                  onIndexChange={setCurrentQuestionIndex}
-                  renderQuestion={(question, _numbering, index) =>
-                    questionEditor(question, index)
-                  }
-                  emptyState={emptyEditor}
-                  paginationLabel="Question"
-                  topSpacing={0}
+              <Box>
+                <Typography variant="h5" fontWeight={600} gutterBottom>
+                  Module overview
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Provide the basic information for your module before building questions.
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
+                  gap: 2,
+                }}
+              >
+                <TextField
+                  label="Title"
+                  fullWidth
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                />
+                <TextField
+                  label="Due Date"
+                  type="date"
+                  fullWidth
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
                 />
               </Box>
-              <Stack direction="row" spacing={1} mt={2}>
-                <Button variant="contained" onClick={addQuestion}>
-                  Add Question
+              <TextField
+                label="Description"
+                fullWidth
+                multiline
+                minRows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+              >
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={hasExpiry}
+                      onChange={(event) => {
+                        const enabled = event.target.checked;
+                        setHasExpiry(enabled);
+                        if (!enabled) {
+                          setExpiryDate('');
+                        }
+                      }}
+                    />
+                  }
+                  label="Module expires"
+                />
+                {!hasExpiry && (
+                  <Typography variant="body2" color="text.secondary">
+                    Optional: automatically revert the module to draft on a specific date.
+                  </Typography>
+                )}
+              </Stack>
+              {hasExpiry && (
+                <TextField
+                  label="Expiry Date"
+                  type="date"
+                  fullWidth
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  helperText="When the module expires it will move back to draft."
+                />
+              )}
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent="flex-end"
+                spacing={2}
+                mt={{ xs: 1, sm: 3 }}
+              >
+                {!canAdvanceToBuilder && (
+                  <Typography variant="body2" color="text.secondary">
+                    Add a title and due date to continue.
+                  </Typography>
+                )}
+                <Button
+                  variant="contained"
+                  onClick={handleNextStep}
+                  disabled={!canAdvanceToBuilder}
+                >
+                  Next: Questions
                 </Button>
               </Stack>
-            </Box>
+            </Paper>
+          ) : (
             <Box
               sx={{
+                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                height: '100%',
-                overflow: 'auto',
-                pl: { xs: 0, md: 2 },
+                gap: 2,
+                minHeight: 0,
               }}
             >
-              <Paper sx={{ p: 2, flex: 1 }}>
-                <PaginatedQuestionLayout
-                  questions={questions}
-                  currentIndex={currentQuestionIndex}
-                  onIndexChange={setCurrentQuestionIndex}
-                  renderQuestion={(question, _numbering, index) =>
-                    questionPreview(question, index)
-                  }
-                  emptyState={emptyPreview}
-                  paginationLabel="Question"
-                  summaryLabel={(index, total) => (
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      Student preview — Question {index + 1} of {total}
-                    </Typography>
-                  )}
-                  topSpacing={0}
-                />
-              </Paper>
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'flex-start', md: 'center' }}
+                spacing={2}
+              >
+                <Box>
+                  <Typography variant="h5" fontWeight={600}>
+                    Build questions & preview responses
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Drag the divider to resize the editor and the live student preview.
+                  </Typography>
+                </Box>
+                <Button variant="text" onClick={handlePreviousStep}>
+                  Back to details
+                </Button>
+              </Stack>
+              <Box sx={{ flex: 1, minHeight: 0 }}>
+                {GutterStyles()}
+                <Splitter
+                  gutterClassName="custom-gutter-horizontal"
+                  draggerClassName="custom-dragger-horizontal"
+                  initialSizes={splitSizes ?? [55, 45]}
+                  onResizeFinished={handleSplitResizeFinished}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      height: '100%',
+                      pr: { xs: 0, md: 2 },
+                    }}
+                  >
+                    <Box sx={{ flex: 1, overflow: 'auto' }}>
+                      <PaginatedQuestionLayout
+                        questions={questions}
+                        currentIndex={currentQuestionIndex}
+                        onIndexChange={setCurrentQuestionIndex}
+                        renderQuestion={(question, _numbering, index) =>
+                          questionEditor(question, index)
+                        }
+                        emptyState={emptyEditor}
+                        paginationLabel="Question"
+                        topSpacing={0}
+                      />
+                    </Box>
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      spacing={1}
+                      mt={2}
+                      justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}
+                    >
+                      <Button variant="contained" onClick={addQuestion}>
+                        Add Question
+                      </Button>
+                    </Stack>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      height: '100%',
+                      overflow: 'auto',
+                      pl: { xs: 0, md: 2 },
+                    }}
+                  >
+                    <Paper sx={{ p: 2, flex: 1 }}>
+                      <PaginatedQuestionLayout
+                        questions={questions}
+                        currentIndex={currentQuestionIndex}
+                        onIndexChange={setCurrentQuestionIndex}
+                        renderQuestion={(question, _numbering, index) =>
+                          questionPreview(question, index)
+                        }
+                        emptyState={emptyPreview}
+                        paginationLabel="Question"
+                        summaryLabel={(index, total) => (
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            Student preview — Question {index + 1} of {total}
+                          </Typography>
+                        )}
+                        topSpacing={0}
+                      />
+                    </Paper>
+                  </Box>
+                </Splitter>
+              </Box>
             </Box>
-          </Splitter>
+          )}
         </Box>
       </Box>
     </Dialog>

@@ -18,16 +18,9 @@ import useSWR from 'swr';
 import { GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
 import EDataGrid from '../../../_components/EDataGrid';
 
-import { getAllStudents } from '../../../../_lib/actions/users';
-import {
-  getAllClassrooms,
-  EnrollStudents,
-  getAllUsersInClassroom,
-  getAllClassroomsAndData,
-} from '../../../../_lib/actions/classrooms';
+import { EnrollStudents, getAllStudentsClient, getAllClassroomsAndDataClient, getAllUsersInClassroomClient } from '../../../../_lib/actions';
 import {
   UserDto,
-  ClassDto,
   EnrollStudentsDto,
   ClassroomDetailsDto,
 } from '../../../../_lib/interfaces/types';
@@ -42,17 +35,17 @@ const StudentManagementTable = () => {
   const [classId, setClassId] = useState<string>('');
 
   const { data: students, isLoading: studentsLoading } = useSWR<UserDto[]>(
-    'students',
-    getAllStudents
+    'all-students',
+    getAllStudentsClient
   );
 
   const { data: classRooms, isLoading: classesLoading } = useSWR<
     ClassroomDetailsDto[]
-  >('classes', getAllClassroomsAndData);
+  >('all-classrooms-details', getAllClassroomsAndDataClient);
 
   const { data: enrolledStudents = [] } = useSWR<UserDto[]>(
-    classId ? ['classroomUsers', classId] : null,
-    () => getAllUsersInClassroom(classId)
+    classId ? ['classroom-users', classId] : null,
+    () => getAllUsersInClassroomClient(classId)
   );
 
   // Filter eligible students (not already enrolled)
@@ -92,13 +85,23 @@ const StudentManagementTable = () => {
     { field: 'email', headerName: 'Email', flex: 1, minWidth: 200 },
   ];
 
+  const dataGridSlotProps = useMemo(
+    () => ({
+      loadingOverlay: {
+        variant: 'linear-progress' as const,
+        noRowsVariant: 'linear-progress' as const,
+      },
+    }),
+    []
+  );
+
   return (
     <Box flexGrow={1}>
       <Stack spacing={2}>
         <Alert severity="info">
           {!classId
-            ? 'Please select a class you want to enroll students to.'
-            : 'Select students who are not yet enrolled in this class.'}
+            ? 'Please select a class you want to enroll trainees to.'
+            : 'Select trainees who are not yet enrolled in this class.'}
         </Alert>
 
         <FormControl fullWidth disabled={classesLoading}>
@@ -132,12 +135,7 @@ const StudentManagementTable = () => {
             disableRowSelectionOnClick
             pageSizeOptions={[10, 20, 50, 100]}
             loading={studentsLoading}
-            slotProps={{
-              loadingOverlay: {
-                variant: 'linear-progress',
-                noRowsVariant: 'linear-progress',
-              },
-            }}
+            slotProps={dataGridSlotProps}
             slots={{
               noResultsOverlay: CustomNoResultsOverlay,
             }}

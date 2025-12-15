@@ -43,7 +43,7 @@ const ExcalidrawPreview = forwardRef<
         return;
       }
       // dynamically import only on client
-      const { exportToSvg } = await import('@excalidraw/utils');
+      const { exportToSvg } = await import('@excalidraw/excalidraw');
       // minimal appState
       const appState = {
         viewBackgroundColor: 'transparent',

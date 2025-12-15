@@ -1,15 +1,19 @@
 import * as React from 'react';
-import type {} from '@mui/x-date-pickers/themeAugmentation';
-import type {} from '@mui/x-charts/themeAugmentation';
-import type {} from '@mui/x-data-grid/themeAugmentation';
-import type {} from '@mui/x-tree-view/themeAugmentation';
+import type { } from '@mui/x-date-pickers/themeAugmentation';
+import type { } from '@mui/x-charts/themeAugmentation';
+import type { } from '@mui/x-data-grid/themeAugmentation';
+import type { } from '@mui/x-tree-view/themeAugmentation';
 import { alpha, Theme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
 import AppNavbar from './AppNavBar';
 import Header from './Header';
 import SideMenu from './SideMenu';
+import NavigationProgress from './NavigationProgress';
 import AppTheme from '../../_lib/components/shared-theme/AppTheme';
 import {
   chartsCustomizations,
@@ -26,10 +30,24 @@ const xThemeComponents = {
   ...treeViewCustomizations,
 };
 
-export default function DashboardComponent(props: any) {
+type AppThemeProps = React.ComponentProps<typeof AppTheme>;
+
+interface DashboardComponentProps extends Omit<AppThemeProps, 'children'> {
+  children: React.ReactNode;
+  noticeMessage?: string | null;
+  onDismissNotice?: () => void;
+}
+
+export default function DashboardComponent({
+  children,
+  noticeMessage,
+  onDismissNotice,
+  ...appThemeProps
+}: DashboardComponentProps) {
   return (
-    <AppTheme {...props} themeComponents={xThemeComponents}>
+    <AppTheme {...appThemeProps} themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
+      <NavigationProgress />
       <Box
         sx={{
           display: 'flex',
@@ -59,14 +77,35 @@ export default function DashboardComponent(props: any) {
               sx={{
                 flexGrow: 1,
                 alignItems: 'stretch',
-                p: 1,
                 mt: { xs: 8, md: 0 },
                 overflow: 'hidden',
               }}
             >
-              <Box sx={{ flexShrink: 0, width: '100%' }}>
-                <Header />
-              </Box>
+              {noticeMessage ? (
+                <Alert
+                  severity="info"
+                  action={
+                    onDismissNotice ? (
+                      <IconButton
+                        aria-label="close already signed in notice"
+                        color="inherit"
+                        size="small"
+                        onClick={onDismissNotice}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    ) : undefined
+                  }
+                  sx={{
+                    borderRadius: 1.5,
+                    boxShadow: 1,
+                    mb: 0.5,
+                  }}
+                >
+                  {noticeMessage}
+                </Alert>
+              ) : null}
+              <Header />
               <Box
                 sx={{
                   flexGrow: 1,
@@ -75,7 +114,7 @@ export default function DashboardComponent(props: any) {
                   overflow: 'auto',
                 }}
               >
-                {props.children}
+                {children}
               </Box>
             </Stack>
           </SearchProvider>

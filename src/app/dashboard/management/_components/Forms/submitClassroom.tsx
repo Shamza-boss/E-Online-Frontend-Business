@@ -20,8 +20,6 @@ export async function SubmitClassroom(prevState: unknown, formData: FormData) {
     textbookUrl: formData.get('textbookUrl') as string,
   };
 
-  console.log('newClassrom', newClassroom);
-
   try {
     await createClassroom(newClassroom);
     return newClassroom;

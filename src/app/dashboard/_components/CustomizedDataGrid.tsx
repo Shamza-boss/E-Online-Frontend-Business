@@ -14,6 +14,16 @@ export default function CustomizedDataGrid({
   rows,
   isLoading,
 }: CustomizedDataGridProps) {
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
+
   const columns: GridColDef[] = [
     {
       field: 'classroomName',

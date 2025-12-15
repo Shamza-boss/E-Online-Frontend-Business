@@ -10,30 +10,30 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 import CircularProgress from '@mui/material/CircularProgress';
-import Tooltip from '@mui/material/Tooltip';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import SchoolIcon from '@mui/icons-material/School';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import DomainAddIcon from '@mui/icons-material/DomainAdd';
-import LockIcon from '@mui/icons-material/Lock';
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
 import { routeLabels } from '@/app/_lib/common/functions';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 
 const platformOwnerRole = UserRole.PlatformAdmin;
 
-const platformOnlyRoutes = ['institutions'];
+const platformOnlyRoutes = ['institutions', 'billing'];
 
 // numeric roles with full access (Admin, Trainer(Teacher))
 const fullAccessRoles: UserRole[] = [UserRole.Admin, UserRole.Instructor];
 // student allowed routes
-const studentAllowed = ['', 'courses', 'library'];
+const studentAllowed = ['', 'courses', 'library', 'settings'];
 
 const mainListItems = [
   { route: '', icon: <TimelineIcon /> }, // Dashboard root route
   { route: 'institutions', icon: <DomainAddIcon /> }, // Institutions route
+  { route: 'billing', icon: <CreditCardIcon /> },
   { route: 'management', icon: <ManageAccountsIcon /> },
   { route: 'manage-courses', icon: <AssignmentIcon /> },
   { route: 'courses', icon: <SchoolIcon /> },
@@ -64,8 +64,7 @@ export default function MenuContent() {
   const currentActiveRoute =
     pathname.replace('/dashboard/', '').split('/')[0] || '';
 
-  const handleRouteClick = (route: string, disabled: boolean) => {
-    if (disabled) return;
+  const handleRouteClick = (route: string) => {
     setClickedRoute(route);
     startTransition(() => {
       router.push(`/dashboard/${route}` as any);
@@ -82,14 +81,20 @@ export default function MenuContent() {
     const isLoading = isPending && clickedRoute === route;
     const isPlatformOnly = platformOnlyRoutes.includes(route);
     const hasFullAccess = fullAccessRoles.includes(roleValue);
+    const isSettingsRoute = route === 'settings';
 
-    const disabled =
-      (isPlatformOnly && roleValue !== platformOwnerRole) ||
-      (!isPlatformOnly && !hasFullAccess && !studentAllowed.includes(route)) ||
-      (route === 'courses' && roleValue === platformOwnerRole);
+    // Check if user has access to this route
+    const blockedForPlatformOwner =
+      roleValue === platformOwnerRole && (route === 'courses' || route === 'library');
 
-    // ❗️If route is platform-only and user isn't platform owner, skip rendering
-    if (isPlatformOnly && roleValue !== platformOwnerRole) {
+    const hasAccess =
+      isSettingsRoute ||
+      (isPlatformOnly && roleValue === platformOwnerRole) ||
+      (!isPlatformOnly && !blockedForPlatformOwner &&
+        (hasFullAccess || studentAllowed.includes(route)));
+
+    // Only render if user has access
+    if (!hasAccess) {
       return null;
     }
 
@@ -99,44 +104,32 @@ export default function MenuContent() {
         disablePadding
         sx={{
           display: 'block',
-          mb: disabled ? 0.5 : 0.3,
+          mb: 0.3,
           '&:last-child': { mb: 0 },
         }}
       >
-        <Tooltip title={disabled ? 'Access locked' : ''} placement="right">
-          <span>
-            <ListItemButton
-              onClick={() => handleRouteClick(route, disabled)}
-              title={label}
-              aria-label={label}
-              selected={isActive || isLoading}
-              disabled={disabled}
-              sx={{
-                borderRadius: 1,
-                '&.Mui-disabled': { opacity: 0.5, cursor: 'default' },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 32, mr: 1 }}>
-                {isLoading ? (
-                  <CircularProgress size={20} />
-                ) : disabled ? (
-                  <LockIcon />
-                ) : (
-                  item.icon
-                )}
-              </ListItemIcon>
-              <ListItemText
-                primary={label}
-                sx={{
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  textAlign: 'left',
-                }}
-              />
-            </ListItemButton>
-          </span>
-        </Tooltip>
+        <ListItemButton
+          onClick={() => handleRouteClick(route)}
+          title={label}
+          aria-label={label}
+          selected={isActive || isLoading}
+          sx={{
+            borderRadius: 1,
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 32, mr: 1 }}>
+            {isLoading ? <CircularProgress size={20} /> : item.icon}
+          </ListItemIcon>
+          <ListItemText
+            primary={label}
+            sx={{
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              textAlign: 'left',
+            }}
+          />
+        </ListItemButton>
       </ListItem>
     );
   };

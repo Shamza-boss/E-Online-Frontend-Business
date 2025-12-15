@@ -15,7 +15,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { PdfMeta } from '../../interfaces/types';
-import { uploadPdfAsset } from '../../actions/storage';
+import { uploadPdfAsset } from '../../services/storageUpload';
 import PDFViewer from '../PDFViewer/PDFViewer';
 
 interface PdfUploadFieldProps {

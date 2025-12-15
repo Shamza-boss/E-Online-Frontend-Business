@@ -42,6 +42,7 @@ import {
   TableImproved,
 } from 'mui-tiptap';
 import { ExcalidrawNode } from '../../extensions/ExcalidrawNode';
+import { PdfNoteLink } from './extensions/PdfNoteLink';
 import { mentionSuggestionOptions } from './MentionSuggestionOptions';
 
 export type UseExtensionsOptions = {
@@ -124,6 +125,7 @@ export default function useExtensions({
       CustomSubscript,
       CustomSuperscript,
       Text,
+      PdfNoteLink,
 
       // Blockquote must come after Bold, since we want the "Cmd+B" shortcut to
       // have lower precedence than the Blockquote "Cmd+Shift+B" shortcut.

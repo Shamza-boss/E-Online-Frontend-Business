@@ -1,7 +1,15 @@
-import React from 'react';
+import { redirect } from 'next/navigation';
+import { auth } from '@/auth';
+import SettingsExperience from './_components/SettingsExperience';
 
-const Settings = () => {
-  return <h1>Settings</h1>;
-};
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-export default Settings;
+export default async function SettingsPage() {
+  const session = await auth();
+  if (!session) {
+    redirect('/signin');
+  }
+
+  return <SettingsExperience />;
+}

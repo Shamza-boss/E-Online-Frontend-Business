@@ -1,121 +1,207 @@
-// utils/serverFetch.ts
+/**
+ * Server-side API Fetch Utility
+ *
+ * Provides a unified interface for making API calls from both server
+ * and client components. Handles authentication, error handling, and
+ * redirects automatically.
+ *
+ * @example
+ * // Server component
+ * const users = await serverFetch<User[]>('/users');
+ *
+ * // With options
+ * const user = await serverFetch<User>('/users', {
+ *   method: 'POST',
+ *   body: { name: 'John' },
+ * });
+ */
+
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
+import {
+  type HttpMethod,
+  BODYLESS_METHODS,
+  DEFAULT_TIMEOUT,
+  CONTENT_TYPES,
+} from '@/lib/api';
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-
-interface ApiFetchOptions {
-  method?: HttpMethod;
-  body?: any;
-  headers?: Record<string, string>;
+// Fetch options with Next.js specific config
+interface FetchOptions extends RequestInit {
+  next?: { revalidate?: number; tags?: string[] };
 }
 
+interface ApiFetchOptions {
+  /** HTTP method (default: 'GET') */
+  method?: HttpMethod;
+  /** Request body - automatically serialized for JSON */
+  body?: unknown;
+  /** Additional headers */
+  headers?: Record<string, string>;
+  /** Request timeout in ms (default: 15000) */
+  timeout?: number;
+  /** Cache tags for revalidation */
+  tags?: string[];
+}
+
+/**
+ * Normalize endpoint path
+ */
+function normalizeEndpoint(endpoint: string): string {
+  return endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+}
+
+/**
+ * Build request headers
+ */
+function buildHeaders(
+  customHeaders: Record<string, string>,
+  authToken?: string
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': CONTENT_TYPES.json,
+    ...customHeaders,
+  };
+
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+
+  return headers;
+}
+
+/**
+ * Prepare request body
+ */
+function prepareBody(
+  body: unknown,
+  method: HttpMethod,
+  headers: Record<string, string>
+): string | FormData | undefined {
+  if (!body || BODYLESS_METHODS.includes(method as 'GET' | 'HEAD')) {
+    return undefined;
+  }
+
+  // Handle FormData - let browser set Content-Type
+  if (body instanceof FormData) {
+    delete headers['Content-Type'];
+    return body;
+  }
+
+  // Serialize to JSON
+  return typeof body === 'string' ? body : JSON.stringify(body);
+}
+
+/**
+ * Generate error reference ID for tracking
+ */
+function generateErrorRef(): string {
+  return crypto.randomUUID().slice(0, 8);
+}
+
+/**
+ * Unified fetch function for API calls
+ *
+ * Works in both server and client contexts:
+ * - Server: Calls backend directly with auth token
+ * - Client: Routes through /api/proxy for auth handling
+ */
 export async function serverFetch<T>(
   endpoint: string,
   options: ApiFetchOptions = {}
 ): Promise<T> {
-  const { method = 'GET', body, headers = {} } = options;
+  const {
+    method = 'GET',
+    body,
+    headers: customHeaders = {},
+    timeout = DEFAULT_TIMEOUT,
+    tags,
+  } = options;
 
-  // Normalize the endpoint
-  const normalized = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-  const proxyPath = `/api/proxy/${normalized}`;
-
-  // Build our own headers object so we can freely assign into it
-  const requestHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...headers,
-  };
-
-  // Determine URL and append server‐side headers if running on server
-  let fetchUrl: string;
+  const normalized = normalizeEndpoint(endpoint);
   const isServer = typeof window === 'undefined';
 
+  // Determine fetch URL and auth
+  let fetchUrl: string;
+  let authToken: string | undefined;
+
   if (isServer) {
-    // ---------------------
-    // Server‐side invocation
-    // ---------------------
     const session = await auth();
     if (!session) redirect('/signin');
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const cookieHeader = cookieStore
-      .getAll()
-      .map((c) => `${c.name}=${c.value}`)
-      .join('; ');
-    requestHeaders['Cookie'] = cookieHeader;
-    requestHeaders['X-User-Id'] = session.user.id;
-    requestHeaders['X-User-Role'] = session.user.role.toString();
-    requestHeaders['X-User-InstitutionId'] = session.user.institutionId;
-
+    authToken = session.apiAccessToken;
     fetchUrl = `${process.env.BASE_API_URL}/api/${normalized}`;
   } else {
-    // ---------------------
-    // Client‐side invocation
-    // ---------------------
-    fetchUrl = proxyPath;
+    fetchUrl = `/api/proxy/${normalized}`;
   }
 
-  // Build the fetch options
-  const fetchOpts: RequestInit & { next?: { revalidate?: number } } = {
+  // Build headers
+  const headers = buildHeaders(customHeaders, authToken);
+
+  // Build fetch options
+  const fetchOpts: FetchOptions = {
     method,
     credentials: 'include',
-    headers: requestHeaders,
+    headers,
+    cache: 'no-store',
+    next: { revalidate: 0, ...(tags && { tags }) },
+    body: prepareBody(body, method, headers),
   };
 
-  // Ensure data is always fresh when calling through the app router
-  fetchOpts.cache = 'no-store';
-  fetchOpts.next = { revalidate: 0 };
-
-  // Attach body for JSON or FormData
-  if (
-    body &&
-    !(body instanceof FormData) &&
-    !['GET', 'HEAD'].includes(method)
-  ) {
-    fetchOpts.body = typeof body === 'string' ? body : JSON.stringify(body);
-  } else if (body instanceof FormData) {
-    fetchOpts.body = body;
-    // Let the browser set the correct multipart Content-Type
-    delete requestHeaders['Content-Type'];
-  }
-
-  // Timeout handling
+  // Setup timeout
   const controller = new AbortController();
   fetchOpts.signal = controller.signal;
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const res = await fetch(fetchUrl, fetchOpts);
+    const response = await fetch(fetchUrl, fetchOpts);
 
-    if (res.status === 401) {
-      console.error('[Auth Error]: Received 401 from backend', {
+    // Handle 401 - redirect to sign in (only on server)
+    if (response.status === 401) {
+      console.error('[Auth] Session expired or invalid');
+      if (isServer) {
+        redirect('/signin');
+      } else {
+        throw new Error('Unauthorized');
+      }
+    }
+
+    // Handle other errors
+    if (!response.ok) {
+      const text = await response.text();
+      const ref = generateErrorRef();
+      console.error(`[API Error – ${ref}]`, {
+        status: response.status,
         url: fetchUrl,
-        headers: requestHeaders,
+        body: text.slice(0, 200),
       });
-      redirect('/signin');
+      const error = new Error(`API Error ${response.status}: ${text.slice(0, 100)}`);
+      error.name = 'ApiError';
+      throw error;
     }
 
-    if (!res.ok) {
-      const text = await res.text();
-      const ref = crypto.randomUUID();
-      console.error(`[API Error – ${ref}]: ${res.status} – ${text}`);
-      redirect(`/error/server-error?ref=${ref}` as const);
+    // Handle empty responses
+    const text = await response.text();
+    if (!text) return null as T;
+
+    return JSON.parse(text) as T;
+  } catch (error) {
+    // Handle abort (timeout)
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      const ref = generateErrorRef();
+      console.error(`[API Timeout – ${ref}]`, { url: fetchUrl });
+      const timeoutError = new Error(`Request timeout: ${fetchUrl}`);
+      timeoutError.name = 'TimeoutError';
+      throw timeoutError;
     }
 
-    // Handle empty/no-content
-    const responseText = await res.text();
-    if (!responseText) return null as unknown as T;
+    // Re-throw redirect errors
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      throw error;
+    }
 
-    return JSON.parse(responseText) as T;
-  } catch (error: any) {
-    const ref = crypto.randomUUID();
-    console.error(`[API Error – ${ref}]: Connection failed`, {
-      error,
-      url: fetchUrl,
-      headers: requestHeaders,
-    });
-
+    // Log and throw for other errors
+    const ref = generateErrorRef();
+    console.error(`[API Error – ${ref}]`, { error, url: fetchUrl });
     throw error;
   } finally {
     clearTimeout(timeoutId);

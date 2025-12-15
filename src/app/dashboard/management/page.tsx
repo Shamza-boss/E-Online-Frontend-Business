@@ -1,66 +1,39 @@
 'use client';
-import React, { useState } from 'react';
-import { Box, Button, IconButton, Stack, Tab, Tooltip } from '@mui/material';
+
+import React from 'react';
+import { Box } from '@mui/material';
 import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
-import TabContext from '@mui/lab/TabContext';
-import TabList from '@mui/lab/TabList';
 import CreateClassroomModal from './_components/Modals/CreateClassroomModal';
 import RegisterPersonModal from './_components/Modals/RegisterPersonModal';
-import ClassManagementDataGrid from './_components/Tables/classManagementDataGrid';
-import UserManagementDataGrid from './_components/Tables/userManagementDataGrid';
-import { mutate } from 'swr';
-import { UserRole } from '@/app/_lib/Enums/UserRole';
-import { useSession } from 'next-auth/react';
 import CreateSubjectModal from './_components/Modals/CreateSubjectModal';
 import CreateAcademicsModal from './_components/Modals/CreateAcademicsModal';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
+import ManagementHeader from './_components/ManagementHeader';
+import ManagementTabs from './_components/ManagementTabs';
+import { useManagementState } from './_components/hooks/useManagementState';
+import { UserRole } from '@/app/_lib/Enums/UserRole';
+import { useSession } from 'next-auth/react';
 
 const ClassesManagement = () => {
   const { data: session } = useSession();
   const userRole = Number(session?.user?.role);
   const isElevated = userRole === UserRole.Admin;
 
-  const [openRegisterPerson, setOpenRegisterPerson] = useState<boolean>(false);
-  const [openClassCreator, setOpnClassCreator] = useState<boolean>(false);
-  const [openSubjectCreator, setOpnSubjectCreator] = useState<boolean>(false);
-  const [openAcademicsCreator, setOpnAcademicsCreator] =
-    useState<boolean>(false);
-  const [value, setValue] = useState('1');
-
-  const handleChange = async (
-    event: React.SyntheticEvent,
-    newValue: string
-  ) => {
-    setValue(newValue);
-  };
-
-  const handleClickOpen = () => setOpenRegisterPerson(true);
-  const handleClickOpenClass = () => setOpnClassCreator(true);
-  const handleClickOpenSubject = () => setOpnSubjectCreator(true);
-  const handleClickOpenAcademic = () => setOpnAcademicsCreator(true);
-
-  const handleClose = async () => {
-    setOpenRegisterPerson(false);
-    await mutate((key) => Array.isArray(key) && key[0] === 'users');
-  };
-
-  const handleCloseClass = async () => {
-    setOpnClassCreator(false);
-    await mutate(
-      (key) =>
-        key === 'classes' ||
-        (Array.isArray(key) && key.length > 0 && key[0] === 'classes')
-    );
-  };
-
-  const handleCloseAcademics = async () => {
-    setOpnAcademicsCreator(false);
-  };
-
-  const handleCloseSubjects = async () => {
-    setOpnSubjectCreator(false);
-  };
+  const {
+    openRegisterPerson,
+    openClassCreator,
+    openSubjectCreator,
+    openAcademicsCreator,
+    activeTab,
+    setActiveTab,
+    handleOpenRegisterPerson,
+    handleOpenClassCreator,
+    handleOpenSubjectCreator,
+    handleOpenAcademicsCreator,
+    handleCloseRegisterPerson,
+    handleCloseClassCreator,
+    handleCloseAcademicsCreator,
+    handleCloseSubjectCreator,
+  } = useManagementState();
 
   return (
     <Box
@@ -69,94 +42,21 @@ const ClassesManagement = () => {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        p: 3
       }}
     >
-      <Box
-        sx={{
-          flexShrink: 0,
-          marginBottom: 1,
-        }}
-      >
-        <Stack spacing={2} direction={'row'}>
-          {value === '2' && (
-            <>
-              <Tooltip
-                title={
-                  !isElevated
-                    ? 'Only administrators and moderators can make changes on this page. Please contact your administrator for assistance.'
-                    : ''
-                }
-              >
-                <span>
-                  <Button
-                    sx={{ maxWidth: 'max-content' }}
-                    variant="outlined"
-                    onClick={handleClickOpenClass}
-                    disabled={!isElevated}
-                  >
-                    Create course
-                  </Button>
-                </span>
-              </Tooltip>
-              <Button
-                sx={{ maxWidth: 'max-content' }}
-                variant="outlined"
-                onClick={handleClickOpenSubject}
-                disabled={!isElevated}
-              >
-                Create subjects
-              </Button>
-              <Button
-                sx={{ maxWidth: 'max-content' }}
-                variant="outlined"
-                onClick={handleClickOpenAcademic}
-                disabled={!isElevated}
-              >
-                Create academic levels
-              </Button>
-            </>
-          )}
-          {value === '1' && (
-            <>
-              <Tooltip
-                title={
-                  !isElevated
-                    ? 'Only administrators and moderators can make changes on this page. Please contact your administrator for assistance.'
-                    : ''
-                }
-              >
-                <span>
-                  <Button
-                    sx={{ maxWidth: 'max-content' }}
-                    variant="outlined"
-                    onClick={handleClickOpen}
-                    disabled={!isElevated}
-                  >
-                    Register person
-                  </Button>
-                </span>
-              </Tooltip>
-              <Tooltip title="Use the trash icon in the table actions to remove a person. A confirmation dialog will appear before deletion.">
-                <IconButton
-                  size="small"
-                  sx={{ alignSelf: 'center' }}
-                  aria-label="People management help"
-                >
-                  <InfoOutlinedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </>
-          )}
-        </Stack>
+      <Box sx={{ flexShrink: 0, marginBottom: 1 }}>
+        <ManagementHeader
+          activeTab={activeTab}
+          isElevated={isElevated}
+          onOpenRegisterPerson={handleOpenRegisterPerson}
+          onOpenClassCreator={handleOpenClassCreator}
+          onOpenSubjectCreator={handleOpenSubjectCreator}
+          onOpenAcademicsCreator={handleOpenAcademicsCreator}
+        />
       </Box>
-      <Box
-        sx={{
-          flex: '1 1 0%',
-          display: 'flex',
-          overflow: 'hidden',
-          minHeight: 0,
-        }}
-      >
+
+      <Box sx={{ flex: '1 1 0%', display: 'flex', overflow: 'hidden', minHeight: 0 }}>
         <OutlinedWrapper
           sx={{
             display: 'flex',
@@ -167,54 +67,28 @@ const ClassesManagement = () => {
             minHeight: 0,
           }}
         >
-          <TabContext value={value}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <TabList
-                onChange={handleChange}
-                aria-label="lab API tabs example"
-              >
-                <Tab label="People" value="1" />
-                <Tab label="Courses" value="2" />
-              </TabList>
-            </Box>
-            <DataGridTabPanel
-              value="1"
-              sx={{
-                flex: 1,
-              }}
-            >
-              <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
-                <UserManagementDataGrid active={value === '1'} />
-              </Box>
-            </DataGridTabPanel>
-            <DataGridTabPanel
-              value="2"
-              sx={{
-                flex: 1,
-              }}
-            >
-              <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
-                <ClassManagementDataGrid active={value === '2'} />
-              </Box>
-            </DataGridTabPanel>
-          </TabContext>
+          <ManagementTabs
+            activeTab={activeTab}
+            onTabChange={(_, newValue) => setActiveTab(newValue)}
+          />
         </OutlinedWrapper>
       </Box>
+
       <RegisterPersonModal
         open={openRegisterPerson}
-        handleClose={handleClose}
+        handleClose={handleCloseRegisterPerson}
       />
       <CreateClassroomModal
         open={openClassCreator}
-        handleClose={handleCloseClass}
+        handleClose={handleCloseClassCreator}
       />
       <CreateSubjectModal
         open={openSubjectCreator}
-        handleClose={handleCloseSubjects}
+        handleClose={handleCloseSubjectCreator}
       />
       <CreateAcademicsModal
         open={openAcademicsCreator}
-        handleClose={handleCloseAcademics}
+        handleClose={handleCloseAcademicsCreator}
       />
     </Box>
   );

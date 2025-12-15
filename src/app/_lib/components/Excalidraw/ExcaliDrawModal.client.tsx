@@ -19,8 +19,6 @@ import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import SaveIcon from '@mui/icons-material/Save';
 import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { TransitionProps } from '@mui/material/transitions';
-import '@excalidraw/excalidraw/index.css';
-import { sanitizeExcalidrawElements } from './sanitizeElements';
 
 const Excalidraw = dynamic(
   () => import('@excalidraw/excalidraw').then((m) => m.Excalidraw),
@@ -65,9 +63,9 @@ export default function ExcalidrawModal({
       fullScreen
       open={open}
       onClose={onClose}
-      slotProps={{ transition: Transition }}
+      slots={{ transition: Transition }}
       keepMounted
-      title="Excalidraw Editor"
+      aria-labelledby="excalidraw-editor-title"
     >
       <AppBar
         position="static"
@@ -89,7 +87,11 @@ export default function ExcalidrawModal({
               <FullscreenExitIcon />
             </IconButton>
           </Tooltip>
-          <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+          <Typography
+            id="excalidraw-editor-title"
+            variant="h6"
+            sx={{ ml: 2, flex: 1 }}
+          >
             Excalidraw Editor
           </Typography>
           {!readonly && (

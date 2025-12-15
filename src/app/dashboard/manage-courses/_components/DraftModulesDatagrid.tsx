@@ -271,6 +271,16 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
     []
   );
 
+  const dataGridSlotProps = useMemo(
+    () => ({
+      loadingOverlay: {
+        variant: 'linear-progress' as const,
+        noRowsVariant: 'linear-progress' as const,
+      },
+    }),
+    []
+  );
+
   return (
     <EDataGrid
       rows={rows}
@@ -288,12 +298,7 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
         },
       }}
       slots={{ noRowsOverlay: NoRowsOverlay }}
-      slotProps={{
-        loadingOverlay: {
-          variant: 'linear-progress',
-          noRowsVariant: 'linear-progress',
-        },
-      }}
+      slotProps={dataGridSlotProps}
     />
   );
 };

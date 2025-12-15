@@ -1,17 +1,29 @@
 'use client';
-import React, { useEffect } from 'react';
-import { TextField, Box, Button } from '@mui/material';
+import React from 'react';
+import { TextField, Box, Stack } from '@mui/material';
 import { useForm, getFormProps } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { useActionState } from 'react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { academicsSchema } from '@/app/_lib/schemas/management';
 import { SubmitAcademics } from './submitAcademics';
+import { AcademicLevelDto } from '@/app/_lib/interfaces/types';
 
-export default function CreateAcademicsForm() {
+interface CreateAcademicsFormProps {
+  formId?: string;
+  onPendingChange?: (pending: boolean) => void;
+  onSuccess?: (level: AcademicLevelDto) => void;
+}
+
+export default function CreateAcademicsForm({
+  formId = 'create-academic-form',
+  onPendingChange,
+  onSuccess,
+}: CreateAcademicsFormProps) {
   const { showAlert } = useAlert();
   const [lastResult, action, pending] = useActionState(SubmitAcademics, false);
   const [form, { name, country, educationSystem }] = useForm({
+    id: formId,
     lastResult,
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: academicsSchema });
@@ -19,13 +31,17 @@ export default function CreateAcademicsForm() {
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
   });
+  const formProps = getFormProps(form);
 
-  useEffect(() => {
-    if (lastResult) {
-      showAlert(
-        'success',
-        `The ${lastResult.name} academic level was successfully created🚀!`
-      );
+  React.useEffect(() => {
+    onPendingChange?.(pending);
+  }, [pending, onPendingChange]);
+
+  React.useEffect(() => {
+    if (lastResult && (lastResult as AcademicLevelDto)?.name) {
+      const created = lastResult as AcademicLevelDto;
+      showAlert('success', `The ${created.name} academic level was successfully created 🚀!`);
+      onSuccess?.(created);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResult]);
@@ -33,55 +49,49 @@ export default function CreateAcademicsForm() {
   return (
     <Box
       component="form"
-      {...getFormProps(form)}
+      {...formProps}
       action={action}
-      sx={{ padding: 3 }}
+      sx={{ display: 'flex', flexDirection: 'column' }}
     >
-      <TextField
-        label="Year 1, Level 2, Grade 12"
-        key={name.key}
-        name={name.name}
-        defaultValue={name.initialValue}
-        error={!name.valid}
-        helperText={name.errors || ''}
-        fullWidth
-        margin="normal"
-      />
+      <Stack spacing={2.5} sx={{ p: { xs: 1, md: 2 } }}>
+        <TextField
+          label="Level name"
+          placeholder="Year 1, Level 2, Grade 12"
+          key={name.key}
+          name={name.name}
+          defaultValue={name.initialValue}
+          error={!name.valid}
+          helperText={name.errors?.join(', ') || 'Visible to students and staff everywhere this level is referenced.'}
+          fullWidth
+          required
+        />
 
-      <TextField
-        label="South africa / ZA"
-        key={country.key}
-        name={country.name}
-        defaultValue={country.initialValue}
-        error={!country.valid}
-        helperText={country.errors || ''}
-        fullWidth
-        margin="normal"
-      />
+        <TextField
+          label="Country / Region"
+          placeholder="South Africa / ZA"
+          key={country.key}
+          name={country.name}
+          defaultValue={country.initialValue}
+          error={!country.valid}
+          helperText={country.errors?.join(', ') || 'Used to localize grade expectations.'}
+          fullWidth
+          required
+        />
 
-      <TextField
-        label="Caps, Tertiary, Organisation"
-        key={educationSystem.key}
-        name={educationSystem.name}
-        defaultValue={educationSystem.initialValue}
-        error={!educationSystem.valid}
-        helperText={educationSystem.errors || ''}
-        fullWidth
-        margin="normal"
-      />
-
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 2,
-          marginTop: 3,
-        }}
-      >
-        <Button type="submit" variant="contained" loading={pending}>
-          Save
-        </Button>
-      </Box>
+        <TextField
+          label="Education system"
+          placeholder="CAPS, Cambridge, IEB"
+          key={educationSystem.key}
+          name={educationSystem.name}
+          defaultValue={educationSystem.initialValue}
+          error={!educationSystem.valid}
+          helperText={
+            educationSystem.errors?.join(', ') ||
+            'Optional descriptor that appears in analytics and exports.'
+          }
+          fullWidth
+        />
+      </Stack>
     </Box>
   );
 }

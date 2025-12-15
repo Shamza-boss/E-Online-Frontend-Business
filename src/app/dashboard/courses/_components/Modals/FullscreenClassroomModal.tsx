@@ -1,4 +1,6 @@
-import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer, {
+  type PdfNoteLinkOptions,
+} from '@/app/_lib/components/PDFViewer/PDFViewer';
 import { NoteDto } from '@/app/_lib/interfaces/types';
 import {
   Dialog,
@@ -21,13 +23,16 @@ import Splitter from '@devbookhq/splitter';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import Tab from '@mui/material/Tab';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import SeeAssignmentsAndPreview from '../Homework/SeeAssignmentsAndPreview';
 import React from 'react';
 import { TransitionProps } from '@mui/material/transitions';
-import Editor from '@/app/_lib/components/TipTapEditor/Editor';
+import Editor, {
+  type EditorHandle,
+} from '@/app/_lib/components/TipTapEditor/Editor';
 import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
 import ConditionalTabPanel from '@/app/_lib/components/conditionalTabPanel';
+import type { PdfNoteLinkSummary } from '@/app/_lib/utils/pdfNoteLinks';
 
 interface FullScreenClassroomModalProps {
   open: boolean;
@@ -48,6 +53,12 @@ interface FullScreenClassroomModalProps {
     onZoomChange: (zoom: number) => void;
     onOutlineChange: (show: boolean) => void;
   };
+  noteLinkOptions?: PdfNoteLinkOptions;
+  editorRef?:
+  | React.RefObject<EditorHandle | null>
+  | React.MutableRefObject<EditorHandle | null>;
+  onEditorContentChange?: (html: string) => void;
+  onPdfLinkClick?: (link: PdfNoteLinkSummary) => void;
 }
 
 const Transition = React.forwardRef(function Transition(
@@ -69,25 +80,43 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
   onTabChange,
   classId,
   pdfState,
+  noteLinkOptions,
+  editorRef,
+  onEditorContentChange,
+  onPdfLinkClick,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [showTextbook, setShowTextbook] = useState(false);
   const [value, setValue] = useState(currentTab);
+  const [splitSizes, setSplitSizes] = useState<number[] | undefined>();
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
     onTabChange?.(newValue);
   };
 
+  useEffect(() => {
+    setValue(currentTab);
+  }, [currentTab]);
+
+  const handleSplitResizeFinished = useCallback(
+    (_gutterIdx: number, sizes: number[]) => {
+      setSplitSizes(sizes);
+    },
+    []
+  );
+
+  const derivedSplitSizes = splitSizes ?? (value === '2' ? [30, 70] : [50, 50]);
+
   return (
     <Dialog
       fullScreen
       open={open}
       onClose={handleClose}
-      TransitionComponent={Transition}
+      slots={{ transition: Transition }}
       keepMounted
-      title="Classroom Fullscreen Mode"
+      title="Course Fullscreen Mode"
     >
       <AppBar
         position="static"
@@ -156,7 +185,14 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 overflow: 'hidden',
               }}
             >
-              <Editor note={note} loading={isLoading} onSave={handleSaveNote} />
+              <Editor
+                ref={editorRef as React.RefObject<EditorHandle> | undefined}
+                note={note}
+                loading={isLoading}
+                onSave={handleSaveNote}
+                onContentChange={onEditorContentChange}
+                onPdfLinkClick={onPdfLinkClick}
+              />
             </OutlinedWrapper>
           ) : (
             <OutlinedWrapper
@@ -197,7 +233,6 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 </ConditionalTabPanel>
                 <ConditionalTabPanel value={value} index="2">
                   <PDFViewer
-                    key={`pdf-${pdfState.currentPage}`}
                     fileUrl={fileUrl}
                     initialPage={pdfState.currentPage}
                     initialZoom={pdfState.zoom}
@@ -205,6 +240,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                     onPageChange={pdfState.onPageChange}
                     onZoomChange={pdfState.onZoomChange}
                     onOutlineChange={pdfState.onOutlineChange}
+                    noteLinkOptions={noteLinkOptions}
                   />
                 </ConditionalTabPanel>
               </TabContext>
@@ -215,7 +251,8 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
           <Splitter
             gutterClassName="custom-gutter-horizontal"
             draggerClassName="custom-dragger-horizontal"
-            initialSizes={value === '2' ? [30, 70] : [50, 50]} // Give homework more space
+            initialSizes={derivedSplitSizes}
+            onResizeFinished={handleSplitResizeFinished}
           >
             <OutlinedWrapper
               sx={{
@@ -226,7 +263,14 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 overflow: 'hidden',
               }}
             >
-              <Editor note={note} loading={isLoading} onSave={handleSaveNote} />
+              <Editor
+                ref={editorRef as React.RefObject<EditorHandle> | undefined}
+                note={note}
+                loading={isLoading}
+                onSave={handleSaveNote}
+                onContentChange={onEditorContentChange}
+                onPdfLinkClick={onPdfLinkClick}
+              />
             </OutlinedWrapper>
 
             <OutlinedWrapper
@@ -241,7 +285,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
             >
               <TabContext value={value}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                  <TabList onChange={handleChange} aria-label="classroom tabs">
+                  <TabList onChange={handleChange} aria-label="course tabs">
                     <Tab label="Modules" value="1" />
                     <Tab label="Resources" value="2" />
                   </TabList>
@@ -271,6 +315,7 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                     onPageChange={pdfState.onPageChange}
                     onZoomChange={pdfState.onZoomChange}
                     onOutlineChange={pdfState.onOutlineChange}
+                    noteLinkOptions={noteLinkOptions}
                   />
                 </ConditionalTabPanel>
               </TabContext>

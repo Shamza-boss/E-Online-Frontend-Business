@@ -78,7 +78,7 @@ export default function FAQ() {
               variant="body2"
               sx={{ maxWidth: { sm: '100%', md: '70%' } }}
             >
-              Our platform is built for trainers, students, tutors, and academic
+              Our platform is built for trainers, trainees, tutors, and academic
               institutions. Whether you manage classrooms or study
               independently, E-Online adapts to your goals.
             </Typography>
@@ -91,7 +91,7 @@ export default function FAQ() {
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />} id="panel3d-header">
             <Typography component="h3" variant="subtitle2">
-              Can students submit assignments through the platform?
+              Can trainees submit assignments through the platform?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -99,9 +99,9 @@ export default function FAQ() {
               variant="body2"
               sx={{ maxWidth: { sm: '100%', md: '70%' } }}
             >
-              Yes. Trainers can create structured assignments, and students can
+              Yes. Trainers can create structured assignments, and trainees can
               complete and submit their work directly through the platform.
-              Teachers can then review, grade, and comment—all in one place.
+              Trainers can then review, grade, and comment—all in one place.
             </Typography>
           </AccordionDetails>
         </Accordion>

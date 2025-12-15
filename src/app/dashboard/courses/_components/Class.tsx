@@ -1,36 +1,28 @@
 'use client';
-import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  Stack,
-  IconButton,
-  Tooltip,
-  Tab,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-
-import Splitter from '@devbookhq/splitter';
-import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Box, useTheme, useMediaQuery } from '@mui/material';
 
 import { useSession } from 'next-auth/react';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 
 import { useClassroomNote } from '../../../_lib/hooks/useNotes';
 
-import PDFViewer from '../../../_lib/components/PDFViewer/PDFViewer';
 import FullScreenClassroomModal from './Modals/FullscreenClassroomModal';
-import Editor from '@/app/_lib/components/TipTapEditor/Editor';
-import SeeAssignmentsAndPreview from './Homework/SeeAssignmentsAndPreview';
-import ConditionalTabPanel from '@/app/_lib/components/conditionalTabPanel';
-
-import TabContext from '@mui/lab/TabContext';
-import TabList from '@mui/lab/TabList';
-import { OutlinedWrapper } from '../../../_lib/components/shared-theme/customizations/OutlinedWrapper';
 import { GutterStyles } from '@/app/_lib/components/shared-theme/customizations/SplitterComponent';
-import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
+import { useClassroomLayout } from './Class/hooks/useClassroomLayout';
+import { ClassToolbar } from './Class/components/ClassToolbar';
+import { NotesPanel } from './Class/components/NotesPanel';
+import { TabsContent } from './Class/components/TabsContent';
+import { DesktopContent } from './Class/components/DesktopContent';
+import { MobileContent } from './Class/components/MobileContent';
+import type { EditorHandle } from '@/app/_lib/components/TipTapEditor/Editor';
+import {
+  buildPdfNoteLinkHtml,
+  extractPdfNoteLinks,
+  type PdfNoteLinkRequest,
+  type PdfNoteLinkSummary,
+} from '@/app/_lib/utils/pdfNoteLinks';
+import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/PDFViewer';
 
 interface Props {
   classId: string;
@@ -42,49 +34,263 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
   const isElevated = Number(session?.user?.role) === UserRole.Trainee;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [tabVal, setTab] = useState('1');
-  const [openBook, setOpenBook] = useState(false);
-  const [isFs, setFs] = useState(false);
-  const [pdfKey, setPdfKey] = useState(0);
-  const [currentPage, setPg] = useState(1);
-  const [zoom, setZoom] = useState(1);
-  const [outline, setOutline] = useState(false);
+  const pdfPersistKey = `${classId}:${textbookUrl}`;
+
+  const {
+    tabValue,
+    setTabValue,
+    isNotesOpen,
+    toggleNotes,
+    isFullscreen,
+    toggleFullscreen,
+    exitFullscreen,
+    pdfState,
+    splitSizes,
+    onSplitResizeFinished,
+  } = useClassroomLayout({ pdfPersistKey });
   const { data: note, isLoading, saveNote } = useClassroomNote(classId);
 
   const handleSave = async (html: string) => {
     await saveNote({ content: html });
   };
 
-  const toggleFs = () => {
-    setFs((f) => !f);
-    if (isFs) setPdfKey((k) => k + 1);
-    else !openBook && setOpenBook(true);
-  };
+  const renderTabs = (variant: 'mobile' | 'desktop') => (
+    <TabsContent
+      variant={variant}
+      tabValue={tabValue}
+      onTabChange={setTabValue}
+      classId={classId}
+      canEdit={!isElevated}
+      fileUrl={textbookUrl}
+      pdfState={pdfState}
+      noteLinkOptions={noteLinkOptions}
+    />
+  );
 
   const editorLoading = isLoading && !note;
   const noteData = note ?? undefined;
+  const notesEditorRef = useRef<EditorHandle | null>(null);
+  const fullscreenEditorRef = useRef<EditorHandle | null>(null);
+  const [liveNoteContent, setLiveNoteContent] = useState<string>(note?.content ?? '');
+  const [activeNoteLinkId, setActiveNoteLinkId] = useState<string | null>(null);
+
+  const syncLiveNoteContent = useCallback((editor: EditorHandle) => {
+    const html = editor.getHtml();
+    if (typeof html === 'string') {
+      setLiveNoteContent(html);
+    }
+  }, [setLiveNoteContent]);
+
+  useEffect(() => {
+    setLiveNoteContent(note?.content ?? '');
+  }, [note?.content]);
+
+  const handleEditorContentChange = useCallback((html: string) => {
+    setLiveNoteContent(html);
+  }, []);
+
+  const noteLinks = useMemo(
+    () => extractPdfNoteLinks(liveNoteContent, note?.id),
+    [liveNoteContent, note?.id]
+  );
+
+  const ensureNotesVisible = useCallback(() => {
+    if (!isNotesOpen) {
+      toggleNotes();
+      return true;
+    }
+    return false;
+  }, [isNotesOpen, toggleNotes]);
+
+  const ensurePdfVisible = useCallback(() => {
+    setTabValue('2');
+    if (isMobile && isNotesOpen) {
+      toggleNotes();
+    }
+  }, [isMobile, isNotesOpen, setTabValue, toggleNotes]);
+
+  const scrollAndPulseNoteChip = useCallback(
+    (linkId: string, editorHandle?: EditorHandle | null) => {
+      if (typeof document === 'undefined' || typeof window === 'undefined') {
+        return;
+      }
+
+      type QueryRoot = Document | HTMLElement;
+      const selector = `[data-link-id="${linkId}"]`;
+      const contexts: QueryRoot[] = [];
+      const editorRoot = editorHandle?.getRootElement?.();
+      if (editorRoot) {
+        contexts.push(editorRoot);
+      }
+      contexts.push(document);
+
+      window.requestAnimationFrame(() => {
+        for (const context of contexts) {
+          const chip = context.querySelector<HTMLElement>(selector);
+          if (!chip) {
+            continue;
+          }
+          chip.classList.remove('pdf-note-chip--pulse');
+          void chip.offsetWidth;
+          chip.classList.add('pdf-note-chip--pulse');
+          chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+      });
+    },
+    []
+  );
+
+  const withEditorHandle = useCallback(
+    (task: (editor: EditorHandle) => void) => {
+      const immediate =
+        (isFullscreen ? fullscreenEditorRef.current : notesEditorRef.current) ??
+        notesEditorRef.current ??
+        fullscreenEditorRef.current;
+
+      if (immediate) {
+        task(immediate);
+        return;
+      }
+
+      const opened = ensureNotesVisible();
+
+      const timeout = opened ? 350 : 150;
+      setTimeout(() => {
+        const fallback = notesEditorRef.current ?? fullscreenEditorRef.current;
+        if (fallback) {
+          task(fallback);
+          return;
+        }
+        console.warn('Unable to access notebook editor to insert PDF link.');
+      }, timeout);
+    },
+    [ensureNotesVisible, isFullscreen]
+  );
+
+
+  const focusNoteChip = useCallback(
+    (linkId: string) => {
+      const notesJustOpened = ensureNotesVisible();
+      const delay = notesJustOpened ? 350 : 0;
+      const run = () =>
+        withEditorHandle((editorHandle) => {
+          scrollAndPulseNoteChip(linkId, editorHandle);
+        });
+
+      if (delay) {
+        setTimeout(run, delay);
+      } else {
+        run();
+      }
+    },
+    [ensureNotesVisible, scrollAndPulseNoteChip, withEditorHandle]
+  );
+
+  const handleCreateNoteLinkRequest = useCallback(
+    (payload: PdfNoteLinkRequest) => {
+      withEditorHandle((editorHandle) => {
+        const { html, summary, attrs } = buildPdfNoteLinkHtml(payload);
+        const inserted = editorHandle.insertPdfLink?.(attrs) ?? false;
+        if (!inserted) {
+          editorHandle.insertHtml(html);
+        }
+        syncLiveNoteContent(editorHandle);
+        setActiveNoteLinkId(summary.id);
+        scrollAndPulseNoteChip(summary.id, editorHandle);
+      });
+    },
+    [withEditorHandle, scrollAndPulseNoteChip, syncLiveNoteContent]
+  );
+
+  const handleUpdateNoteLinkRequest = useCallback(
+    (link: PdfNoteLinkSummary, payload: { title: string; color: string }) => {
+      withEditorHandle((editorHandle) => {
+        const updated = editorHandle.updatePdfLink?.(link.id, {
+          chipLabel: payload.title,
+          chipColor: payload.color,
+        });
+        if (updated) {
+          syncLiveNoteContent(editorHandle);
+          setActiveNoteLinkId(link.id);
+          focusNoteChip(link.id);
+        }
+      });
+    },
+    [withEditorHandle, focusNoteChip, syncLiveNoteContent]
+  );
+
+  const handleNotebookPdfLinkClick = useCallback(
+    (link: PdfNoteLinkSummary) => {
+      setActiveNoteLinkId(link.id);
+      ensurePdfVisible();
+      pdfState.onPageChange(link.pageNumber);
+    },
+    [ensurePdfVisible, pdfState]
+  );
+
+  const handleOpenNoteFromSidebar = useCallback(
+    (link: PdfNoteLinkSummary) => {
+      setActiveNoteLinkId(link.id);
+      focusNoteChip(link.id);
+    },
+    [focusNoteChip]
+  );
+
+  const handleSidebarLinkSelect = useCallback(
+    (link: PdfNoteLinkSummary) => {
+      setActiveNoteLinkId(link.id);
+      ensurePdfVisible();
+      pdfState.onPageChange(link.pageNumber);
+      focusNoteChip(link.id);
+    },
+    [ensurePdfVisible, pdfState, focusNoteChip]
+  );
+
+  const noteFeaturesEnabled = !editorLoading;
+
+  const noteLinkOptions: PdfNoteLinkOptions | undefined = useMemo(() => {
+    if (!noteFeaturesEnabled) {
+      return undefined;
+    }
+
+    return {
+      enabled: true,
+      links: noteLinks,
+      activeLinkId: activeNoteLinkId,
+      onCreateLink: handleCreateNoteLinkRequest,
+      onOpenNote: handleOpenNoteFromSidebar,
+      onSelectLink: handleSidebarLinkSelect,
+      onUpdateLink: handleUpdateNoteLinkRequest,
+    };
+  }, [
+    noteFeaturesEnabled,
+    noteLinks,
+    activeNoteLinkId,
+    handleCreateNoteLinkRequest,
+    handleOpenNoteFromSidebar,
+    handleSidebarLinkSelect,
+    handleUpdateNoteLinkRequest,
+  ]);
 
   return (
     <>
       <FullScreenClassroomModal
-        open={isFs}
+        open={isFullscreen}
         canEdit={!isElevated}
         fileUrl={textbookUrl}
         isLoading={editorLoading}
-        handleClose={() => setFs(false)}
+        handleClose={exitFullscreen}
         handleSaveNote={handleSave}
         note={noteData}
-        currentTab={tabVal}
-        onTabChange={setTab}
+        currentTab={tabValue}
+        onTabChange={setTabValue}
         classId={classId}
-        pdfState={{
-          currentPage,
-          zoom,
-          outline,
-          onPageChange: setPg,
-          onZoomChange: setZoom,
-          onOutlineChange: setOutline,
-        }}
+        pdfState={pdfState}
+        noteLinkOptions={noteLinkOptions}
+        editorRef={fullscreenEditorRef}
+        onEditorContentChange={handleEditorContentChange}
+        onPdfLinkClick={handleNotebookPdfLinkClick}
       />
 
       <Box
@@ -93,22 +299,18 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          p: 3,
         }}
       >
         {GutterStyles()}
 
         <Box sx={{ flexShrink: 0, mb: 1 }}>
-          <Stack spacing={1} direction="row" alignItems="center">
-            <Tooltip title="Fullscreen">
-              <IconButton onClick={toggleFs}>
-                {isFs ? <FullscreenExitIcon /> : <FullscreenIcon />}
-              </IconButton>
-            </Tooltip>
-
-            <Button variant="outlined" onClick={() => setOpenBook((o) => !o)}>
-              {openBook ? 'Hide' : 'Show'} notes
-            </Button>
-          </Stack>
+          <ClassToolbar
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
+            notesOpen={isNotesOpen}
+            onToggleNotes={toggleNotes}
+          />
         </Box>
         <Box
           sx={{
@@ -125,136 +327,38 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
             overflow="hidden"
           >
             {isMobile ? (
-              openBook ? (
-                <OutlinedWrapper sx={{ flex: 1, overflow: 'hidden' }}>
-                  <Editor
+              <MobileContent
+                notesOpen={isNotesOpen}
+                notesPanel={
+                  <NotesPanel
                     note={noteData}
                     loading={editorLoading}
                     onSave={handleSave}
+                    sx={{ overflow: 'hidden' }}
+                    editorRef={notesEditorRef}
+                    onContentChange={handleEditorContentChange}
+                    onPdfLinkClick={handleNotebookPdfLinkClick}
                   />
-                </OutlinedWrapper>
-              ) : (
-                <OutlinedWrapper
-                  sx={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                    minHeight: 0,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <TabContext value={tabVal}>
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                      <TabList onChange={(_e, v) => setTab(v)}>
-                        <Tab label="Modules" value="1" />
-                        <Tab label="Resources" value="2" />
-                      </TabList>
-                    </Box>
-
-                    <ConditionalTabPanel value={tabVal} index="1">
-                      <SeeAssignmentsAndPreview
-                        classId={classId}
-                        canEdit={!isElevated}
-                      />
-                    </ConditionalTabPanel>
-                    <ConditionalTabPanel value={tabVal} index="2">
-                      <Box
-                        sx={{
-                          flex: 1,
-                          overflow: 'auto',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 0,
-                        }}
-                      >
-                        <PDFViewer
-                          key={`pdf-${currentPage}-${pdfKey}`}
-                          fileUrl={textbookUrl}
-                          initialPage={currentPage}
-                          initialZoom={zoom}
-                          showOutline={outline}
-                          onPageChange={setPg}
-                          onZoomChange={setZoom}
-                          onOutlineChange={setOutline}
-                        />
-                      </Box>
-                    </ConditionalTabPanel>
-                  </TabContext>
-                </OutlinedWrapper>
-              )
+                }
+                renderTabs={() => renderTabs('mobile')}
+              />
             ) : (
-              // Desktop Splitter
-              <Splitter
-                gutterClassName="custom-gutter-horizontal"
-                draggerClassName="custom-dragger-horizontal"
-              >
-                {openBook && (
-                  <OutlinedWrapper
-                    sx={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      height: '100%',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Editor
-                      note={noteData}
-                      loading={editorLoading}
-                      onSave={handleSave}
-                    />
-                  </OutlinedWrapper>
-                )}
-
-                <OutlinedWrapper
-                  sx={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                    minHeight: 0,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <TabContext value={tabVal}>
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                      <TabList onChange={(_e, v) => setTab(v)}>
-                        <Tab label="Modules" value="1" />
-                        <Tab label="Resources" value="2" />
-                      </TabList>
-                    </Box>
-                    <DataGridTabPanel value="1">
-                      <Box
-                        sx={{
-                          flex: 1,
-                          overflow: 'auto',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 0,
-                        }}
-                      >
-                        <SeeAssignmentsAndPreview
-                          classId={classId}
-                          canEdit={!isElevated}
-                        />
-                      </Box>
-                    </DataGridTabPanel>
-                    <DataGridTabPanel value="2">
-                      <PDFViewer
-                        key={`pdf-${currentPage}-${pdfKey}`}
-                        fileUrl={textbookUrl}
-                        initialPage={currentPage}
-                        initialZoom={zoom}
-                        showOutline={outline}
-                        onPageChange={setPg}
-                        onZoomChange={setZoom}
-                        onOutlineChange={setOutline}
-                      />
-                    </DataGridTabPanel>
-                  </TabContext>
-                </OutlinedWrapper>
-              </Splitter>
+              <DesktopContent
+                notesOpen={isNotesOpen}
+                notesPanel={
+                  <NotesPanel
+                    note={noteData}
+                    loading={editorLoading}
+                    onSave={handleSave}
+                    editorRef={notesEditorRef}
+                    onContentChange={handleEditorContentChange}
+                    onPdfLinkClick={handleNotebookPdfLinkClick}
+                  />
+                }
+                renderTabs={() => renderTabs('desktop')}
+                splitSizes={splitSizes}
+                onSplitResizeFinished={onSplitResizeFinished}
+              />
             )}
           </Box>
         </Box>

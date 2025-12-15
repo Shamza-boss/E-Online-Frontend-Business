@@ -20,8 +20,8 @@ export async function SubmitSubject(prevState: unknown, formData: FormData) {
   };
 
   try {
-    await createSubject(newSubject);
-    return newSubject;
+    const created = await createSubject(newSubject);
+    return (created as SubjectDto) ?? newSubject;
   } catch (error: any) {
     return error;
   }

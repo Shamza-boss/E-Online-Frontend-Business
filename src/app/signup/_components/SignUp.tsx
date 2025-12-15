@@ -12,7 +12,7 @@ import {
   Stack,
   Button,
 } from '@mui/material';
-import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
@@ -53,12 +53,15 @@ export default function SignUpPage() {
     if (email) setValue('email', email);
   }, [setValue]);
 
-  const onSubmit: SubmitHandler<Form> = async ({ email }) => {
-    setLoading(true);
-    const normalized = email.trim().toLowerCase();
+  const onSubmit = async ({ email }: Form) => {
+    const normalized = (email ?? '').trim().toLowerCase();
+    if (!normalized) {
+      showAlert('error', 'Please enter your email');
+      return;
+    }
 
+    setLoading(true);
     try {
-      // 1) Verify the user exists in your base DB and get their name
       const res = await fetch(
         `/api/auth/resolve/${encodeURIComponent(normalized)}`,
         { cache: 'no-store' }
@@ -72,10 +75,7 @@ export default function SignUpPage() {
         return;
       }
       if (!res.ok) {
-        showAlert(
-          'error',
-          'Server error while checking your account. Try again.'
-        );
+        showAlert('error', 'Server error while checking your account. Try again.');
         return;
       }
 
@@ -88,11 +88,10 @@ export default function SignUpPage() {
         redirect: true,
         callbackUrl: '/dashboard',
         action: 'register',
-        email: email.toLowerCase().trim(),
+        email: normalized,
         name,
       } as any);
 
-      // If the WebAuthn modal is cancelled, code continues here:
       showAlert(
         'info',
         'Passkey dialog was closed. You can create a passkey later from Settings.'
@@ -101,8 +100,8 @@ export default function SignUpPage() {
       showAlert(
         'error',
         err?.message ||
-          (Messages?.error?.generic ??
-            'Something went wrong😫. Please contact support or your administrator.')
+        (Messages?.error?.generic ??
+          'Something went wrong😫. Please contact support or your administrator.')
       );
       console.error('Passkey enrollment error:', err);
     } finally {
@@ -124,8 +123,13 @@ export default function SignUpPage() {
           Create your passkey
         </Typography>
 
-        <form onSubmit={handleSubmit(onSubmit as any)} noValidate>
-          <Stack spacing={1}>
+        <Box
+          component="form"
+          noValidate
+          autoComplete="on"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <Stack spacing={2}>
             <Controller
               name="email"
               control={control}
@@ -135,8 +139,11 @@ export default function SignUpPage() {
                   label="Work email"
                   type="email"
                   fullWidth
+                  autoComplete="email"
+                  placeholder="you@school.edu"
                   error={!!errors.email}
-                  helperText={errors.email?.message}
+                  helperText={errors.email?.message ?? ' '}
+                  inputProps={{ 'aria-label': 'Work email address' }}
                 />
               )}
             />
@@ -144,10 +151,23 @@ export default function SignUpPage() {
               name="terms"
               control={control}
               render={({ field }) => (
-                <FormControlLabel
-                  control={<Checkbox {...field} />}
-                  label="I accept the terms and conditions"
-                />
+                <Box>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={!!field.value}
+                        onChange={(event) => field.onChange(event.target.checked)}
+                        inputProps={{ 'aria-label': 'Accept terms and conditions' }}
+                      />
+                    }
+                    label="I accept the terms and conditions"
+                  />
+                  {errors.terms && (
+                    <Typography variant="caption" color="error" sx={{ ml: 1.5 }}>
+                      {errors.terms.message}
+                    </Typography>
+                  )}
+                </Box>
               )}
             />
             <Button
@@ -159,7 +179,7 @@ export default function SignUpPage() {
               {loading ? 'Opening passkey…' : 'Create passkey'}
             </Button>
           </Stack>
-        </form>
+        </Box>
 
         <Divider sx={{ my: 2 }} />
         <Typography textAlign="center" mt={1}>
