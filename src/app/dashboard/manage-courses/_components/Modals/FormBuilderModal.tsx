@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { NextPage } from 'next';
 import {
   Dialog,
@@ -97,6 +97,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const [paletteDragType, setPaletteDragType] = useState<Question['type'] | null>(
     null
   );
+  const draftSaveTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -132,6 +133,11 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     if (!hydrated || typeof window === 'undefined') return;
     if (activeHomeworkId) return;
 
+    if (draftSaveTimeoutRef.current) {
+      window.clearTimeout(draftSaveTimeoutRef.current);
+      draftSaveTimeoutRef.current = null;
+    }
+
     const isEmpty =
       formTitle.trim() === '' &&
       description.trim() === '' &&
@@ -154,7 +160,16 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       currentQuestionIndex,
     };
 
-    localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(payload));
+    draftSaveTimeoutRef.current = window.setTimeout(() => {
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(payload));
+    }, 250);
+
+    return () => {
+      if (draftSaveTimeoutRef.current) {
+        window.clearTimeout(draftSaveTimeoutRef.current);
+        draftSaveTimeoutRef.current = null;
+      }
+    };
   }, [
     hydrated,
     formTitle,
@@ -988,7 +1003,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                     Drag to add
                   </Typography>
                   {QUESTION_TYPES.map((type) => (
-                    <Paper
+                    <Box
                       key={type.value}
                       draggable
                       onDragStart={(e) => {
@@ -997,7 +1012,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                         setPaletteDragType(type.value as Question['type']);
                       }}
                       onDragEnd={() => setPaletteDragType(null)}
-                      variant="outlined"
+                      
+                    >
+                      <Paper variant="outlined"
                       sx={{
                         p: 2,
                         display: 'flex',
@@ -1005,18 +1022,19 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                         gap: 1,
                         cursor: 'grab',
                         '&:hover': { bgcolor: 'action.hover' },
-                      }}
-                    >
+                      }}>
+                        
                       <DragIndicatorIcon color="action" />
                       <Typography variant="body2">{type.label}</Typography>
-                    </Paper>
+                      </Paper>
+                    </Box>
                   ))}
                   <Button variant="contained" onClick={addQuestion} sx={{ mt: 2 }}>
                     Add Question
                   </Button>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0 }}>
-                  {GutterStyles()}
+                  <GutterStyles />
                   <Splitter
                     gutterClassName="custom-gutter-horizontal"
                     draggerClassName="custom-dragger-horizontal"

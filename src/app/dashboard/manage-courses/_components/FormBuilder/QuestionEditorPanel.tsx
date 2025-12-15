@@ -28,6 +28,123 @@ import EditorMenuControls from '@/app/_lib/components/TipTapEditor/EditorMenuCon
 
 const SUBQUESTION_DND_MIME = 'application/x-eonline-subquestion-move';
 
+// Many browser “writing assistant” extensions inject a content_script.js that
+// can throw errors on complex/controlled inputs. Opt out of those integrations.
+const ANTI_ASSIST_ATTRS = {
+  'data-gramm': 'false',
+  'data-gramm_editor': 'false',
+  'data-enable-grammarly': 'false',
+  'data-lt-active': 'false',
+  'data-ms-editor': 'false',
+  spellCheck: false,
+  autoCorrect: 'off',
+  autoCapitalize: 'off',
+} as const;
+
+type BufferedTextFieldProps = Omit<
+  React.ComponentProps<typeof TextField>,
+  'value' | 'onChange'
+> & {
+  value?: string | number | null;
+  onCommit: (value: string) => void;
+  debounceMs?: number;
+};
+
+const BufferedTextField: React.FC<BufferedTextFieldProps> = ({
+  value,
+  onCommit,
+  debounceMs = 250,
+  onBlur,
+  ...rest
+}) => {
+  const initial = value == null ? '' : String(value);
+  const [draft, setDraft] = useState<string>(initial);
+  const isFocusedRef = useRef(false);
+  const timeoutRef = useRef<number | null>(null);
+  const latestCommitRef = useRef(onCommit);
+  const latestDraftRef = useRef(draft);
+  const lastCommittedRef = useRef<string>(initial);
+
+  useEffect(() => {
+    latestCommitRef.current = onCommit;
+  }, [onCommit]);
+
+  useEffect(() => {
+    latestDraftRef.current = draft;
+  }, [draft]);
+
+  useEffect(() => {
+    // If parent value changes (e.g. after debounced commit, reorder, load),
+    // sync it into the local draft unless the user is actively editing.
+    const next = value == null ? '' : String(value);
+    lastCommittedRef.current = next;
+    if (!isFocusedRef.current && next !== latestDraftRef.current) {
+      setDraft(next);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      // Flush on unmount so last keystrokes aren't lost.
+      if (latestDraftRef.current !== lastCommittedRef.current) {
+        lastCommittedRef.current = latestDraftRef.current;
+        latestCommitRef.current(latestDraftRef.current);
+      }
+    };
+  }, []);
+
+  const scheduleCommit = (next: string) => {
+    if (next === lastCommittedRef.current) return;
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = window.setTimeout(() => {
+      timeoutRef.current = null;
+      if (next !== lastCommittedRef.current) {
+        lastCommittedRef.current = next;
+        latestCommitRef.current(next);
+      }
+    }, debounceMs);
+  };
+
+  const flushCommit = () => {
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (latestDraftRef.current !== lastCommittedRef.current) {
+      lastCommittedRef.current = latestDraftRef.current;
+      latestCommitRef.current(latestDraftRef.current);
+    }
+  };
+
+  return (
+    <TextField
+      {...rest}
+      value={draft}
+      onFocus={(event) => {
+        isFocusedRef.current = true;
+        rest.onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        isFocusedRef.current = false;
+        flushCommit();
+        onBlur?.(event);
+      }}
+      onChange={(event) => {
+        const next = event.target.value;
+        setDraft(next);
+        scheduleCommit(next);
+      }}
+    />
+  );
+};
+
 const isSectionType = (type: Question['type']) =>
   type === 'video' || type === 'pdf' || type === 'group';
 
@@ -60,6 +177,8 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
 }) => {
   const fieldId = useId();
   const editorRef = useRef<RichTextEditorRef>(null);
+  const updateTimeoutRef = useRef<number | null>(null);
+  const pendingHtmlRef = useRef<string>('');
   const extensions = useExtensions({ placeholder });
   const normalizedValue = value ?? '';
 
@@ -79,25 +198,55 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
     }
   }, [normalizedValue]);
 
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        window.clearTimeout(updateTimeoutRef.current);
+        updateTimeoutRef.current = null;
+      }
+
+      // Flush any pending change so the last keystrokes aren't lost
+      if (pendingHtmlRef.current !== normalizedValue) {
+        onChange(pendingHtmlRef.current);
+      }
+    };
+    // Intentionally omit normalizedValue from deps: this cleanup should use the
+    // latest refs and onChange function.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onChange]);
+
   const handleUpdate = () => {
     const editor = editorRef.current?.editor;
     if (!editor) return;
 
     const html = editor.isEmpty ? '' : editor.getHTML();
     if (html !== normalizedValue) {
-      onChange(html);
+      pendingHtmlRef.current = html;
+      if (updateTimeoutRef.current) {
+        window.clearTimeout(updateTimeoutRef.current);
+      }
+
+      // Debounce: typing in TipTap can fire lots of updates per second.
+      updateTimeoutRef.current = window.setTimeout(() => {
+        updateTimeoutRef.current = null;
+        if (pendingHtmlRef.current !== normalizedValue) {
+          onChange(pendingHtmlRef.current);
+        }
+      }, 150);
     }
   };
 
   return (
-    <FormControl fullWidth margin="normal">
-      <InputLabel
-        shrink
+    <Box sx={{ width: '100%', mt: 2 }} {...ANTI_ASSIST_ATTRS}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        component="label"
         htmlFor={fieldId}
-        sx={{ position: 'relative', transform: 'none', mb: 0.5 }}
+        sx={{ display: 'block', mb: 0.5 }}
       >
         {label}
-      </InputLabel>
+      </Typography>
       <RichTextEditor
         ref={editorRef}
         content={normalizedValue}
@@ -108,6 +257,8 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
         RichTextFieldProps={{
           id: fieldId,
           variant: 'outlined',
+          // Best-effort opt-out for writing assistants on the editable area.
+          RichTextContentProps: ANTI_ASSIST_ATTRS as any,
           sx: {
             mt: 1,
             '& .MuiRichTextContent-root': {
@@ -117,7 +268,7 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
           },
         }}
       />
-    </FormControl>
+    </Box>
   );
 };
 
@@ -353,7 +504,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           handlePaletteSlotDrop(event, parent, parentDepth, slotIndex)
         }
         sx={{
-          height: isActive ? 40 : 10,
+          height: 40,
           my: 0.5,
           borderRadius: 1,
           bgcolor: isActive ? 'primary.light' : 'transparent',
@@ -365,15 +516,16 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           justifyContent: 'center',
           '&:hover': {
             bgcolor: isActive ? 'primary.light' : 'action.hover',
-            height: 20,
           },
         }}
       >
-        {isActive && (
+        {isActive ? (
           <Typography variant="caption" color="primary.dark">
             Drop here
           </Typography>
-        )}
+        ):(<Typography variant="caption" color="primary.dark">
+            Drop here
+          </Typography>)}
       </Box>
     );
   };
@@ -631,14 +783,13 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
                   }
                 />
               )}
-              <TextField
+              <BufferedTextField
                 label={`Option ${index + 1}`}
                 fullWidth
                 margin="dense"
                 value={option}
-                onChange={(e) =>
-                  onOptionChange(target.id, index, e.target.value)
-                }
+                inputProps={ANTI_ASSIST_ATTRS as any}
+                onCommit={(next) => onOptionChange(target.id, index, next)}
               />
             </Stack>
           );
@@ -790,12 +941,13 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
         </Stack>
         
         {isVideoSub || isPdfSub ? (
-          <TextField
+          <BufferedTextField
             label="Section Title"
             fullWidth
             margin="normal"
             value={sub.questionText ?? ''}
-            onChange={(e) => onFieldChange(sub.id, 'questionText', e.target.value)}
+            inputProps={ANTI_ASSIST_ATTRS as any}
+            onCommit={(next) => onFieldChange(sub.id, 'questionText', next)}
           />
         ) : (
           <QuestionRichTextField
@@ -851,13 +1003,13 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
                 ))}
             </Select>
           </FormControl>
-          <TextField
+          <BufferedTextField
             label="Weight"
             type="number"
             fullWidth
             margin="normal"
             value={sub.weight}
-            onChange={(e) => onWeightChange(sub.id, e.target.value)}
+            onCommit={(next) => onWeightChange(sub.id, next)}
           />
         </Stack>
 
@@ -967,13 +1119,14 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
               }
             />
           ) : (
-            <TextField
+            <BufferedTextField
               label="Section Title"
               fullWidth
               margin="normal"
-              value={question.questionText}
-              onChange={(e) =>
-                onFieldChange(question.id, 'questionText', e.target.value)
+              value={question.questionText ?? ''}
+              inputProps={ANTI_ASSIST_ATTRS as any}
+              onCommit={(next) =>
+                onFieldChange(question.id, 'questionText', next)
               }
             />
           )}
@@ -1021,13 +1174,13 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
               </Select>
             </FormControl>
             {!isSection && (
-              <TextField
+              <BufferedTextField
                 label="Weight"
                 type="number"
                 fullWidth
                 margin="normal"
                 value={question.weight}
-                onChange={(e) => onWeightChange(question.id, e.target.value)}
+                onCommit={(next) => onWeightChange(question.id, next)}
               />
             )}
           </Stack>
