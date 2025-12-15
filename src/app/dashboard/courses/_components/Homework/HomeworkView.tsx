@@ -13,6 +13,10 @@ import {
   DialogTitle,
   DialogContent,
   IconButton,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Checkbox,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -28,6 +32,7 @@ import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionText
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
 import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
+import { extractPlainText } from '@/app/_lib/utils/textUtils';
 
 const formatFileSize = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return null;
@@ -244,7 +249,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
         </Box>
         <Box sx={{ mt: 1 }}>
           {(() => {
-            if (node.type === 'radio') {
+            if (node.type === 'single-select') {
               return (
                 <RadioGroup
                   value={answers[node.id] || ''}

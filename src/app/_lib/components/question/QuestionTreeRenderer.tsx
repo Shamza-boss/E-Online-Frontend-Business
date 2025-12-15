@@ -202,7 +202,7 @@ const QuestionTreeRenderer: React.FC<QuestionTreeRendererProps> = ({
         );
       }
 
-      if (node.type === 'radio') {
+      if (node.type === 'single-select') {
         const selectedValue = (() => {
           if (mode === 'builder-preview') return node.correctAnswer ?? '';
           const answer = answers[node.id];
@@ -318,7 +318,7 @@ const QuestionTreeRenderer: React.FC<QuestionTreeRendererProps> = ({
       if (node.type === 'pdf') {
         return renderPdf(!isSection);
       }
-      if (node.type === 'radio' || node.type === 'multi-select') {
+      if (node.type === 'single-select' || node.type === 'multi-select') {
         return renderChoiceOptions();
       }
 

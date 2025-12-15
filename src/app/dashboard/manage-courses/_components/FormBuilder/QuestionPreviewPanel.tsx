@@ -1,7 +1,16 @@
 import React from 'react';
-import { Typography } from '@mui/material';
+import {
+  Box,
+  Checkbox,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  Typography,
+} from '@mui/material';
 import { Question } from '../../../../_lib/interfaces/types';
-import QuestionTreeRenderer from '@/app/_lib/components/question/QuestionTreeRenderer';
+import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
+import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 
 interface QuestionPreviewPanelProps {
   question?: Question;
@@ -146,7 +155,7 @@ const QuestionPreviewPanel: React.FC<QuestionPreviewPanelProps> = ({
         </Box>
         <Box sx={{ mt: 1 }}>
           {(() => {
-            if (node.type === 'radio') {
+            if (node.type === 'single-select') {
               return (
                 <RadioGroup value={node.correctAnswer ?? ''} row>
                   {options.length > 0 ? (

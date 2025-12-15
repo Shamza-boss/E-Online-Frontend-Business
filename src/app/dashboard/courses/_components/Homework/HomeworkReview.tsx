@@ -13,6 +13,10 @@ import {
   DialogTitle,
   DialogContent,
   IconButton,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Checkbox,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -22,6 +26,8 @@ import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
 import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
+import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
+import { extractPlainText } from '@/app/_lib/utils/textUtils';
 
 const formatFileSize = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return null;
@@ -221,7 +227,7 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
         </Box>
         <Box sx={{ mt: 1 }}>
           {(() => {
-            if (node.type === 'radio') {
+            if (node.type === 'single-select') {
               return (
                 <RadioGroup value={answer || ''} row>
                   {options.length > 0 ? (

@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import Alert from '@mui/material/Alert';
 import CloseIcon from '@mui/icons-material/Close';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { TransitionProps } from '@mui/material/transitions';
 import {
   Homework,
@@ -37,9 +38,14 @@ import {
   buildValidatedHomework,
   createLeafQuestion,
   createVideoQuestion,
+  createPdfQuestion,
+  createPlaceholderQuestion,
+  createGroupQuestion,
   findQuestionMeta,
   isChoiceType,
   updateQuestionTree,
+  NEW_QUESTION_DND_MIME,
+  IsValidChild,
 } from '../FormBuilder/questionUtils';
 
 interface FormBuilderModalProps {
@@ -55,7 +61,7 @@ interface FormBuilderModalProps {
 const QUESTION_TYPES = [
   { value: 'video', label: 'Video Section' },
   { value: 'pdf', label: 'PDF Section' },
-  { value: 'radio', label: 'Single Choice' },
+  { value: 'single-select', label: 'Single Choice' },
   { value: 'multi-select', label: 'Multiple Choice' },
 ] as const;
 
@@ -88,6 +94,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const [prefillSource, setPrefillSource] = useState<string | null>(null);
   const [splitSizes, setSplitSizes] = useState<number[] | undefined>();
   const [activeStep, setActiveStep] = useState(0);
+  const [paletteDragType, setPaletteDragType] = useState<Question['type'] | null>(
+    null
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -124,12 +133,12 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     if (activeHomeworkId) return;
 
     const isEmpty =
-      !formTitle &&
-      !description &&
-      !dueDate &&
+      formTitle.trim() === '' &&
+      description.trim() === '' &&
+      dueDate.trim() === '' &&
       !hasExpiry &&
+      expiryDate.trim() === '' &&
       questions.length === 0;
-
     if (isEmpty) {
       localStorage.removeItem(FORM_STORAGE_KEY);
       return;
@@ -254,7 +263,12 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       const meta = findQuestionMeta(prev, questionId);
       if (!meta) return prev;
 
-      if (meta.depth > 0 && (newType === 'video' || newType === 'pdf')) {
+      // Only allow nested containers (video/pdf) when the direct parent is a group.
+      if (
+        meta.depth > 0 &&
+        (newType === 'video' || newType === 'pdf') &&
+        meta.parent?.type !== 'group'
+      ) {
         return prev;
       }
 
@@ -301,7 +315,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             pdf: undefined,
             subquestions: [],
             options: fallbackOptions,
-            correctAnswer: newType === 'radio' ? '' : undefined,
+            correctAnswer: newType === 'single-select' ? '' : undefined,
             correctAnswers: newType === 'multi-select' ? [] : undefined,
             weight: Math.max(q.weight || 1, 1),
           };
@@ -313,7 +327,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           video: undefined,
           pdf: undefined,
           options: hasChildren ? undefined : fallbackOptions,
-          correctAnswer: newType === 'radio' ? '' : undefined,
+          correctAnswer: newType === 'single-select' ? '' : undefined,
           correctAnswers: newType === 'multi-select' ? [] : undefined,
           weight: Math.max(q.weight || 1, 1),
         };
@@ -362,7 +376,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
         let correctAnswer = q.correctAnswer;
         let correctAnswers = q.correctAnswers;
 
-        if (q.type === 'radio' && previous === q.correctAnswer) {
+        if (q.type === 'single-select' && previous === q.correctAnswer) {
           correctAnswer = value;
         }
 
@@ -383,20 +397,25 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     });
   };
 
-  const addSubquestion = (parentId: string) => {
+  const addSubquestion = (parentId: string, type: Question['type'] = 'single-select') => {
     setQuestions((prev) => {
       const meta = findQuestionMeta(prev, parentId);
       if (!meta) return prev;
 
-      if (meta.depth === 0 && !['video', 'pdf'].includes(meta.question.type)) {
+      if (!IsValidChild(meta.question.type, type)) {
         return prev;
       }
 
-      if (meta.depth >= 2) {
+      let newSub: Question;
+      if (type === 'single-select' || type === 'multi-select') {
+        newSub = { ...createLeafQuestion(), type };
+      } else if (type === 'video') {
+        newSub = createVideoQuestion();
+      } else if (type === 'pdf') {
+        newSub = createPdfQuestion();
+      } else {
         return prev;
       }
-
-      const newSub = createLeafQuestion();
 
       const { updated, changed } = updateQuestionTree(prev, parentId, (q) => {
         const existing = q.subquestions ?? [];
@@ -447,7 +466,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                   ? [...parent.options]
                   : ['', ''],
               correctAnswer:
-                parent.type === 'radio'
+                parent.type === 'single-select'
                   ? (parent.correctAnswer ?? '')
                   : undefined,
               correctAnswers:
@@ -477,11 +496,88 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   };
 
   const addQuestion = () => {
-    const newQuestion = createVideoQuestion();
+    const newQuestion = createGroupQuestion();
     setQuestions((prev) => {
       const updated = [...prev, newQuestion];
       setCurrentQuestionIndex(updated.length - 1);
       return updated;
+    });
+  };
+
+  const handleContainerDragOver = (event: React.DragEvent) => {
+    if (event.dataTransfer.types.includes(NEW_QUESTION_DND_MIME)) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  };
+
+  const handleContainerDrop = (event: React.DragEvent) => {
+    // Dropping on the main container should NOT create a new top-level question
+    // unless the list is empty. If the list is not empty, it should probably
+    // add to the currently active question (if we had a concept of active question).
+    // But the user says: "Question 1 takes all question types from the sub panel which are nested."
+    // This implies we should add to the LAST question if it exists?
+    // Or maybe we should just add a new top-level question if dropped here?
+    // The user said: "dragging a question from the QuestionEditor panel should not add a new Question (1,2...) but should add a new nested Question for the active question"
+    
+    // So if we have questions, we should find the active one and add to it.
+    // If we have no questions, we create a new Group question and add the dropped item to it.
+
+    const type = event.dataTransfer.getData(NEW_QUESTION_DND_MIME) as Question['type'];
+    if (!type) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    setQuestions((prev) => {
+      if (prev.length === 0) {
+        // Create Question 1 (Group) and add the dropped item as 1.1
+        const group = createGroupQuestion();
+        let child: Question;
+        if (type === 'video') child = createVideoQuestion();
+        else if (type === 'pdf') child = createPdfQuestion();
+        else child = { ...createLeafQuestion(), type };
+        
+        group.subquestions = [child];
+        return [group];
+      } else {
+        // Add to the currently active question (currentQuestionIndex)
+        const activeIndex = Math.min(currentQuestionIndex, prev.length - 1);
+        const activeId = prev[activeIndex].id;
+        
+        // We need to use addSubquestion logic but we are inside setQuestions
+        // Let's reuse the update logic
+        const meta = findQuestionMeta(prev, activeId);
+        if (!meta) return prev;
+
+        if (!IsValidChild(meta.question.type, type)) {
+           // If the active question is a Group, it accepts Video/PDF/Choice.
+           // If it's a Video, it accepts Choice.
+           // If the user drags Video onto a Video question, it should fail (or be ignored).
+           return prev;
+        }
+
+        let newSub: Question;
+        if (type === 'single-select' || type === 'multi-select') {
+          newSub = { ...createLeafQuestion(), type };
+        } else if (type === 'video') {
+          newSub = createVideoQuestion();
+        } else if (type === 'pdf') {
+          newSub = createPdfQuestion();
+        } else {
+          return prev;
+        }
+
+        const { updated, changed } = updateQuestionTree(prev, activeId, (q) => {
+          const existing = q.subquestions ?? [];
+          return {
+            ...q,
+            subquestions: [...existing, newSub],
+          };
+        });
+        
+        return changed ? updated : prev;
+      }
     });
   };
 
@@ -522,6 +618,68 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     return question.weight;
   };
 
+  const onInsertSubquestionFromPalette = (
+    parentId: string,
+    insertIndex: number,
+    type: Question['type']
+  ) => {
+    setQuestions((prev) => {
+      const meta = findQuestionMeta(prev, parentId);
+      if (!meta) return prev;
+
+      if (!IsValidChild(meta.question.type, type)) {
+        return prev;
+      }
+
+      let newSub: Question;
+      if (type === 'single-select' || type === 'multi-select') {
+        newSub = { ...createLeafQuestion(), type };
+      } else if (type === 'video') {
+        newSub = createVideoQuestion();
+      } else if (type === 'pdf') {
+        newSub = createPdfQuestion();
+      } else {
+        return prev;
+      }
+
+      const { updated, changed } = updateQuestionTree(prev, parentId, (q) => {
+        const existing = q.subquestions ?? [];
+        const updatedSubquestions = [...existing];
+        updatedSubquestions.splice(insertIndex, 0, newSub);
+        
+        const base: Question = {
+          ...q,
+          subquestions: updatedSubquestions,
+        };
+        if (meta.depth === 1) {
+          return {
+            ...base,
+            options: undefined,
+          };
+        }
+        return base;
+      });
+
+      return changed ? updated : prev;
+    });
+  };
+
+  const onReorderSubquestions = (
+    parentId: string,
+    fromIdx: number,
+    toIdx: number
+  ) => {
+    setQuestions((prev) => {
+      const { updated, changed } = updateQuestionTree(prev, parentId, (q) => {
+        const subs = [...(q.subquestions ?? [])];
+        const [moved] = subs.splice(fromIdx, 1);
+        subs.splice(toIdx, 0, moved);
+        return { ...q, subquestions: subs };
+      });
+      return changed ? updated : prev;
+    });
+  };
+
   const questionEditor = (
     question: Question,
     index: number
@@ -539,24 +697,41 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       onAddSubquestion={addSubquestion}
       onRemoveSubquestion={removeSubquestion}
       onRemoveQuestion={removeQuestion}
+      onInsertSubquestionFromPalette={onInsertSubquestionFromPalette}
+      onReorderSubquestions={onReorderSubquestions}
+      paletteMimeType={NEW_QUESTION_DND_MIME}
+      paletteDragType={paletteDragType}
     />
   );
 
   const emptyEditor = (
-    <QuestionEditorPanel
-      question={undefined}
-      questionIndex={0}
-      questionTypeOptions={QUESTION_TYPES}
-      computeTotalWeight={computeTotalWeight}
-      onFieldChange={handleQuestionFieldChange}
-      onTypeChange={handleQuestionTypeChange}
-      onWeightChange={handleQuestionWeightChange}
-      onAddOption={addOption}
-      onOptionChange={handleOptionChange}
-      onAddSubquestion={addSubquestion}
-      onRemoveSubquestion={removeSubquestion}
-      onRemoveQuestion={removeQuestion}
-    />
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '2px dashed',
+        borderColor: 'divider',
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+        color: 'text.secondary',
+        p: 4,
+        textAlign: 'center',
+      }}
+      onDragOver={handleContainerDragOver}
+      onDrop={handleContainerDrop}
+    >
+      <Box>
+        <DragIndicatorIcon sx={{ fontSize: 48, opacity: 0.5, mb: 2 }} />
+        <Typography variant="h6" gutterBottom>
+          Drag a question type here
+        </Typography>
+        <Typography variant="body2">
+          Select a question type from the sidebar and drag it here to start building your module.
+        </Typography>
+      </Box>
+    </Box>
   );
 
   const questionPreview = (
@@ -807,75 +982,101 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                   Back to details
                 </Button>
               </Stack>
-              <Box sx={{ flex: 1, minHeight: 0 }}>
-                {GutterStyles()}
-                <Splitter
-                  gutterClassName="custom-gutter-horizontal"
-                  draggerClassName="custom-dragger-horizontal"
-                  initialSizes={splitSizes ?? [55, 45]}
-                  onResizeFinished={handleSplitResizeFinished}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      height: '100%',
-                      pr: { xs: 0, md: 2 },
-                    }}
-                  >
-                    <Box sx={{ flex: 1, overflow: 'auto' }}>
-                      <PaginatedQuestionLayout
-                        questions={questions}
-                        currentIndex={currentQuestionIndex}
-                        onIndexChange={setCurrentQuestionIndex}
-                        renderQuestion={(question, _numbering, index) =>
-                          questionEditor(question, index)
-                        }
-                        emptyState={emptyEditor}
-                        paginationLabel="Question"
-                        topSpacing={0}
-                      />
-                    </Box>
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                      spacing={1}
-                      mt={2}
-                      justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}
+              <Box sx={{ flex: 1, minHeight: 0, display: 'flex', gap: 2 }}>
+                <Box sx={{ width: 250, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Drag to add
+                  </Typography>
+                  {QUESTION_TYPES.map((type) => (
+                    <Paper
+                      key={type.value}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData(NEW_QUESTION_DND_MIME, type.value);
+                        e.dataTransfer.effectAllowed = 'copy';
+                        setPaletteDragType(type.value as Question['type']);
+                      }}
+                      onDragEnd={() => setPaletteDragType(null)}
+                      variant="outlined"
+                      sx={{
+                        p: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        cursor: 'grab',
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
                     >
-                      <Button variant="contained" onClick={addQuestion}>
-                        Add Question
-                      </Button>
-                    </Stack>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      height: '100%',
-                      overflow: 'auto',
-                      pl: { xs: 0, md: 2 },
-                    }}
-                  >
-                    <Paper sx={{ p: 2, flex: 1 }}>
-                      <PaginatedQuestionLayout
-                        questions={questions}
-                        currentIndex={currentQuestionIndex}
-                        onIndexChange={setCurrentQuestionIndex}
-                        renderQuestion={(question, _numbering, index) =>
-                          questionPreview(question, index)
-                        }
-                        emptyState={emptyPreview}
-                        paginationLabel="Question"
-                        summaryLabel={(index, total) => (
-                          <Typography variant="subtitle1" fontWeight={600}>
-                            Student preview — Question {index + 1} of {total}
-                          </Typography>
-                        )}
-                        topSpacing={0}
-                      />
+                      <DragIndicatorIcon color="action" />
+                      <Typography variant="body2">{type.label}</Typography>
                     </Paper>
-                  </Box>
-                </Splitter>
+                  ))}
+                  <Button variant="contained" onClick={addQuestion} sx={{ mt: 2 }}>
+                    Add Question
+                  </Button>
+                </Box>
+                <Box sx={{ flex: 1, minHeight: 0 }}>
+                  {GutterStyles()}
+                  <Splitter
+                    gutterClassName="custom-gutter-horizontal"
+                    draggerClassName="custom-dragger-horizontal"
+                    initialSizes={splitSizes ?? [55, 45]}
+                    onResizeFinished={handleSplitResizeFinished}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
+                        pr: { xs: 0, md: 2 },
+                      }}
+                      onDragOver={handleContainerDragOver}
+                      onDrop={handleContainerDrop}
+                    >
+                      <Box sx={{ flex: 1, overflow: 'auto' }}>
+                        <PaginatedQuestionLayout
+                          questions={questions}
+                          currentIndex={currentQuestionIndex}
+                          onIndexChange={setCurrentQuestionIndex}
+                          renderQuestion={(question, _numbering, index) =>
+                            questionEditor(question, index)
+                          }
+                          emptyState={emptyEditor}
+                          paginationLabel="Question"
+                          topSpacing={0}
+                        />
+                      </Box>
+                    </Box>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
+                        overflow: 'auto',
+                        pl: { xs: 0, md: 2 },
+                      }}
+                    >
+                      <Paper sx={{ p: 2, flex: 1 }}>
+                        <PaginatedQuestionLayout
+                          questions={questions}
+                          currentIndex={currentQuestionIndex}
+                          onIndexChange={setCurrentQuestionIndex}
+                          renderQuestion={(question, _numbering, index) =>
+                            questionPreview(question, index)
+                          }
+                          emptyState={emptyPreview}
+                          paginationLabel="Question"
+                          summaryLabel={(index, total) => (
+                            <Typography variant="subtitle1" fontWeight={600}>
+                              Student preview — Question {index + 1} of {total}
+                            </Typography>
+                          )}
+                          topSpacing={0}
+                        />
+                      </Paper>
+                    </Box>
+                  </Splitter>
+                </Box>
               </Box>
             </Box>
           )}
