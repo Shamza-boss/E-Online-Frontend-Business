@@ -21,15 +21,142 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { Question } from '../../../../_lib/interfaces/types';
 import { VideoUploadField } from '@/app/_lib/components/video/VideoUploadField';
 import { PdfUploadField } from '@/app/_lib/components/pdf/PdfUploadField';
-import { isChoiceType } from './questionUtils';
+import { isChoiceType, IsValidChild, NEW_QUESTION_DND_MIME } from './questionUtils';
 import { RichTextEditor, RichTextEditorRef } from 'mui-tiptap';
 import useExtensions from '@/app/_lib/components/TipTapEditor/useExtensions';
 import EditorMenuControls from '@/app/_lib/components/TipTapEditor/EditorMenuControls';
 
 const SUBQUESTION_DND_MIME = 'application/x-eonline-subquestion-move';
 
+// Many browser “writing assistant” extensions inject a content_script.js that
+// can throw errors on complex/controlled inputs. Opt out of those integrations.
+const ANTI_ASSIST_ATTRS = {
+  'data-gramm': 'false',
+  'data-gramm_editor': 'false',
+  'data-enable-grammarly': 'false',
+  'data-lt-active': 'false',
+  'data-ms-editor': 'false',
+  spellCheck: false,
+  autoCorrect: 'off',
+  autoCapitalize: 'off',
+} as const;
+
+type BufferedTextFieldProps = Omit<
+  React.ComponentProps<typeof TextField>,
+  'value' | 'onChange'
+> & {
+  value?: string | number | null;
+  onCommit: (value: string) => void;
+  debounceMs?: number;
+};
+
+const BufferedTextField: React.FC<BufferedTextFieldProps> = ({
+  value,
+  onCommit,
+  debounceMs = 250,
+  onBlur,
+  ...rest
+}) => {
+  const initial = value == null ? '' : String(value);
+  const [draft, setDraft] = useState<string>(initial);
+  const isFocusedRef = useRef(false);
+  const timeoutRef = useRef<number | null>(null);
+  const latestCommitRef = useRef(onCommit);
+  const latestDraftRef = useRef(draft);
+  const lastCommittedRef = useRef<string>(initial);
+
+  useEffect(() => {
+    latestCommitRef.current = onCommit;
+  }, [onCommit]);
+
+  useEffect(() => {
+    latestDraftRef.current = draft;
+  }, [draft]);
+
+  useEffect(() => {
+    // If parent value changes (e.g. after debounced commit, reorder, load),
+    // sync it into the local draft unless the user is actively editing.
+    const next = value == null ? '' : String(value);
+    lastCommittedRef.current = next;
+    if (!isFocusedRef.current && next !== latestDraftRef.current) {
+      setDraft(next);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      // Flush on unmount so last keystrokes aren't lost.
+      if (latestDraftRef.current !== lastCommittedRef.current) {
+        lastCommittedRef.current = latestDraftRef.current;
+        latestCommitRef.current(latestDraftRef.current);
+      }
+    };
+  }, []);
+
+  const scheduleCommit = (next: string) => {
+    if (next === lastCommittedRef.current) return;
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = window.setTimeout(() => {
+      timeoutRef.current = null;
+      if (next !== lastCommittedRef.current) {
+        lastCommittedRef.current = next;
+        latestCommitRef.current(next);
+      }
+    }, debounceMs);
+  };
+
+  const flushCommit = () => {
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (latestDraftRef.current !== lastCommittedRef.current) {
+      lastCommittedRef.current = latestDraftRef.current;
+      latestCommitRef.current(latestDraftRef.current);
+    }
+  };
+
+  return (
+    <TextField
+      {...rest}
+      value={draft}
+      onFocus={(event) => {
+        isFocusedRef.current = true;
+        rest.onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        isFocusedRef.current = false;
+        flushCommit();
+        onBlur?.(event);
+      }}
+      onChange={(event) => {
+        const next = event.target.value;
+        setDraft(next);
+        scheduleCommit(next);
+      }}
+    />
+  );
+};
+
 const isSectionType = (type: Question['type']) =>
-  type === 'video' || type === 'pdf';
+  type === 'video' || type === 'pdf' || type === 'group';
+
+const allowedTypeHint = (parentType: Question['type']) => {
+  if (parentType === 'video' || parentType === 'pdf') {
+    return 'Single Choice or Multiple Choice';
+  }
+  if (parentType === 'group') {
+    return 'Video Section, PDF Section, Single Choice, or Multiple Choice';
+  }
+  return '';
+};
 
 interface QuestionRichTextFieldProps {
   label: string;
@@ -50,6 +177,8 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
 }) => {
   const fieldId = useId();
   const editorRef = useRef<RichTextEditorRef>(null);
+  const updateTimeoutRef = useRef<number | null>(null);
+  const pendingHtmlRef = useRef<string>('');
   const extensions = useExtensions({ placeholder });
   const normalizedValue = value ?? '';
 
@@ -69,25 +198,55 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
     }
   }, [normalizedValue]);
 
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        window.clearTimeout(updateTimeoutRef.current);
+        updateTimeoutRef.current = null;
+      }
+
+      // Flush any pending change so the last keystrokes aren't lost
+      if (pendingHtmlRef.current !== normalizedValue) {
+        onChange(pendingHtmlRef.current);
+      }
+    };
+    // Intentionally omit normalizedValue from deps: this cleanup should use the
+    // latest refs and onChange function.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onChange]);
+
   const handleUpdate = () => {
     const editor = editorRef.current?.editor;
     if (!editor) return;
 
     const html = editor.isEmpty ? '' : editor.getHTML();
     if (html !== normalizedValue) {
-      onChange(html);
+      pendingHtmlRef.current = html;
+      if (updateTimeoutRef.current) {
+        window.clearTimeout(updateTimeoutRef.current);
+      }
+
+      // Debounce: typing in TipTap can fire lots of updates per second.
+      updateTimeoutRef.current = window.setTimeout(() => {
+        updateTimeoutRef.current = null;
+        if (pendingHtmlRef.current !== normalizedValue) {
+          onChange(pendingHtmlRef.current);
+        }
+      }, 150);
     }
   };
 
   return (
-    <FormControl fullWidth margin="normal">
-      <InputLabel
-        shrink
+    <Box sx={{ width: '100%', mt: 2 }} {...ANTI_ASSIST_ATTRS}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        component="label"
         htmlFor={fieldId}
-        sx={{ position: 'relative', transform: 'none', mb: 0.5 }}
+        sx={{ display: 'block', mb: 0.5 }}
       >
         {label}
-      </InputLabel>
+      </Typography>
       <RichTextEditor
         ref={editorRef}
         content={normalizedValue}
@@ -98,6 +257,8 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
         RichTextFieldProps={{
           id: fieldId,
           variant: 'outlined',
+          // Best-effort opt-out for writing assistants on the editable area.
+          RichTextContentProps: ANTI_ASSIST_ATTRS as any,
           sx: {
             mt: 1,
             '& .MuiRichTextContent-root': {
@@ -107,7 +268,7 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
           },
         }}
       />
-    </FormControl>
+    </Box>
   );
 };
 
@@ -126,7 +287,7 @@ interface QuestionEditorPanelProps {
   onWeightChange: (questionId: string, value: string) => void;
   onAddOption: (questionId: string) => void;
   onOptionChange: (questionId: string, index: number, value: string) => void;
-  onAddSubquestion: (parentId: string) => void;
+  onAddSubquestion: (parentId: string, type?: Question['type']) => void;
   onRemoveSubquestion: (parentId: string, subId: string) => void;
   onRemoveQuestion: (questionId: string) => void;
   onReorderSubquestions?: (parentId: string, fromIdx: number, toIdx: number) => void;
@@ -176,11 +337,12 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     parentId: string;
     slot: number;
   } | null>(null);
+  const [paletteContainerTargetId, setPaletteContainerTargetId] = useState<
+    string | null
+  >(null);
 
   const paletteMime = paletteMimeType ?? 'application/x-eonline-question-type';
-  const isComponentPaletteDrag = Boolean(
-    paletteDragType && !isSectionType(paletteDragType)
-  );
+  const isComponentPaletteDrag = Boolean(paletteDragType);
   const numberingLabel = displayNumber ?? `${questionIndex + 1}`;
   const childPrefixRoot = childNumberPrefix ?? numberingLabel;
 
@@ -188,10 +350,66 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     if (!isComponentPaletteDrag && paletteDropTarget) {
       setPaletteDropTarget(null);
     }
-  }, [isComponentPaletteDrag, paletteDropTarget]);
+    if (!isComponentPaletteDrag && paletteContainerTargetId) {
+      setPaletteContainerTargetId(null);
+    }
+  }, [isComponentPaletteDrag, paletteDropTarget, paletteContainerTargetId]);
 
-  const canReceivePaletteDrop = (parent: Question, parentDepth: number) => {
-    return parentDepth === 0 && isSectionType(parent.type);
+  const canReceivePaletteDrop = (parent: Question, _parentDepth: number) => {
+    if (!isSectionType(parent.type)) return false;
+    if (!paletteDragType) return false;
+    return IsValidChild(parent.type, paletteDragType);
+  };
+
+  const canReceivePaletteDropType = (parent: Question, type: Question['type']) => {
+    if (!isSectionType(parent.type)) return false;
+    return IsValidChild(parent.type, type);
+  };
+
+  const handlePaletteContainerDragOver = (
+    event: React.DragEvent,
+    parent: Question
+  ) => {
+    if (!paletteMime || !event.dataTransfer.types.includes(paletteMime)) {
+      return;
+    }
+    const type = event.dataTransfer.getData(paletteMime) as Question['type'];
+    if (!type) return;
+    if (!canReceivePaletteDropType(parent, type)) return;
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    setPaletteContainerTargetId(parent.id);
+  };
+
+  const handlePaletteContainerDragLeave = (
+    event: React.DragEvent,
+    parentId: string
+  ) => {
+    const next = event.relatedTarget as Node | null;
+    if (next && event.currentTarget.contains(next)) {
+      return;
+    }
+    setPaletteContainerTargetId((prev) => (prev === parentId ? null : prev));
+  };
+
+  const handlePaletteContainerDrop = (
+    event: React.DragEvent,
+    parent: Question
+  ) => {
+    if (!paletteMime || !event.dataTransfer.types.includes(paletteMime)) {
+      return;
+    }
+    const type = event.dataTransfer.getData(paletteMime) as Question['type'];
+    if (!type) return;
+    if (!canReceivePaletteDropType(parent, type)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    setPaletteContainerTargetId(null);
+
+    const insertIndex = (parent.subquestions ?? []).length;
+    onInsertSubquestionFromPalette?.(parent.id, insertIndex, type);
   };
 
   const handlePaletteSlotDragOver = (
@@ -247,6 +465,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       return;
     }
     event.preventDefault();
+    event.stopPropagation(); // Prevent bubbling to parent containers
     setPaletteDropTarget(null);
     const type = event.dataTransfer.getData(paletteMime) as Question['type'];
     if (!type) return;
@@ -285,21 +504,28 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           handlePaletteSlotDrop(event, parent, parentDepth, slotIndex)
         }
         sx={{
-          border: '2px dashed',
-          borderColor: isActive ? 'primary.main' : 'divider',
-          bgcolor: isActive ? 'action.hover' : 'transparent',
-          minHeight: isActive ? 44 : 24,
+          height: 40,
+          my: 0.5,
           borderRadius: 1,
+          bgcolor: isActive ? 'primary.light' : 'transparent',
+          border: '2px dotted',
+          borderColor: 'primary.main',
           transition: 'all 0.2s ease',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'text.secondary',
-          fontSize: 12,
-          my: 0.5,
+          '&:hover': {
+            bgcolor: isActive ? 'primary.light' : 'action.hover',
+          },
         }}
       >
-        {isActive ? 'Drop component here' : null}
+        {isActive ? (
+          <Typography variant="caption" color="primary.dark">
+            Drop here
+          </Typography>
+        ):(<Typography variant="caption" color="primary.dark">
+            Drop here
+          </Typography>)}
       </Box>
     );
   };
@@ -341,6 +567,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     targetIndex: number
   ) => {
     event.preventDefault();
+    event.stopPropagation(); // Prevent bubbling
     const payload = event.dataTransfer.getData(SUBQUESTION_DND_MIME);
     setSubDragState({
       dragging: null,
@@ -427,6 +654,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       return;
     }
     event.preventDefault();
+    event.stopPropagation(); // Prevent bubbling
     const fromIndex = subDragState.fromIndex;
     if (fromIndex === -1) {
       return;
@@ -463,20 +691,26 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
         }
         onDrop={(event) => handleSubSlotDrop(event, parentId, slotIndex)}
         sx={{
-          border: '2px dashed',
-          borderColor: isActive ? 'primary.main' : 'divider',
-          bgcolor: isActive ? 'action.hover' : 'transparent',
-          borderRadius: 1,
-          minHeight: 16,
+          height: isActive ? 40 : 10,
           my: 0.5,
-          opacity: isActive ? 1 : 0.7,
+          borderRadius: 1,
+          bgcolor: isActive ? 'primary.light' : 'transparent',
+          border: isActive ? '2px dashed' : 'none',
+          borderColor: 'primary.main',
           transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          '&:hover': {
+            bgcolor: isActive ? 'primary.light' : 'action.hover',
+            height: 20,
+          },
         }}
       >
         {isActive && (
           <Typography
             variant="caption"
-            color="text.secondary"
+            color="primary.dark"
             sx={{ display: 'block', textAlign: 'center', py: 0.5 }}
           >
             Drop to reorder
@@ -493,7 +727,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     }
 
     const options = target.options ?? [];
-    const isRadio = target.type === 'radio';
+    const isRadio = target.type === 'single-select';
 
     const handleToggle = (option: string, checked: boolean) => {
       if (isRadio) {
@@ -549,14 +783,13 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
                   }
                 />
               )}
-              <TextField
+              <BufferedTextField
                 label={`Option ${index + 1}`}
                 fullWidth
                 margin="dense"
                 value={option}
-                onChange={(e) =>
-                  onOptionChange(target.id, index, e.target.value)
-                }
+                inputProps={ANTI_ASSIST_ATTRS as any}
+                onCommit={(next) => onOptionChange(target.id, index, next)}
               />
             </Stack>
           );
@@ -579,6 +812,95 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     );
   }
 
+  if (question.type === 'placeholder') {
+    const handleDrop = (event: React.DragEvent) => {
+      const type = event.dataTransfer.getData(NEW_QUESTION_DND_MIME) as Question['type'];
+      if (type) {
+        event.preventDefault();
+        onTypeChange(question.id, type);
+      }
+    };
+
+    const handleDragOver = (event: React.DragEvent) => {
+      if (event.dataTransfer.types.includes(NEW_QUESTION_DND_MIME)) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+      }
+    };
+
+    return (
+      <Paper
+        sx={{
+          p: 4,
+          mb: 2,
+          border: '2px dashed',
+          borderColor: 'divider',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'background.default',
+        }}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <DragIndicatorIcon sx={{ fontSize: 40, opacity: 0.3, mb: 1 }} />
+        <Typography variant="subtitle1" color="text.secondary">
+          Drop Question Type Here
+        </Typography>
+        <Button onClick={() => onRemoveQuestion(question.id)} sx={{ mt: 2 }}>
+          Cancel
+        </Button>
+      </Paper>
+    );
+  }
+
+  const renderContainerDropHint = (
+    parent: Question,
+    mode: 'empty' | 'append' = 'empty'
+  ) => {
+    const hint = allowedTypeHint(parent.type);
+    if (!hint) return null;
+
+    const isActive = paletteContainerTargetId === parent.id;
+    const label =
+      mode === 'append'
+        ? `Drag ${hint} here to add another item`
+        : `Drag ${hint} here`;
+
+    return (
+      <Box
+        onDragOver={(event) => handlePaletteContainerDragOver(event, parent)}
+        onDragLeave={(event) => handlePaletteContainerDragLeave(event, parent.id)}
+        onDrop={(event) => handlePaletteContainerDrop(event, parent)}
+        sx={{
+          mt: 1,
+          mb: 1,
+          p: 1.5,
+          minHeight: 56,
+          display: 'flex',
+          alignItems: 'center',
+          borderRadius: 1,
+          border: '2px dotted',
+          borderColor: isActive ? 'primary.main' : 'divider',
+          bgcolor: isActive ? 'primary.light' : 'transparent',
+          transition: 'all 0.15s ease',
+          '&:hover': {
+            borderColor: 'primary.main',
+            bgcolor: 'action.hover',
+          },
+        }}
+      >
+        <Typography
+          variant="body2"
+          color={isActive ? 'primary.dark' : 'text.secondary'}
+        >
+          {label}
+        </Typography>
+      </Box>
+    );
+  };
+
   const renderSubquestion = (
     sub: Question,
     numbering: string,
@@ -589,6 +911,8 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     const isLeaf = !sub.subquestions || sub.subquestions.length === 0;
     const isDragTarget = subDragState.over === sub.id;
     const isDragging = subDragState.dragging === sub.id;
+    const isVideoSub = sub.type === 'video';
+    const isPdfSub = sub.type === 'pdf';
 
     return (
       <Paper
@@ -615,18 +939,44 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           <DragIndicatorIcon fontSize="small" color="disabled" />
           <Typography variant="subtitle2">Question {numbering}</Typography>
         </Stack>
-        <QuestionRichTextField
-          label={depth === 1 ? 'Subquestion Text' : 'Nested Question Text'}
-          value={sub.questionText ?? ''}
-          placeholder={
-            depth === 1
-              ? 'Enter the supporting question prompt...'
-              : 'Enter the nested question prompt...'
-          }
-          minHeight={depth > 1 ? 150 : 180}
-          showToolbar={depth <= 1}
-          onChange={(value) => onFieldChange(sub.id, 'questionText', value)}
-        />
+        
+        {isVideoSub || isPdfSub ? (
+          <BufferedTextField
+            label="Section Title"
+            fullWidth
+            margin="normal"
+            value={sub.questionText ?? ''}
+            inputProps={ANTI_ASSIST_ATTRS as any}
+            onCommit={(next) => onFieldChange(sub.id, 'questionText', next)}
+          />
+        ) : (
+          <QuestionRichTextField
+            label={depth === 1 ? 'Subquestion Text' : 'Nested Question Text'}
+            value={sub.questionText ?? ''}
+            placeholder={
+              depth === 1
+                ? 'Enter the supporting question prompt...'
+                : 'Enter the nested question prompt...'
+            }
+            minHeight={depth > 1 ? 150 : 180}
+            showToolbar={depth <= 1}
+            onChange={(value) => onFieldChange(sub.id, 'questionText', value)}
+          />
+        )}
+
+        {isVideoSub && (
+          <VideoUploadField
+            value={sub.video}
+            onChange={(video) => onFieldChange(sub.id, 'video', video)}
+          />
+        )}
+        {isPdfSub && (
+          <PdfUploadField
+            value={sub.pdf}
+            onChange={(pdf) => onFieldChange(sub.id, 'pdf', pdf)}
+          />
+        )}
+
         <Stack spacing={1} direction="row">
           <FormControl fullWidth margin="normal">
             <InputLabel>Type</InputLabel>
@@ -639,7 +989,12 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
             >
               {questionTypeOptions
                 .filter(
-                  (type) => type.value !== 'video' && type.value !== 'pdf'
+                  (type) => {
+                    // If parent is Group, allow Video/PDF/Choice
+                    // If parent is Video/PDF, allow Choice only
+                    if (question.type === 'group') return true;
+                    return type.value !== 'video' && type.value !== 'pdf';
+                  }
                 )
                 .map((type) => (
                   <MenuItem key={type.value} value={type.value}>
@@ -648,30 +1003,23 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
                 ))}
             </Select>
           </FormControl>
-          <TextField
+          <BufferedTextField
             label="Weight"
             type="number"
             fullWidth
             margin="normal"
             value={sub.weight}
-            onChange={(e) => onWeightChange(sub.id, e.target.value)}
+            onCommit={(next) => onWeightChange(sub.id, next)}
           />
         </Stack>
 
         {isLeaf && isChoiceType(sub.type) && renderChoiceOptions(sub)}
 
-        {canReceivePaletteDrop(sub, depth) && (
-          <Box sx={{ borderLeft: '2px solid #ddd', pl: 2, mt: 1 }}>
-            {(!sub.subquestions || sub.subquestions.length === 0) && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ py: 1 }}
-              >
-                Drag components here to create nested questions.
-              </Typography>
-            )}
+        {isSectionType(sub.type) && (
+          <Box sx={{ borderLeft: '2px solid', borderColor: 'divider', pl: 2, mt: 1 }}>
+            {(sub.subquestions ?? []).length === 0 && renderContainerDropHint(sub, 'empty')}
             {renderSubquestionList(sub, depth, numbering)}
+            {(sub.subquestions ?? []).length > 0 && renderContainerDropHint(sub, 'append')}
           </Box>
         )}
 
@@ -724,12 +1072,14 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     return elements.length > 0 ? elements : null;
   };
 
-  const isSection = question.type === 'video' || question.type === 'pdf';
+  const isSection =
+    question.type === 'video' || question.type === 'pdf' || question.type === 'group';
   const isVideo = question.type === 'video';
   const isPdf = question.type === 'pdf';
+  const isGroup = question.type === 'group';
   const hasSubquestions =
     question.subquestions && question.subquestions.length > 0;
-  const showTypeControls = !isSection || !hasSubquestions;
+  const showTypeControls = (!isSection || !hasSubquestions) && !isGroup;
 
   return (
     <Paper
@@ -748,7 +1098,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       }}>
         <DragIndicatorIcon fontSize="small" />
         <Typography variant="subtitle1" fontWeight={600}>
-          {`${isSection ? 'Section' : 'Question'} ${numberingLabel}`}
+          {`${isSection ? (isGroup ? 'Question' : 'Section') : 'Question'} ${numberingLabel}`}
         </Typography>
         {isSection && hasSubquestions && (
           <Typography variant="caption" color="text.secondary">
@@ -759,15 +1109,27 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       </Stack>
       {isSection ? (
         <>
-          <TextField
-            label="Section Title"
-            fullWidth
-            margin="normal"
-            value={question.questionText}
-            onChange={(e) =>
-              onFieldChange(question.id, 'questionText', e.target.value)
-            }
-          />
+          {isGroup ? (
+            <QuestionRichTextField
+              label="Question Text"
+              value={question.questionText ?? ''}
+              placeholder="Enter the question prompt..."
+              onChange={(value) =>
+                onFieldChange(question.id, 'questionText', value)
+              }
+            />
+          ) : (
+            <BufferedTextField
+              label="Section Title"
+              fullWidth
+              margin="normal"
+              value={question.questionText ?? ''}
+              inputProps={ANTI_ASSIST_ATTRS as any}
+              onCommit={(next) =>
+                onFieldChange(question.id, 'questionText', next)
+              }
+            />
+          )}
           {isVideo && (
             <VideoUploadField
               value={question.video}
@@ -812,13 +1174,13 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
               </Select>
             </FormControl>
             {!isSection && (
-              <TextField
+              <BufferedTextField
                 label="Weight"
                 type="number"
                 fullWidth
                 margin="normal"
                 value={question.weight}
-                onChange={(e) => onWeightChange(question.id, e.target.value)}
+                onCommit={(next) => onWeightChange(question.id, next)}
               />
             )}
           </Stack>
@@ -845,20 +1207,21 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       </Stack>
 
       {isSection && (
-        <Box sx={{ ml: 0.5, borderLeft: '2px solid #ccc', pl: 1, mt: 2 }}>
-          {(!question.subquestions || question.subquestions.length === 0) && (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-              Drag single or multi-select blocks here to build this page.
-            </Typography>
-          )}
+        <Box sx={{ ml: 0.5, borderLeft: '2px solid', borderColor: 'divider', pl: 1, mt: 2 }}>
+          {(question.subquestions ?? []).length === 0 &&
+            renderContainerDropHint(question, 'empty')}
           {renderSubquestionList(question, 0, childPrefixRoot)}
-          <Button
-            sx={{ mt: 1 }}
-            size="small"
-            onClick={() => onAddSubquestion(question.id)}
-          >
-            Add Another Question to Section
-          </Button>
+          {(question.subquestions ?? []).length > 0 &&
+            renderContainerDropHint(question, 'append')}
+          {!isGroup && (
+            <Button
+              sx={{ mt: 1 }}
+              size="small"
+              onClick={() => onAddSubquestion(question.id)}
+            >
+              Add Another Question to {isGroup ? 'Question' : 'Section'}
+            </Button>
+          )}
         </Box>
       )}
     </Paper>

@@ -155,7 +155,7 @@ const QuestionPreviewPanel: React.FC<QuestionPreviewPanelProps> = ({
         </Box>
         <Box sx={{ mt: 1 }}>
           {(() => {
-            if (node.type === 'radio') {
+            if (node.type === 'single-select') {
               return (
                 <RadioGroup value={node.correctAnswer ?? ''} row>
                   {options.length > 0 ? (

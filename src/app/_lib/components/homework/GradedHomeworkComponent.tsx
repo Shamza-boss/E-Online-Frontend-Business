@@ -8,10 +8,6 @@ import {
   Paper,
   Box,
   Divider,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  Checkbox,
   Stack,
   Pagination,
 } from '@mui/material';
@@ -23,9 +19,7 @@ import {
   calculateHomeworkTotals,
 } from '../../utils/gradeCalculator';
 import { MathJaxContext } from 'better-react-mathjax';
-import { VideoPlayer } from '../video/VideoPlayer';
-import PDFViewer from '../PDFViewer/PDFViewer';
-import QuestionTextDisplay from '../TipTapEditor/QuestionTextDisplay';
+import QuestionTreeRenderer from '../question/QuestionTreeRenderer';
 
 const mathJaxConfig = {
   tex: {
@@ -66,272 +60,21 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
     [homework.questions, grading]
   );
 
-  const renderQuestion = (
-    question: Question,
-    numbering: string,
-    depth: number = 1
-  ) => {
-    const indent = depth > 1 ? (depth - 1) * 5 : 0;
-    const textVariant = 'h6';
-
+  const computeTotalWeight = (question: Question): number => {
     if (question.subquestions && question.subquestions.length > 0) {
-      const sectionTotals = computeQuestionTotals(question, grading);
-      const sectionGrade = grading[question.id]?.grade || 0;
-
-      return (
-        <Box key={question.id} sx={{ ml: indent, my: 2 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
-              alignItems: 'baseline',
-            }}
-          >
-            <Typography variant={textVariant} sx={{ fontWeight: 600 }}>
-              {numbering}.
-            </Typography>
-            <QuestionTextDisplay
-              content={question.questionText}
-              fallback="Untitled section"
-              variant={textVariant}
-              component="span"
-              fontWeight={600}
-            />
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              component="span"
-            >
-              (Est: {question.weight})
-            </Typography>
-          </Box>
-          {question.type === 'video' && (
-            <Box sx={{ mt: 2 }}>
-              {question.video ? (
-                <VideoPlayer video={question.video} />
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Video unavailable
-                </Typography>
-              )}
-            </Box>
-          )}
-          {question.type === 'pdf' && (
-            <Box
-              sx={{
-                mt: 2,
-                height: 360,
-                borderRadius: 1,
-                overflow: 'hidden',
-                border: 1,
-                borderColor: 'divider',
-              }}
-            >
-              {question.pdf?.url ? (
-                <PDFViewer
-                  key={question.pdf.key || question.id}
-                  fileUrl={question.pdf.url}
-                  initialPage={1}
-                />
-              ) : (
-                <Box
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    px: 2,
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Document unavailable
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          )}
-          {grading[question.id]?.comment && (
-            <Box sx={{ mt: 1, ml: 16 }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color:
-                    sectionGrade < question.weight
-                      ? getGradeBorder(sectionGrade, question.weight)
-                      : 'inherit',
-                }}
-              >
-                Section Comment: {grading[question.id].comment}
-              </Typography>
-            </Box>
-          )}
-          {question.subquestions.map((sub, idx) =>
-            renderQuestion(sub, `${numbering}.${idx + 1}`, depth + 1)
-          )}
-          <Box sx={{ mt: 1, ml: 6 }}>
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 'bold',
-                color:
-                  sectionTotals.awarded < sectionTotals.estimated
-                    ? getGradeBorder(
-                        sectionTotals.awarded,
-                        sectionTotals.estimated
-                      )
-                    : 'inherit',
-              }}
-            >
-              Section Total: {sectionTotals.awarded} / {sectionTotals.estimated}
-            </Typography>
-          </Box>
-        </Box>
+      return question.subquestions.reduce(
+        (sum, sub) => sum + computeTotalWeight(sub),
+        0
       );
     }
 
-    const awarded = grading[question.id]?.grade || 0;
-
-    return (
-      <Box key={question.id} sx={{ ml: indent, my: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
-              alignItems: 'baseline',
-            }}
-          >
-            <Typography variant={textVariant}>
-              {numbering}.
-            </Typography>
-            <QuestionTextDisplay
-              content={question.questionText}
-              fallback="Untitled question"
-              variant={textVariant}
-              component="span"
-            />
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            (Weight: {question.weight})
-          </Typography>
-        </Box>
-        <Box sx={{ mt: 1, display: 'flex', gap: 2 }}>
-          <Box sx={{ flex: 3 }}>
-            {(() => {
-              const answer = answers[question.id];
-              switch (question.type) {
-                case 'radio':
-                  return (
-                    <RadioGroup value={answer || ''} row>
-                      {question.options?.map((option, idx) => (
-                        <FormControlLabel
-                          key={idx}
-                          value={option}
-                          control={<Radio disabled />}
-                          label={option}
-                        />
-                      ))}
-                    </RadioGroup>
-                  );
-                case 'multi-select':
-                  return (
-                    <Box>
-                      {question.options?.map((option, idx) => (
-                        <FormControlLabel
-                          key={idx}
-                          control={
-                            <Checkbox
-                              disabled
-                              checked={
-                                Array.isArray(answer)
-                                  ? answer.includes(option)
-                                  : false
-                              }
-                            />
-                          }
-                          label={option}
-                        />
-                      ))}
-                    </Box>
-                  );
-                case 'video':
-                  return question.video ? (
-                    <VideoPlayer video={question.video} />
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      Video unavailable
-                    </Typography>
-                  );
-                case 'pdf':
-                  return question.pdf?.url ? (
-                    <Box
-                      sx={{
-                        mt: 1,
-                        height: 360,
-                        borderRadius: 1,
-                        overflow: 'hidden',
-                        border: 1,
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <PDFViewer
-                        key={question.pdf.key || question.id}
-                        fileUrl={question.pdf.url}
-                        initialPage={1}
-                      />
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      Document unavailable
-                    </Typography>
-                  );
-                default:
-                  return (
-                    <Typography variant="body2" color="text.secondary">
-                      Unsupported question type
-                    </Typography>
-                  );
-              }
-            })()}
-          </Box>
-          <Box
-            sx={{
-              flex: 1,
-              p: 1,
-              border: 2,
-              borderColor: getGradeBorder(awarded, question.weight),
-              borderRadius: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-              {awarded} / {question.weight}
-            </Typography>
-            {grading[question.id]?.comment && (
-              <Typography
-                variant="body2"
-                sx={{
-                  mt: 1,
-                  textAlign: 'center',
-                  color:
-                    awarded < question.weight
-                      ? getGradeBorder(awarded, question.weight)
-                      : 'inherit',
-                }}
-              >
-                {grading[question.id].comment}
-              </Typography>
-            )}
-          </Box>
-        </Box>
-      </Box>
-    );
+    return Number.isFinite(question.weight) ? Number(question.weight) : 0;
   };
+
+  const computeSectionTotals = (
+    questionNode: Question,
+    _gradingMap: Record<string, { grade?: number; comment?: string } | undefined>
+  ) => computeQuestionTotals(questionNode, grading);
 
   return (
     <MathJaxContext version={3} config={mathJaxConfig}>
@@ -365,11 +108,18 @@ const GradedHomeworkComponent: React.FC<GradedHomeworkProps> = ({
                 )}
               />
             </Stack>
-            {currentQuestion &&
-              renderQuestion(
-                currentQuestion,
-                (currentQuestionIndex + 1).toString()
-              )}
+            {currentQuestion && (
+              <QuestionTreeRenderer
+                mode="graded"
+                question={currentQuestion}
+                questionIndex={currentQuestionIndex}
+                computeTotalWeight={computeTotalWeight}
+                answers={answers}
+                grading={grading}
+                computeSectionTotals={computeSectionTotals}
+                getGradeBorder={getGradeBorder}
+              />
+            )}
           </>
         ) : (
           <Typography variant="body2" color="text.secondary">

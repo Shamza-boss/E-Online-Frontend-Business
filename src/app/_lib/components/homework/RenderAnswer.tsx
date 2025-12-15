@@ -63,7 +63,7 @@ const RenderAnswer: React.FC<RenderAnswerProps> = ({ question, answer }) => {
           )}
         </Box>
       );
-    case 'radio':
+    case 'single-select':
       return <Typography variant="body2">{answer || ''}</Typography>;
     case 'multi-select':
       return (

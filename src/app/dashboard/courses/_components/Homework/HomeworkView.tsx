@@ -7,16 +7,16 @@ import {
   Typography,
   Button,
   Paper,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  Checkbox,
   Box,
   Stack,
   Dialog,
   DialogTitle,
   DialogContent,
   IconButton,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Checkbox,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -26,11 +26,13 @@ import {
   Question,
 } from '../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
+import QuestionTreeRenderer from '@/app/_lib/components/question/QuestionTreeRenderer';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
 import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
+import { extractPlainText } from '@/app/_lib/utils/textUtils';
 
 const formatFileSize = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return null;
@@ -40,12 +42,6 @@ const formatFileSize = (bytes?: number | null) => {
   }
   return `${(bytes / 1024).toFixed(1)} KB`;
 };
-
-const extractPlainText = (html?: string | null) =>
-  (html ?? '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 
 interface HomeworkViewProps {
   homework: Homework;
@@ -253,7 +249,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
         </Box>
         <Box sx={{ mt: 1 }}>
           {(() => {
-            if (node.type === 'radio') {
+            if (node.type === 'single-select') {
               return (
                 <RadioGroup
                   value={answers[node.id] || ''}

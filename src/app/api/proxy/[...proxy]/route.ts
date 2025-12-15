@@ -15,6 +15,8 @@ import {
   MULTIPART_CONTENT_TYPE,
   BODYLESS_METHODS,
 } from '@/lib/api';
+import type { HomeworkPayload } from '@/app/_lib/interfaces/types';
+import { validateHomeworkPayload } from '@/lib/validation/homeworkQuestions';
 
 // Route segment config - always dynamic, never cached
 export const dynamic = 'force-dynamic';
@@ -122,9 +124,32 @@ async function proxyRequest(
   };
 
   // Add body for non-GET/HEAD requests
-  const method = req.method as (typeof BODYLESS_METHODS)[number];
-  if (!BODYLESS_METHODS.includes(method)) {
+  const method = req.method;
+  if (!BODYLESS_METHODS.includes(method as (typeof BODYLESS_METHODS)[number])) {
     init.body = await prepareBody(req, headers);
+
+    // Validate homework payloads
+    if (
+      pathSegments[0] === 'homework' &&
+      (method === 'POST' || method === 'PUT') &&
+      typeof init.body === 'string'
+    ) {
+      try {
+        const payload = JSON.parse(init.body) as HomeworkPayload;
+        // Only validate if it looks like a homework payload (has questions)
+        if (payload.questions) {
+          const validationError = validateHomeworkPayload(payload);
+          if (validationError) {
+            return NextResponse.json(
+              { error: validationError },
+              { status: 400 }
+            );
+          }
+        }
+      } catch (e) {
+        // Ignore parse errors, let backend handle
+      }
+    }
   }
 
   try {

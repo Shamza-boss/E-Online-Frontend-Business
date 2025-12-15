@@ -7,26 +7,27 @@ import {
   Typography,
   Button,
   Paper,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  Checkbox,
   Box,
   Stack,
   Dialog,
   DialogTitle,
   DialogContent,
   IconButton,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Checkbox,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { SubmittedHomework, Question } from '../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
-import { VideoPlayer } from '../../../../_lib/components/video/VideoPlayer';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
 import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
+import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
+import { extractPlainText } from '@/app/_lib/utils/textUtils';
 
 const formatFileSize = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return null;
@@ -36,12 +37,6 @@ const formatFileSize = (bytes?: number | null) => {
   }
   return `${(bytes / 1024).toFixed(1)} KB`;
 };
-
-const extractPlainText = (html?: string | null) =>
-  (html ?? '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 
 interface HomeworkReviewProps {
   submittedHomework: SubmittedHomework;
@@ -71,7 +66,7 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
       );
     }
 
-    return Number.isFinite(node.weight) ? node.weight : 0;
+    return Number.isFinite(node.weight) ? Number(node.weight) : 0;
   };
 
   const openPdfPreview = (fallbackTitle: string, pdf?: Question['pdf']) => {
@@ -232,7 +227,7 @@ const HomeworkReview: React.FC<HomeworkReviewProps> = ({
         </Box>
         <Box sx={{ mt: 1 }}>
           {(() => {
-            if (node.type === 'radio') {
+            if (node.type === 'single-select') {
               return (
                 <RadioGroup value={answer || ''} row>
                   {options.length > 0 ? (

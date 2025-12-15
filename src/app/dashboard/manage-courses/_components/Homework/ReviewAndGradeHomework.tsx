@@ -244,7 +244,7 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
                   return null;
                 case 'pdf':
                   return null;
-                case 'radio':
+                case 'single-select':
                   return (
                     <RadioGroup value={answer || ''} row>
                       {question.options?.map((option, idx) => (

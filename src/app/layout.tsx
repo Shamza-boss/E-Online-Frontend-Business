@@ -51,14 +51,27 @@ export default async function RootLayout({
 }) {
   const session = await auth();
 
+  const antiAssistAttrs = {
+    'data-gramm': 'false',
+    'data-gramm_editor': 'false',
+    'data-enable-grammarly': 'false',
+    'data-grammarly': 'false',
+    'data-lt-active': 'false',
+  } as const;
+
   return (
-    <html lang="en" suppressHydrationWarning className={manrope.variable}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={manrope.variable}
+      {...antiAssistAttrs}
+    >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
       </head>
-      <body style={{ fontFamily: manrope.style.fontFamily }}>
+      <body style={{ fontFamily: manrope.style.fontFamily }} {...antiAssistAttrs}>
         <Providers session={session}>{children}</Providers>
       </body>
     </html>
