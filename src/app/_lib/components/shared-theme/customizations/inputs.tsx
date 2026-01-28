@@ -30,7 +30,7 @@ export const inputsCustomizations: Components<Theme> = {
     styleOverrides: {
       root: ({ theme }) => ({
         boxShadow: 'none',
-        borderRadius: theme.shape.borderRadius + 6,
+        borderRadius: Number(theme.shape.borderRadius) + 6,
         textTransform: 'none',
         transition: 'all 200ms ease-out',
         fontWeight: 500,
@@ -42,7 +42,7 @@ export const inputsCustomizations: Components<Theme> = {
             style: {
               height: '2.25rem',
               padding: '8px 16px',
-              borderRadius: theme.shape.borderRadius + 4,
+              borderRadius: Number(theme.shape.borderRadius) + 4,
             },
           },
           {
@@ -224,7 +224,7 @@ export const inputsCustomizations: Components<Theme> = {
     styleOverrides: {
       root: ({ theme }) => ({
         boxShadow: 'none',
-        borderRadius: theme.shape.borderRadius + 2,
+        borderRadius: Number(theme.shape.borderRadius) + 2,
         textTransform: 'none',
         fontWeight: theme.typography.fontWeightMedium,
         letterSpacing: 0,

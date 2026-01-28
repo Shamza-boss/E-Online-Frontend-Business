@@ -69,7 +69,7 @@ export const surfacesCustomizations: Components<Theme> = {
           gap: 16,
           transition: 'all 200ms ease-out',
           backgroundColor: 'hsl(0, 0%, 100%)',
-          borderRadius: theme.shape.borderRadius + 4,
+          borderRadius: Number(theme.shape.borderRadius) + 4,
           border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
           boxShadow: 'none',
           ...theme.applyStyles('dark', {

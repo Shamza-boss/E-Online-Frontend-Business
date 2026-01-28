@@ -1,4 +1,4 @@
-import type { ExcalidrawElement } from '@excalidraw/excalidraw/types';
+import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 
 export const sanitizeExcalidrawElements = (
   list: readonly ExcalidrawElement[] | any[]
