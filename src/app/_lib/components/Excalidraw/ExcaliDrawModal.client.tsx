@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Dialog,
@@ -14,15 +14,32 @@ import {
   Button,
   useTheme,
   alpha,
+  CircularProgress,
 } from '@mui/material';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import SaveIcon from '@mui/icons-material/Save';
-import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { TransitionProps } from '@mui/material/transitions';
+import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 
 const Excalidraw = dynamic(
   () => import('@excalidraw/excalidraw').then((m) => m.Excalidraw),
-  { ssr: false }
+  { 
+    ssr: false,
+    loading: () => (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          minHeight: 400,
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    ),
+  }
 );
 
 const Transition = React.forwardRef(function Transition(
@@ -35,8 +52,8 @@ const Transition = React.forwardRef(function Transition(
 export interface ExcalidrawModalProps {
   open: boolean;
   onClose: () => void;
-  initialElements: any[]; // or ExcalidrawElement[]
-  onSave: (elements: any[]) => void;
+  initialElements: ExcalidrawElement[];
+  onSave: (elements: ExcalidrawElement[]) => void;
   readonly: boolean;
 }
 
@@ -47,16 +64,17 @@ export default function ExcalidrawModal({
   onSave,
   readonly,
 }: ExcalidrawModalProps) {
-  const [elements, setElements] =
-    useState<readonly ExcalidrawElement[]>(initialElements);
+  const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
-  useEffect(() => {
-    if (open) {
-      setElements(initialElements);
+  const handleSave = useCallback(() => {
+    if (excalidrawAPIRef.current) {
+      const elements = excalidrawAPIRef.current.getSceneElements();
+      onSave([...elements]);
     }
-  }, [open, initialElements]);
+    onClose();
+  }, [onSave, onClose]);
 
   return (
     <Dialog
@@ -64,7 +82,6 @@ export default function ExcalidrawModal({
       open={open}
       onClose={onClose}
       slots={{ transition: Transition }}
-      keepMounted
       aria-labelledby="excalidraw-editor-title"
     >
       <AppBar
@@ -100,10 +117,7 @@ export default function ExcalidrawModal({
                 color="inherit"
                 variant="outlined"
                 startIcon={<SaveIcon />}
-                onClick={() => {
-                  onSave([...elements]);
-                  onClose();
-                }}
+                onClick={handleSave}
                 sx={{ ml: 2 }}
               >
                 Save
@@ -123,9 +137,11 @@ export default function ExcalidrawModal({
         }}
       >
         <Excalidraw
-          initialData={{ elements }}
+          excalidrawAPI={(api: ExcalidrawImperativeAPI) => {
+            excalidrawAPIRef.current = api;
+          }}
+          initialData={{ elements: initialElements }}
           viewModeEnabled={readonly}
-          onChange={(upd: readonly ExcalidrawElement[]) => setElements(upd)}
           theme={isDark ? 'dark' : 'light'}
         />
       </Box>

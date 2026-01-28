@@ -103,6 +103,7 @@
     "@types/node": "^22",
     "@types/pdfjs-dist": "^2.10.377",
     "baseline-browser-mapping": "^2.8.32",
+    "critters": "^0.0.23",
     "cross-env": "^7.0.3",
     "depcheck": "^1.4.7",
     "eslint": "^9.15.0",
@@ -126,8 +127,6 @@
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.0",
     "@emotion/cache": "11.14.0",
-    "@types/react": "19.2.6",
-    "@types/react-dom": "19.2.3",
     "@auth/core": "^0.41.1"
   },
   "resolutions": {

@@ -43,13 +43,13 @@ interface RoleChipConfig {
 export function getRoleChipConfig(role: UserRole): RoleChipConfig {
   switch (role) {
     case UserRole.Admin:
-      return { label: 'Admin', color: 'error' };
+      return { label: 'Admin', color: 'error' }; // Vibrant coral-red
     case UserRole.Trainee:
-      return { label: 'Trainee', color: 'primary' };
+      return { label: 'Trainee', color: 'primary' }; // Vibrant blue
     case UserRole.Instructor:
-      return { label: 'Instructor', color: 'success' };
+      return { label: 'Instructor', color: 'success' }; // Vibrant green
     case UserRole.PlatformAdmin:
-      return { label: 'Platform Admin', color: 'default' };
+      return { label: 'Platform Admin', color: 'secondary' }; // Vibrant purple
     default:
       // Fallback if something new or unknown
       return { label: 'Unknown', color: 'default' };

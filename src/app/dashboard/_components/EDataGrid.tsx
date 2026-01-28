@@ -18,7 +18,8 @@ export default function EDataGrid(
     > & { pagination?: true } & React.RefAttributes<HTMLDivElement>
 ) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  // Use noSsr to prevent state update before component mounts
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
 
   const { sx, slotProps, ...rest } = props as any;
 

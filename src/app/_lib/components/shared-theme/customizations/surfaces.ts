@@ -35,11 +35,12 @@ export const surfacesCustomizations: Components<Theme> = {
     styleOverrides: {
       root: ({ theme }) => ({
         border: 'none',
-        borderRadius: 8,
-        '&:hover': { backgroundColor: gray[50] },
+        borderRadius: 12,
+        transition: 'background-color 200ms ease-out',
+        '&:hover': { backgroundColor: alpha(gray[100], 0.6) },
         '&:focus-visible': { backgroundColor: 'transparent' },
         ...theme.applyStyles('dark', {
-          '&:hover': { backgroundColor: gray[800] },
+          '&:hover': { backgroundColor: alpha(gray[800], 0.6) },
         }),
       }),
     },
@@ -64,15 +65,16 @@ export const surfacesCustomizations: Components<Theme> = {
     styleOverrides: {
       root: ({ theme }) => {
         return {
-          padding: 16,
+          padding: 20,
           gap: 16,
-          transition: 'all 100ms ease',
-          backgroundColor: gray[50],
-          borderRadius: theme.shape.borderRadius,
-          border: `1px solid ${theme.palette.divider}`,
+          transition: 'all 200ms ease-out',
+          backgroundColor: 'hsl(0, 0%, 100%)',
+          borderRadius: Number(theme.shape.borderRadius) + 4,
+          border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
           boxShadow: 'none',
           ...theme.applyStyles('dark', {
             backgroundColor: gray[800],
+            boxShadow: 'none',
           }),
           variants: [
             {
@@ -80,7 +82,7 @@ export const surfacesCustomizations: Components<Theme> = {
                 variant: 'outlined',
               },
               style: {
-                border: `1px solid ${theme.palette.divider}`,
+                border: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
                 boxShadow: 'none',
                 background: 'hsl(0, 0%, 100%)',
                 ...theme.applyStyles('dark', {

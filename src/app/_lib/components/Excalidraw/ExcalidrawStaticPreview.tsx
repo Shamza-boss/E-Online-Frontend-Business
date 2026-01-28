@@ -9,9 +9,9 @@ import {
   useTheme,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import ExcalidrawModal from './ExcaliDrawModal.client';
 import { sanitizeExcalidrawElements } from './sanitizeElements';
+import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 
 interface ExcalidrawStaticPreviewProps {
   data?: string | null;

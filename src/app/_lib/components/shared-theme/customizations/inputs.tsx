@@ -30,8 +30,10 @@ export const inputsCustomizations: Components<Theme> = {
     styleOverrides: {
       root: ({ theme }) => ({
         boxShadow: 'none',
-        borderRadius: theme.shape.borderRadius,
+        borderRadius: Number(theme.shape.borderRadius) + 6,
         textTransform: 'none',
+        transition: 'all 200ms ease-out',
+        fontWeight: 500,
         variants: [
           {
             props: {
@@ -39,7 +41,8 @@ export const inputsCustomizations: Components<Theme> = {
             },
             style: {
               height: '2.25rem',
-              padding: '8px 12px',
+              padding: '8px 16px',
+              borderRadius: Number(theme.shape.borderRadius) + 4,
             },
           },
           {
@@ -47,7 +50,8 @@ export const inputsCustomizations: Components<Theme> = {
               size: 'medium',
             },
             style: {
-              height: '2.5rem', // 40px
+              height: '2.5rem',
+              padding: '8px 20px',
             },
           },
           {
@@ -57,31 +61,27 @@ export const inputsCustomizations: Components<Theme> = {
             },
             style: {
               color: 'white',
-              backgroundColor: gray[900],
-              backgroundImage: `linear-gradient(to bottom, ${gray[700]}, ${gray[800]})`,
-              boxShadow: `inset 0 1px 0 ${gray[600]}, inset 0 -1px 0 1px hsl(220, 0%, 0%)`,
-              border: `1px solid ${gray[700]}`,
+              backgroundColor: brand[400],
+              backgroundImage: 'none',
+              boxShadow: 'none',
+              border: 'none',
               '&:hover': {
-                backgroundImage: 'none',
-                backgroundColor: gray[700],
+                backgroundColor: brand[500],
                 boxShadow: 'none',
               },
               '&:active': {
-                backgroundColor: gray[800],
+                backgroundColor: brand[600],
               },
               ...theme.applyStyles('dark', {
-                color: 'black',
-                backgroundColor: gray[50],
-                backgroundImage: `linear-gradient(to bottom, ${gray[100]}, ${gray[50]})`,
-                boxShadow: 'inset 0 -1px 0  hsl(220, 30%, 80%)',
-                border: `1px solid ${gray[50]}`,
+                color: 'white',
+                backgroundColor: brand[400],
+                boxShadow: 'none',
                 '&:hover': {
-                  backgroundImage: 'none',
-                  backgroundColor: gray[300],
+                  backgroundColor: brand[300],
                   boxShadow: 'none',
                 },
                 '&:active': {
-                  backgroundColor: gray[400],
+                  backgroundColor: brand[500],
                 },
               }),
             },
@@ -224,30 +224,31 @@ export const inputsCustomizations: Components<Theme> = {
     styleOverrides: {
       root: ({ theme }) => ({
         boxShadow: 'none',
-        borderRadius: theme.shape.borderRadius,
+        borderRadius: Number(theme.shape.borderRadius) + 2,
         textTransform: 'none',
         fontWeight: theme.typography.fontWeightMedium,
         letterSpacing: 0,
         color: theme.palette.text.primary,
-        border: '1px solid ',
-        borderColor: gray[200],
-        backgroundColor: alpha(gray[50], 0.3),
+        border: '1px solid',
+        borderColor: alpha(gray[200], 0.6),
+        backgroundColor: alpha(gray[50], 0.4),
+        transition: 'all 200ms ease-out',
         '&:hover': {
-          backgroundColor: gray[100],
-          borderColor: gray[300],
+          backgroundColor: alpha(gray[100], 0.8),
+          borderColor: alpha(gray[300], 0.6),
         },
         '&:active': {
           backgroundColor: gray[200],
         },
         ...theme.applyStyles('dark', {
-          backgroundColor: gray[800],
-          borderColor: gray[700],
+          backgroundColor: alpha(gray[800], 0.6),
+          borderColor: alpha(gray[700], 0.5),
           '&:hover': {
-            backgroundColor: gray[900],
-            borderColor: gray[600],
+            backgroundColor: alpha(gray[700], 0.6),
+            borderColor: alpha(gray[600], 0.5),
           },
           '&:active': {
-            backgroundColor: gray[900],
+            backgroundColor: gray[800],
           },
         }),
         variants: [

@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 
 const Excalidraw = dynamic(
   () => import('@excalidraw/excalidraw').then((m) => m.Excalidraw),
