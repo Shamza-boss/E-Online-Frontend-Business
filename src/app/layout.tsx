@@ -71,7 +71,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
       </head>
-      <body style={{ fontFamily: manrope.style.fontFamily }} {...antiAssistAttrs}>
+      <body suppressHydrationWarning style={{ fontFamily: manrope.style.fontFamily }} {...antiAssistAttrs}>
         <Providers session={session}>{children}</Providers>
       </body>
     </html>
