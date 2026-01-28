@@ -19,7 +19,6 @@ import {
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import SaveIcon from '@mui/icons-material/Save';
 import { TransitionProps } from '@mui/material/transitions';
-import type { ExcalidrawElement } from '@excalidraw/excalidraw/types';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 
 const Excalidraw = dynamic(
@@ -52,7 +51,7 @@ const Transition = React.forwardRef(function Transition(
 export interface ExcalidrawModalProps {
   open: boolean;
   onClose: () => void;
-  initialElements: any[]; // or ExcalidrawElement[]
+  initialElements: any[];
   onSave: (elements: any[]) => void;
   readonly: boolean;
 }
