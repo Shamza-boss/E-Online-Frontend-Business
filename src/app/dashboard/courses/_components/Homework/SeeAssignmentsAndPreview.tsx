@@ -153,7 +153,6 @@ export default function SeeAssignmentsAndPreview({
 
   return (
     <>
-      <AppBar position="static">
         <Toolbar>
           <Typography sx={{ flex: 1 }} variant="h6">
             {selectedAssignment
@@ -166,7 +165,6 @@ export default function SeeAssignmentsAndPreview({
             </Button>
           )}
         </Toolbar>
-      </AppBar>
 
       {!selectedAssignment ? (
         <Box
