@@ -29,22 +29,26 @@ interface AppThemeProps {
 const palette: ThemeOptions['palette'] = {
   mode: 'light',
   primary: {
-    main: '#1976d2',
+    main: 'hsl(217, 90%, 58%)',
+    light: 'hsl(217, 85%, 72%)',
+    dark: 'hsl(217, 90%, 42%)',
     contrastText: '#fff',
   },
   secondary: {
-    main: '#9c27b0',
+    main: 'hsl(280, 70%, 55%)',
+    light: 'hsl(280, 65%, 72%)',
+    dark: 'hsl(280, 75%, 40%)',
     contrastText: '#fff',
   },
   background: {
-    default: '#f5f5f5',
+    default: 'hsl(210, 20%, 98%)',
     paper: '#fff',
   },
   text: {
-    primary: '#1a1a1a',
-    secondary: '#555',
+    primary: 'hsl(210, 14%, 25%)',
+    secondary: 'hsl(210, 10%, 45%)',
   },
-  divider: '#e0e0e0',
+  divider: 'hsl(210, 15%, 90%)',
 };
 
 const typography: ThemeOptions['typography'] = {
@@ -69,15 +73,16 @@ const typography: ThemeOptions['typography'] = {
 };
 
 const shape: ThemeOptions['shape'] = {
-  borderRadius: 8,
+  borderRadius: 14,
 };
 
 const shadows = [
   'none',
-  '0px 1px 2px 0px rgba(60,60,60,0.05)',
-  '0px 1.5px 4px 0px rgba(60,60,60,0.08)',
-  '0px 2px 8px 0px rgba(60,60,60,0.10)',
-  ...Array(21).fill('none'),
+  'none',
+  'none',
+  'none',
+  'none',
+  ...Array(20).fill('none'),
 ] as const as ThemeOptions['shadows'];
 
 export default function AppTheme({

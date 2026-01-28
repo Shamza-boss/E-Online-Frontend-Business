@@ -31,68 +31,68 @@ const defaultTheme = createTheme();
 const customShadows: Shadows = [...defaultTheme.shadows];
 
 export const brand = {
-  50: 'hsl(210, 100%, 95%)',
-  100: 'hsl(210, 100%, 92%)',
-  200: 'hsl(210, 100%, 80%)',
-  300: 'hsl(210, 100%, 65%)',
-  400: 'hsl(210, 98%, 48%)',
-  500: 'hsl(210, 98%, 42%)',
-  600: 'hsl(210, 98%, 55%)',
-  700: 'hsl(210, 100%, 35%)',
-  800: 'hsl(210, 100%, 16%)',
-  900: 'hsl(210, 100%, 21%)',
+  50: 'hsl(217, 90%, 96%)',
+  100: 'hsl(217, 85%, 92%)',
+  200: 'hsl(217, 80%, 84%)',
+  300: 'hsl(217, 75%, 72%)',
+  400: 'hsl(217, 90%, 58%)',
+  500: 'hsl(217, 90%, 50%)',
+  600: 'hsl(217, 90%, 42%)',
+  700: 'hsl(217, 90%, 34%)',
+  800: 'hsl(217, 90%, 24%)',
+  900: 'hsl(217, 90%, 16%)',
 };
 
 export const gray = {
-  50: 'hsl(220, 35%, 97%)',
-  100: 'hsl(220, 30%, 94%)',
-  200: 'hsl(220, 20%, 88%)',
-  300: 'hsl(220, 20%, 80%)',
-  400: 'hsl(220, 20%, 65%)',
-  500: 'hsl(220, 20%, 42%)',
-  600: 'hsl(220, 20%, 35%)',
-  700: 'hsl(220, 20%, 25%)',
-  800: 'hsl(220, 30%, 6%)',
-  900: 'hsl(220, 35%, 3%)',
+  50: 'hsl(210, 20%, 98%)',
+  100: 'hsl(210, 18%, 95%)',
+  200: 'hsl(210, 15%, 90%)',
+  300: 'hsl(210, 12%, 82%)',
+  400: 'hsl(210, 10%, 65%)',
+  500: 'hsl(210, 10%, 50%)',
+  600: 'hsl(210, 12%, 40%)',
+  700: 'hsl(210, 14%, 30%)',
+  800: 'hsl(210, 16%, 20%)',
+  900: 'hsl(210, 18%, 12%)',
 };
 
 export const green = {
-  50: 'hsl(120, 80%, 98%)',
-  100: 'hsl(120, 75%, 94%)',
-  200: 'hsl(120, 75%, 87%)',
-  300: 'hsl(120, 61%, 77%)',
-  400: 'hsl(120, 44%, 53%)',
-  500: 'hsl(120, 59%, 30%)',
-  600: 'hsl(120, 70%, 25%)',
-  700: 'hsl(120, 75%, 16%)',
-  800: 'hsl(120, 84%, 10%)',
-  900: 'hsl(120, 87%, 6%)',
+  50: 'hsl(142, 70%, 95%)',
+  100: 'hsl(142, 65%, 88%)',
+  200: 'hsl(142, 60%, 78%)',
+  300: 'hsl(142, 55%, 65%)',
+  400: 'hsl(142, 70%, 45%)',
+  500: 'hsl(142, 75%, 36%)',
+  600: 'hsl(142, 80%, 28%)',
+  700: 'hsl(142, 82%, 22%)',
+  800: 'hsl(142, 85%, 16%)',
+  900: 'hsl(142, 88%, 10%)',
 };
 
 export const orange = {
-  50: 'hsl(45, 100%, 97%)',
-  100: 'hsl(45, 92%, 90%)',
-  200: 'hsl(45, 94%, 80%)',
-  300: 'hsl(45, 90%, 65%)',
-  400: 'hsl(45, 90%, 40%)',
-  500: 'hsl(45, 90%, 35%)',
-  600: 'hsl(45, 91%, 25%)',
-  700: 'hsl(45, 94%, 20%)',
-  800: 'hsl(45, 95%, 16%)',
-  900: 'hsl(45, 93%, 12%)',
+  50: 'hsl(43, 100%, 95%)',
+  100: 'hsl(43, 95%, 88%)',
+  200: 'hsl(43, 90%, 78%)',
+  300: 'hsl(43, 85%, 62%)',
+  400: 'hsl(43, 95%, 48%)',
+  500: 'hsl(36, 95%, 45%)',
+  600: 'hsl(30, 95%, 38%)',
+  700: 'hsl(25, 95%, 30%)',
+  800: 'hsl(20, 95%, 22%)',
+  900: 'hsl(15, 95%, 15%)',
 };
 
 export const red = {
-  50: 'hsl(0, 100%, 97%)',
-  100: 'hsl(0, 92%, 90%)',
-  200: 'hsl(0, 94%, 80%)',
-  300: 'hsl(0, 90%, 65%)',
-  400: 'hsl(0, 90%, 40%)',
-  500: 'hsl(0, 90%, 30%)',
-  600: 'hsl(0, 91%, 25%)',
-  700: 'hsl(0, 94%, 18%)',
-  800: 'hsl(0, 95%, 12%)',
-  900: 'hsl(0, 93%, 6%)',
+  50: 'hsl(4, 90%, 96%)',
+  100: 'hsl(4, 85%, 90%)',
+  200: 'hsl(4, 80%, 82%)',
+  300: 'hsl(4, 75%, 70%)',
+  400: 'hsl(4, 85%, 58%)',
+  500: 'hsl(4, 85%, 48%)',
+  600: 'hsl(4, 85%, 40%)',
+  700: 'hsl(4, 85%, 32%)',
+  800: 'hsl(4, 85%, 22%)',
+  900: 'hsl(4, 85%, 14%)',
 };
 
 export const getDesignTokens = (mode: PaletteMode) => {
@@ -161,11 +161,11 @@ export const getDesignTokens = (mode: PaletteMode) => {
       grey: { ...gray },
       divider: mode === 'dark' ? alpha(gray[700], 0.6) : alpha(gray[300], 0.4),
       background: {
-        default: 'hsl(0, 0%, 99%)',
-        paper: 'hsl(220, 35%, 97%)',
+        default: 'hsl(200, 20%, 98%)',
+        paper: 'hsl(0, 0%, 100%)',
         ...(mode === 'dark' && {
           default: gray[900],
-          paper: 'hsl(220, 30%, 7%)',
+          paper: 'hsl(210, 18%, 8%)',
         }),
       },
       text: {
@@ -245,9 +245,9 @@ export const colorSchemes = {
       error: { light: red[300], main: red[400], dark: red[800] },
       success: { light: green[300], main: green[400], dark: green[800] },
       grey: { ...gray },
-      divider: alpha(gray[300], 0.4),
-      background: { default: 'hsl(0, 0%, 99%)', paper: 'hsl(220, 35%, 97%)' },
-      text: { primary: gray[800], secondary: gray[600], warning: orange[400] },
+      divider: alpha(gray[300], 0.35),
+      background: { default: 'hsl(200, 20%, 98%)', paper: 'hsl(0, 0%, 100%)' },
+      text: { primary: gray[700], secondary: gray[500], warning: orange[400] },
       action: {
         hover: alpha(gray[200], 0.2),
         selected: `${alpha(gray[200], 0.3)}`,
@@ -274,9 +274,9 @@ export const colorSchemes = {
       error: { light: red[400], main: red[500], dark: red[700] },
       success: { light: green[400], main: green[500], dark: green[700] },
       grey: { ...gray },
-      divider: alpha(gray[700], 0.6),
-      background: { default: gray[900], paper: 'hsl(220, 30%, 7%)' },
-      text: { primary: 'hsl(0, 0%, 100%)', secondary: gray[400] },
+      divider: alpha(gray[700], 0.5),
+      background: { default: gray[900], paper: 'hsl(210, 18%, 8%)' },
+      text: { primary: 'hsl(210, 15%, 95%)', secondary: gray[400] },
       action: { hover: alpha(gray[600], 0.2), selected: alpha(gray[600], 0.3) },
       baseShadow:
         'hsla(220, 30%, 5%, 0.7) 0px 4px 16px 0px, hsla(220, 25%, 10%, 0.8) 0px 8px 16px -5px',
@@ -312,7 +312,7 @@ export const typography = {
   caption: { fontSize: defaultTheme.typography.pxToRem(12), fontWeight: 400 },
 };
 
-export const shape = { borderRadius: 8 };
+export const shape = { borderRadius: 14 };
 
 // @ts-ignore
 const defaultShadows: Shadows = [
