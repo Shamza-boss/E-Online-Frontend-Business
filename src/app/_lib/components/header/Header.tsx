@@ -16,7 +16,7 @@ import { useSession } from 'next-auth/react';
 import useAuthActions from '../../hooks/useAuthActions';
 
 const pages = ['Products', 'Pricing', 'Blog'];
-const settings = ['Profile', 'Account', 'Dashboard', ' E-Online'];
+const settings = ['Profile', 'Account', 'Dashboard', 'AO Launchpad'];
 
 const Header = () => {
   const { data: session } = useSession();
@@ -66,7 +66,7 @@ const Header = () => {
               textDecoration: 'none',
             }}
           >
-            E-Online
+            AO Launchpad
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -122,7 +122,7 @@ const Header = () => {
               textDecoration: 'none',
             }}
           >
-            E-Online
+            AO Launchpad
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
@@ -171,7 +171,7 @@ const Header = () => {
                 }
               >
                 <Typography textAlign="center">
-                  {session ? ' E-Online' : 'Login'}
+                  {session ? 'AO Launchpad' : 'Login'}
                 </Typography>
               </MenuItem>
             </Menu>

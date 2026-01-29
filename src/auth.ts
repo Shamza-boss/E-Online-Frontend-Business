@@ -43,7 +43,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Passkey({
       id: 'passkey',
       name: 'Passkey',
-      relayingParty: { id: rpId, name: 'E-Online', origin: ORIGIN },
+      relayingParty: { id: rpId, name: 'AO Launchpad', origin: ORIGIN },
 
       async getUserInfo(_opts, request) {
         const url =

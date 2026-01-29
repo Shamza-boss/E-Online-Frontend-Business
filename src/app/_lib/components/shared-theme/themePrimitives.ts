@@ -159,7 +159,7 @@ export const getDesignTokens = (mode: PaletteMode) => {
         }),
       },
       grey: { ...gray },
-      divider: mode === 'dark' ? alpha(gray[700], 0.6) : alpha(gray[300], 0.4),
+      divider: mode === 'dark' ? alpha(gray[700], 0.6) : alpha(gray[400], 0.5),
       background: {
         default: 'hsl(200, 20%, 98%)',
         paper: 'hsl(0, 0%, 100%)',

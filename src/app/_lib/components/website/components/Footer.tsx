@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography';
 import FacebookIcon from '@mui/icons-material/GitHub';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/X';
-import EducationOnlineLogoIcon from './EducationOnlineIcon';
+import AOLaunchpadLogoIcon from './EducationOnlineIcon';
 
 function Copyright() {
   return (
@@ -55,16 +55,16 @@ export default function Footer() {
           }}
         >
           <Box sx={{ width: { xs: '100%', sm: '60%' } }}>
-            <EducationOnlineLogoIcon />
+            <AOLaunchpadLogoIcon />
             <Typography
               variant="body2"
               gutterBottom
               sx={{ fontWeight: 600, mt: 2 }}
             >
-              Join the newsletter
+              Get product updates
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-              Subscribe for weekly updates. No spams ever!
+              Subscribe for platform updates and L&D insights. No spam.
             </Typography>
             <InputLabel htmlFor="email-newsletter">Email</InputLabel>
             <Stack direction="row" spacing={1} useFlexGap>
@@ -105,19 +105,16 @@ export default function Footer() {
           <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             Product
           </Typography>
-          <Link color="text.secondary" variant="body2" href="#">
+          <Link color="text.secondary" variant="body2" href="/#features">
             Features
           </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Testimonials
+          <Link color="text.secondary" variant="body2" href="/#tech-stack">
+            Tech Stack
           </Link>
-          <Link color="text.secondary" variant="body2" href="#">
+          <Link color="text.secondary" variant="body2" href="/#highlights">
             Highlights
           </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Pricing
-          </Link>
-          <Link color="text.secondary" variant="body2" href="#">
+          <Link color="text.secondary" variant="body2" href="/#faq">
             FAQs
           </Link>
         </Box>
@@ -131,14 +128,14 @@ export default function Footer() {
           <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             Company
           </Typography>
-          <Link color="text.secondary" variant="body2" href="#">
+          <Link color="text.secondary" variant="body2" href="/about">
             About us
           </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Careers
+          <Link color="text.secondary" variant="body2" href="https://absoluteonline.co.za" target="_blank">
+            Main Website
           </Link>
-          <Link color="text.secondary" variant="body2" href="#">
-            Press
+          <Link color="text.secondary" variant="body2" href="mailto:info@absoluteonline.co.za">
+            Contact
           </Link>
         </Box>
         <Box

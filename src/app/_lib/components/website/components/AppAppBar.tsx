@@ -12,7 +12,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Drawer from '@mui/material/Drawer';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import EducationOnlineLogo from './EducationOnlineIcon';
+import AOLaunchpadLogo from './EducationOnlineIcon';
 import ColorModeIconDropdown from '../../shared-theme/ColorModelIconDropdown';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -59,7 +59,7 @@ export default function AppAppBar() {
             sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}
           >
             <Link href="/" style={{ textDecoration: 'none' }}>
-              <EducationOnlineLogo />
+              <AOLaunchpadLogo />
             </Link>
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
               <Link href="/#features">
@@ -67,19 +67,14 @@ export default function AppAppBar() {
                   Features
                 </Button>
               </Link>
-              <Link href="/#testimonials">
+              <Link href="/#tech-stack">
                 <Button variant="text" color="info" size="small">
-                  Testimonials
+                  Tech Stack
                 </Button>
               </Link>
               <Link href="/#highlights">
                 <Button variant="text" color="info" size="small">
                   Highlights
-                </Button>
-              </Link>
-              <Link href="/#pricing">
-                <Button variant="text" color="info" size="small">
-                  Pricing
                 </Button>
               </Link>
               <Link href="/#faq">
@@ -92,14 +87,14 @@ export default function AppAppBar() {
                   FAQ
                 </Button>
               </Link>
-              <Link href="/blog">
+              <Link href="/about">
                 <Button
                   variant="text"
                   color="info"
                   size="small"
                   sx={{ minWidth: 0 }}
                 >
-                  Blog
+                  About
                 </Button>
               </Link>
             </Box>
@@ -173,20 +168,17 @@ export default function AppAppBar() {
                 <Link href="/#features">
                   <MenuItem>Features</MenuItem>
                 </Link>
-                <Link href="/#testimonials">
-                  <MenuItem>Testimonials</MenuItem>
+                <Link href="/#tech-stack">
+                  <MenuItem>Tech Stack</MenuItem>
                 </Link>
                 <Link href="/#highlights">
                   <MenuItem>Highlights</MenuItem>
                 </Link>
-                <Link href="/#pricing">
-                  <MenuItem>Pricing</MenuItem>
-                </Link>
                 <Link href="/#faq">
                   <MenuItem>FAQ</MenuItem>
                 </Link>
-                <Link href="/blog">
-                  <MenuItem>Blog</MenuItem>
+                <Link href="/about">
+                  <MenuItem>About</MenuItem>
                 </Link>
                 <Divider sx={{ my: 3 }} />
                 {!session ? (

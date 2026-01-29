@@ -17,23 +17,28 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: 'E-Online',
-    template: '%s | E-Online',
+    default: 'AO Launchpad',
+    template: '%s | AO Launchpad',
   },
   description:
-    'E-Online delivers a modern classroom experience for administrators, instructors, and learners.',
-  keywords: ['education', 'online learning', 'classroom', 'LMS'],
-  authors: [{ name: 'E-Online' }],
+    'AO Launchpad is a corporate Learning Management System by Absolute Online. Empower your organization to train employees with your own proprietary content.',
+  keywords: ['corporate training', 'LMS', 'employee training', 'enterprise learning', 'Absolute Online', 'workforce development'],
+  authors: [{ name: 'Absolute Online' }],
   robots: {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: '/assets/absolute-rocket.webp',
+    shortcut: '/assets/absolute-rocket.webp',
+    apple: '/assets/absolute-rocket.webp',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    title: 'E-Online',
-    description: 'E-Online delivers a modern classroom experience for administrators, instructors, and learners.',
-    siteName: 'E-Online',
+    title: 'AO Launchpad',
+    description: 'AO Launchpad is a corporate Learning Management System by Absolute Online. Empower your organization to train employees with your own proprietary content.',
+    siteName: 'AO Launchpad',
   },
 };
 
