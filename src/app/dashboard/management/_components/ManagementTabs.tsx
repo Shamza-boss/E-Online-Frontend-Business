@@ -3,6 +3,8 @@
 import { Box, Tab } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
+import PeopleIcon from '@mui/icons-material/People';
+import SchoolIcon from '@mui/icons-material/School';
 import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
 import UserManagementDataGrid from './Tables/userManagementDataGrid';
 import ClassManagementDataGrid from './Tables/classManagementDataGrid';
@@ -20,8 +22,8 @@ export default function ManagementTabs({
         <TabContext value={activeTab}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <TabList onChange={onTabChange} aria-label="management tabs">
-                    <Tab label="People" value="1" />
-                    <Tab label="Courses" value="2" />
+                    <Tab icon={<PeopleIcon />} iconPosition="start" label="People" value="1" />
+                    <Tab icon={<SchoolIcon />} iconPosition="start" label="Courses" value="2" />
                 </TabList>
             </Box>
             <DataGridTabPanel value="1" sx={{ flex: 1 }}>

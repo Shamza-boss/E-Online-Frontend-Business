@@ -74,8 +74,9 @@ export default function CreateSubjectsForm({
           name={group.name}
           defaultValue={group.initialValue}
           error={!group.valid}
-          helperText={group.errors?.join(', ') || 'Optional grouping to cluster reports.'}
+          helperText={group.errors?.join(', ') || 'Grouping to cluster reports.'}
           fullWidth
+          required
         />
 
         <TextField
@@ -97,8 +98,9 @@ export default function CreateSubjectsForm({
           name={category.name}
           defaultValue={category.initialValue}
           error={!category.valid}
-          helperText={category.errors?.join(', ') || 'Optional tag displayed on analytics cards.'}
+          helperText={category.errors?.join(', ') || 'Tag displayed on analytics cards.'}
           fullWidth
+          required
         />
       </Stack>
     </Box>

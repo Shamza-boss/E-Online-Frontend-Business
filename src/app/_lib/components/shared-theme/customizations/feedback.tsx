@@ -9,6 +9,7 @@ export const feedbackCustomizations: Components<Theme> = {
         backgroundColor: orange[100],
         color: theme.palette.text.primary,
         border: `1px solid ${alpha(orange[300], 0.5)}`,
+        alignItems: 'center',
         '& .MuiAlert-icon': {
           color: orange[500],
         },

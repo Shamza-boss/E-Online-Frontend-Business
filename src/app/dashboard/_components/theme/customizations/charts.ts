@@ -30,18 +30,39 @@ export const chartsCustomizations: ChartsComponents<Theme> = {
   },
   MuiChartsTooltip: {
     styleOverrides: {
+      root: ({ theme }) => ({
+        '& .MuiChartsTooltip-paper': {
+          border: `1px solid ${theme.palette.divider}`,
+          boxShadow: theme.shadows[16],
+          borderRadius: theme.shape.borderRadius,
+          overflow: 'hidden',
+          backdropFilter: 'blur(12px)',
+        },
+      }),
       mark: ({ theme }) => ({
         ry: 6,
         boxShadow: 'none',
         border: `1px solid ${theme.palette.divider}`,
       }),
       table: ({ theme }) => ({
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: theme.shape.borderRadius,
-        background: 'hsl(0, 0%, 100%)',
+        border: 'none',
+        borderRadius: 0,
+        background: 'rgba(255, 255, 255, 0.95)',
         ...theme.applyStyles('dark', {
-          background: gray[900],
+          background: 'rgba(0, 0, 0, 0.85)',
         }),
+      }),
+      row: ({ theme }) => ({
+        '&:first-of-type': {
+          background: 'rgba(0, 0, 0, 0.03)',
+          ...theme.applyStyles('dark', {
+            background: 'rgba(255, 255, 255, 0.08)',
+          }),
+        },
+      }),
+      cell: ({ theme }) => ({
+        border: 'none',
+        padding: theme.spacing(0.75, 1.5),
       }),
     },
   },

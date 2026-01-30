@@ -36,16 +36,24 @@ const StudentManagementTable = () => {
 
   const { data: students, isLoading: studentsLoading } = useSWR<UserDto[]>(
     'all-students',
-    getAllStudentsClient
+    getAllStudentsClient,
+    {
+      revalidateOnFocus: false,
+    }
   );
 
   const { data: classRooms, isLoading: classesLoading } = useSWR<
     ClassroomDetailsDto[]
-  >('all-classrooms-details', getAllClassroomsAndDataClient);
+  >('all-classrooms-details', getAllClassroomsAndDataClient, {
+    revalidateOnFocus: false,
+  });
 
   const { data: enrolledStudents = [] } = useSWR<UserDto[]>(
     classId ? ['classroom-users', classId] : null,
-    () => getAllUsersInClassroomClient(classId)
+    () => getAllUsersInClassroomClient(classId),
+    {
+      revalidateOnFocus: false,
+    }
   );
 
   // Filter eligible students (not already enrolled)
@@ -100,13 +108,17 @@ const StudentManagementTable = () => {
       <Stack spacing={2}>
         <Alert severity="info">
           {!classId
-            ? 'Please select a class you want to enroll trainees to.'
+            ? 'Please select a trainee class you want to enroll trainees to.'
             : 'Select trainees who are not yet enrolled in this class.'}
         </Alert>
 
         <FormControl fullWidth disabled={classesLoading}>
-          <InputLabel>Select Class</InputLabel>
-          <Select value={classId} onChange={handleValueChange}>
+          <InputLabel id="trainee-class-label">Select trainee class</InputLabel>
+          <Select
+            labelId="trainee-class-label"
+            value={classId}
+            onChange={handleValueChange}
+            label="Select trainee class">
             {classRooms?.map((c) => (
               <MenuItem key={c.classroomId} value={c.classroomId}>
                 {c.classroomName}
@@ -114,7 +126,7 @@ const StudentManagementTable = () => {
             ))}
           </Select>
           <FormHelperText>
-            You must select a class to begin enrolling.
+            You must select a trainee class to begin enrolling.
           </FormHelperText>
         </FormControl>
         <Box

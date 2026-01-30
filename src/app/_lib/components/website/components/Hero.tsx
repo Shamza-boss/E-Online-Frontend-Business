@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import { alpha, useTheme } from '@mui/material/styles';
 import Link from 'next/link';
+import { useWarp } from '../../../components/shared-theme/WarpTransition';
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded';
@@ -16,15 +17,29 @@ import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 
 const MotionBox = motion.create(Box);
 
-// Floating particles for background
-const particles = Array.from({ length: 20 }, (_, i) => ({
-  id: i,
-  size: Math.random() * 6 + 2,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  duration: Math.random() * 20 + 15,
-  delay: Math.random() * 5,
-}));
+// Floating particles for background - using deterministic values to avoid hydration mismatch
+const particles = [
+  { id: 0, size: 5, x: 12, y: 8, duration: 22, delay: 1 },
+  { id: 1, size: 3, x: 85, y: 15, duration: 18, delay: 3 },
+  { id: 2, size: 7, x: 45, y: 25, duration: 25, delay: 0 },
+  { id: 3, size: 4, x: 72, y: 42, duration: 20, delay: 2 },
+  { id: 4, size: 6, x: 28, y: 65, duration: 23, delay: 4 },
+  { id: 5, size: 3, x: 92, y: 78, duration: 17, delay: 1 },
+  { id: 6, size: 5, x: 8, y: 55, duration: 21, delay: 3 },
+  { id: 7, size: 4, x: 55, y: 88, duration: 19, delay: 2 },
+  { id: 8, size: 6, x: 38, y: 12, duration: 24, delay: 0 },
+  { id: 9, size: 3, x: 68, y: 95, duration: 16, delay: 4 },
+  { id: 10, size: 5, x: 15, y: 35, duration: 22, delay: 1 },
+  { id: 11, size: 4, x: 82, y: 52, duration: 20, delay: 3 },
+  { id: 12, size: 7, x: 48, y: 72, duration: 26, delay: 2 },
+  { id: 13, size: 3, x: 25, y: 18, duration: 18, delay: 0 },
+  { id: 14, size: 6, x: 95, y: 38, duration: 23, delay: 4 },
+  { id: 15, size: 4, x: 5, y: 82, duration: 19, delay: 1 },
+  { id: 16, size: 5, x: 62, y: 5, duration: 21, delay: 3 },
+  { id: 17, size: 3, x: 35, y: 48, duration: 17, delay: 2 },
+  { id: 18, size: 6, x: 78, y: 68, duration: 24, delay: 0 },
+  { id: 19, size: 4, x: 18, y: 92, duration: 20, delay: 4 },
+];
 
 // Mock dashboard stats for the floating preview
 const mockStats = [
@@ -39,6 +54,36 @@ const mockClassrooms = [
   { name: 'Sales Fundamentals', students: 84, color: '#f093fb' },
   { name: 'Compliance Training', students: 215, color: '#4facfe' },
 ];
+
+// Warp button component for navigation
+function WarpButton({ href }: { href: string }) {
+  const { warpTo } = useWarp();
+  return (
+    <Button
+      variant="contained"
+      size="large"
+      onClick={() => warpTo(href)}
+      endIcon={<ArrowForwardRoundedIcon />}
+      sx={{
+        py: 1.5,
+        px: 4,
+        fontSize: '1rem',
+        fontWeight: 600,
+        borderRadius: 2,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        boxShadow: `0 8px 24px ${alpha('#667eea', 0.4)}`,
+        '&:hover': {
+          background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%)',
+          boxShadow: `0 12px 32px ${alpha('#667eea', 0.5)}`,
+          transform: 'translateY(-2px)',
+        },
+        transition: 'all 0.3s ease',
+      }}
+    >
+      Get Started Free
+    </Button>
+  );
+}
 
 export default function Hero() {
   const theme = useTheme();
@@ -63,38 +108,41 @@ export default function Hero() {
         overflow: 'hidden',
         pt: { xs: 12, sm: 16 },
         pb: { xs: 8, sm: 12 },
+        // Space background for dark, sky/cloud for light
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(180deg, #000000 0%, #020617 50%, #0a0a1a 100%)'
+          : 'linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)',
       }}
     >
-      {/* Animated gradient background */}
+      {/* Animated gradient background - nebula effects */}
       <Box
         sx={{
           position: 'absolute',
           inset: 0,
           background: theme.palette.mode === 'dark'
             ? `
-              radial-gradient(ellipse 80% 50% at 50% -20%, ${alpha(theme.palette.primary.main, 0.3)} 0%, transparent 50%),
-              radial-gradient(ellipse 60% 40% at 100% 50%, ${alpha('#8B5CF6', 0.15)} 0%, transparent 50%),
-              radial-gradient(ellipse 60% 40% at 0% 80%, ${alpha('#EC4899', 0.12)} 0%, transparent 50%)
+              radial-gradient(ellipse 100% 80% at 50% -20%, ${alpha(theme.palette.primary.main, 0.35)} 0%, transparent 50%),
+              radial-gradient(ellipse 60% 50% at 100% 30%, ${alpha('#8B5CF6', 0.25)} 0%, transparent 50%),
+              radial-gradient(ellipse 60% 50% at 0% 70%, ${alpha('#EC4899', 0.2)} 0%, transparent 50%)
             `
             : `
-              radial-gradient(ellipse 80% 50% at 50% -20%, ${alpha(theme.palette.primary.main, 0.15)} 0%, transparent 50%),
-              radial-gradient(ellipse 60% 40% at 100% 50%, ${alpha('#8B5CF6', 0.08)} 0%, transparent 50%),
-              radial-gradient(ellipse 60% 40% at 0% 80%, ${alpha('#EC4899', 0.06)} 0%, transparent 50%)
+              radial-gradient(ellipse 80% 50% at 50% -20%, ${alpha(theme.palette.primary.main, 0.12)} 0%, transparent 50%),
+              radial-gradient(ellipse 60% 40% at 100% 50%, ${alpha('#8B5CF6', 0.06)} 0%, transparent 50%),
+              radial-gradient(ellipse 60% 40% at 0% 80%, ${alpha('#EC4899', 0.05)} 0%, transparent 50%)
             `,
           zIndex: 0,
         }}
       />
 
-      {/* Floating particles */}
+      {/* Floating particles - twinkling stars */}
       <Box sx={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
         {particles.map((particle) => (
           <MotionBox
             key={particle.id}
             initial={{ opacity: 0 }}
             animate={{
-              opacity: [0.2, 0.5, 0.2],
-              y: [0, -30, 0],
-              x: [0, 10, 0],
+              opacity: [0.3, 0.9, 0.3],
+              scale: [1, 1.3, 1],
             }}
             transition={{
               duration: particle.duration,
@@ -224,30 +272,7 @@ export default function Hero() {
                   spacing={2}
                   sx={{ mb: 4 }}
                 >
-                  <Link href="/signup" style={{ textDecoration: 'none' }}>
-                    <Button
-                      variant="contained"
-                      size="large"
-                      endIcon={<ArrowForwardRoundedIcon />}
-                      sx={{
-                        py: 1.5,
-                        px: 4,
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                        borderRadius: 2,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        boxShadow: `0 8px 24px ${alpha('#667eea', 0.4)}`,
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%)',
-                          boxShadow: `0 12px 32px ${alpha('#667eea', 0.5)}`,
-                          transform: 'translateY(-2px)',
-                        },
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      Get Started Free
-                    </Button>
-                  </Link>
+                  <WarpButton href="/signup" />
                   <Link href="/about" style={{ textDecoration: 'none' }}>
                     <Button
                       variant="outlined"

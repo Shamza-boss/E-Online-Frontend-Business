@@ -135,12 +135,12 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
 
     return (
         <Card
-            elevation={10}
+            variant="outlined"
             sx={(theme) => ({
                 borderRadius: 4,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                border: `1.5px solid ${alpha(theme.palette.divider, 0.12)}`,
                 backgroundImage: cardBg(theme),
-                boxShadow: '0 30px 70px rgba(15, 23, 42, 0.18)',
+                boxShadow: 'none',
                 backdropFilter: 'blur(14px)',
             })}
         >

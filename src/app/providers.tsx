@@ -18,6 +18,7 @@ import { SessionProvider, useSession } from 'next-auth/react';
 import type { Session } from 'next-auth';
 import { usePathname, useRouter } from 'next/navigation';
 import AppTheme from './_lib/components/shared-theme/AppTheme';
+import { WarpTransitionProvider } from './_lib/components/shared-theme/WarpTransition';
 import { AlertProvider } from './_lib/components/alert/AlertProvider';
 import { PDF_NOTE_SENTINEL_ATTRIBUTE } from './_lib/utils/pdfNoteLinks';
 
@@ -88,7 +89,9 @@ export default function Providers({ children, session }: ProvidersProps) {
         <AppTheme>
           <CssBaseline enableColorScheme />
           <GlobalStyles styles={pdfNoteStyles} />
-          <AlertProvider>{children}</AlertProvider>
+          <WarpTransitionProvider>
+            <AlertProvider>{children}</AlertProvider>
+          </WarpTransitionProvider>
         </AppTheme>
       </AppRouterCacheProvider>
     </SessionProvider>

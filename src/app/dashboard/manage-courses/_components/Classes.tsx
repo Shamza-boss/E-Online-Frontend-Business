@@ -1,22 +1,17 @@
 'use client';
-import { getAllUserClassrooms } from '@/app/_lib/actions/classrooms';
 import ClassCard from '@/app/_lib/components/shared-theme/customizations/card';
 import { ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import { SchoolRounded } from '@mui/icons-material';
 import { Box } from '@mui/material';
 import Link from 'next/link';
-import useSWR from 'swr';
 import ErrorLayout from '../../_components/ErrorLayout';
+import React from 'react';
 
-export default function StudentClassesCards() {
-  const { data: result } = useSWR<ClassroomDetailsDto[]>(
-    'classes',
-    getAllUserClassrooms,
-    { suspense: true }
-  );
+interface StudentClassesCardsProps {
+  classes: ClassroomDetailsDto[];
+}
 
-  const classes = Array.isArray(result) ? result : [];
-
+function StudentClassesCards({ classes }: StudentClassesCardsProps) {
   if (classes.length === 0) {
     return (
       <ErrorLayout
@@ -24,7 +19,7 @@ export default function StudentClassesCards() {
         title="No courses Found"
         description="You are not enrolled into any courses yet. Please contact your administrator or institution for access."
         actionLabel="Go to management?"
-        actionHref="/management"
+        actionHref="/dashboard/management"
         tone="info"
       />
     );
@@ -68,3 +63,5 @@ export default function StudentClassesCards() {
     </Box>
   );
 }
+
+export default React.memo(StudentClassesCards);

@@ -39,13 +39,13 @@ export const subjectsSchema = z.object({
   name: z.string().min(2).max(20).nonempty('Subject name is required'),
   group: z.string().min(2).max(20).nonempty('Group name is required'),
   subjectCode: z.string().min(2).max(20).nonempty('Subject code is required'),
-  category: z.string().min(2).max(20),
+  category: z.string().min(2).max(20).nonempty('Category is required'),
 });
 
 export const academicsSchema = z.object({
   name: z.string().min(2).max(20).nonempty('Academics name is required'),
   country: z.string().min(2).max(20).nonempty('Country name is required'),
-  educationSystem: z.string().min(2).max(20),
+  educationSystem: z.string().min(2).max(20).nonempty('Education system is required'),
 });
 
 export const institutionSchema = z.object({

@@ -26,6 +26,7 @@ interface ModulesPanelProps {
   refreshIndex: number;
   onEdit: (homeworkId: string) => void | Promise<void>;
   onAfterChange?: () => void;
+  onRowClick?: (homeworkId: string) => void;
 }
 
 const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
@@ -34,6 +35,7 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
   refreshIndex,
   onEdit,
   onAfterChange,
+  onRowClick,
 }) => {
   const { showAlert } = useAlert();
   const { data, isLoading, mutate } = useSWR<Homework[]>(
@@ -263,7 +265,7 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
           >
             <Typography variant="subtitle1">No modules yet.</Typography>
             <Typography variant="body2" color="text.secondary">
-              Create a new module or edit one of your drafts to get started.
+              Click <strong>Create module</strong> above to build your first homework assignment.
             </Typography>
           </Box>
         );
@@ -274,11 +276,21 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
   const dataGridSlotProps = useMemo(
     () => ({
       loadingOverlay: {
-        variant: 'linear-progress' as const,
-        noRowsVariant: 'linear-progress' as const,
+        variant: 'skeleton' as const,
+        noRowsVariant: 'skeleton' as const,
       },
     }),
     []
+  );
+
+  const handleRowClick = useCallback(
+    (params: any) => {
+      const moduleId = resolveModuleId(params.row);
+      if (moduleId && onRowClick) {
+        onRowClick(moduleId);
+      }
+    },
+    [onRowClick, resolveModuleId]
   );
 
   return (
@@ -290,7 +302,12 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
         params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
       }
       loading={isLoading}
-      disableRowSelectionOnClick
+      onRowClick={handleRowClick}
+      sx={{
+        '& .MuiDataGrid-row': {
+          cursor: 'pointer',
+        },
+      }}
       pageSizeOptions={[5, 10, 25]}
       initialState={{
         pagination: {

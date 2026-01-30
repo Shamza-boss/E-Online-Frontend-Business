@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import {
     Box,
     Button,
@@ -52,8 +51,6 @@ import type {
 import useSWR from 'swr';
 import { getMySettingsClient } from '@/app/_lib/actions';
 
-const MotionBox = motion(Box);
-
 type ChipTone = ChipProps['color'];
 
 interface RoleGuidanceCard {
@@ -66,8 +63,6 @@ interface RoleGuidanceCard {
 interface SettingsExperienceProps {
     // No props needed - will fetch data with SWR
 }
-
-type Pointer = { x: number; y: number };
 
 type RoleKey = UserRole | 'default';
 
@@ -319,27 +314,12 @@ function SettingsExperienceContent({ data, theme }: { data: SettingsResponseDto;
     };
 
     const [tab, setTab] = React.useState('profile');
-    const [pointer, setPointer] = React.useState<Pointer>({ x: 0, y: 0 });
     const handleTabChange = React.useCallback(
         (_: React.SyntheticEvent, value: string) => {
             setTab(value);
         },
         []
     );
-
-    const handlePointerMove = React.useCallback(
-        (event: React.PointerEvent<HTMLDivElement>) => {
-            const rect = event.currentTarget.getBoundingClientRect();
-            const x = (event.clientX - rect.left) / rect.width - 0.5;
-            const y = (event.clientY - rect.top) / rect.height - 0.5;
-            setPointer({ x, y });
-        },
-        []
-    );
-
-    const handlePointerLeave = React.useCallback(() => {
-        setPointer({ x: 0, y: 0 });
-    }, []);
 
     return (
         <Box
@@ -353,10 +333,8 @@ function SettingsExperienceContent({ data, theme }: { data: SettingsResponseDto;
                 py: { xs: 6, md: 10 },
                 px: { xs: 1.5, md: 4 },
             }}
-            onPointerMove={handlePointerMove}
-            onPointerLeave={handlePointerLeave}
         >
-            <RocketBackdrop pointer={pointer} />
+            <RocketBackdrop />
             <Container
                 maxWidth="lg"
                 sx={{
@@ -375,7 +353,13 @@ function SettingsExperienceContent({ data, theme }: { data: SettingsResponseDto;
                                 component="img"
                                 src="/assets/absolute-rocket.webp"
                                 alt="Absolute Online rocket"
-                                sx={{ width: 110, height: 110, opacity: 0.9 }}
+                                sx={{ 
+                                    width: 'auto', 
+                                    height: 100, 
+                                    objectFit: 'contain',
+                                    opacity: 0.9,
+                                    flexShrink: 0,
+                                }}
                             />
                             <Box>
                                 <Typography
@@ -988,9 +972,28 @@ function ViewRolesMatrix({ activeRole }: { activeRole?: UserRole | null }) {
         </Paper>
     );
 }
-function RocketBackdrop({ pointer }: { pointer: Pointer }) {
+function RocketBackdrop() {
+    const containerRef = React.useRef<HTMLDivElement>(null);
+
+    // Use native event listener to avoid React re-renders
+    React.useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 2;
+            const y = (e.clientY / window.innerHeight - 0.5) * 2;
+            container.style.setProperty('--mouse-x', String(x));
+            container.style.setProperty('--mouse-y', String(y));
+        };
+
+        window.addEventListener('mousemove', handleMouseMove, { passive: true });
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, []);
+
     return (
         <Box
+            ref={containerRef}
             aria-hidden
             sx={{
                 position: 'fixed',
@@ -998,14 +1001,11 @@ function RocketBackdrop({ pointer }: { pointer: Pointer }) {
                 pointerEvents: 'none',
                 overflow: 'hidden',
                 zIndex: 0,
-            }}
+                '--mouse-x': '0',
+                '--mouse-y': '0',
+            } as React.CSSProperties}
         >
-            <Box
-                sx={{
-                    position: 'absolute',
-                    inset: 0,
-                }}
-            />
+            {/* Gradient glow layer */}
             <Box
                 sx={{
                     position: 'absolute',
@@ -1018,9 +1018,12 @@ function RocketBackdrop({ pointer }: { pointer: Pointer }) {
                     transform: 'rotate(-8deg)',
                 }}
             />
-            <MotionBox
+            {/* Interactive glow that follows mouse - CSS driven */}
+            <Box
                 sx={{
                     position: 'absolute',
+                    top: '10%',
+                    left: '15%',
                     width: '65vw',
                     height: '65vw',
                     borderRadius: '50%',
@@ -1028,33 +1031,27 @@ function RocketBackdrop({ pointer }: { pointer: Pointer }) {
                         'radial-gradient(circle, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.15) 45%, transparent 70%)',
                     filter: 'blur(120px)',
                     opacity: 0.45,
+                    transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: 'translate(calc(var(--mouse-x) * 60px), calc(var(--mouse-y) * 40px))',
                 }}
-                animate={{
-                    x: pointer.x * 120,
-                    y: pointer.y * 80,
-                }}
-                transition={{ type: 'spring', stiffness: 80, damping: 18 }}
             />
+            {/* Rockets with subtle parallax */}
             {rocketPositions.map((rocket) => (
-                <motion.img
+                <Box
                     key={rocket.id}
+                    component="img"
                     src="/assets/absolute-rocket.webp"
                     alt=""
-                    aria-hidden
-                    style={{
+                    sx={{
                         position: 'absolute',
                         width: 16,
                         opacity: 0.05 + rocket.depth * 0.08,
                         top: `${rocket.top}%`,
                         left: `${rocket.left}%`,
                         filter: 'blur(1px)',
+                        transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transform: `translate(calc(var(--mouse-x) * ${rocket.depth * 15}px), calc(var(--mouse-y) * ${rocket.depth * 15}px)) rotate(${rocket.depth * 10}deg)`,
                     }}
-                    animate={{
-                        x: pointer.x * rocket.depth * 18,
-                        y: pointer.y * rocket.depth * 18,
-                        rotate: pointer.x * 2,
-                    }}
-                    transition={{ type: 'spring', stiffness: 140, damping: 16 }}
                 />
             ))}
         </Box>

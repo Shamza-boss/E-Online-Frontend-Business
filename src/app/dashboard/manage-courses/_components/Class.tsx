@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Box, Button, Stack, Tab, Tooltip } from '@mui/material';
+import { Box, Button, Stack, Tab, Tooltip, Typography } from '@mui/material';
 import DragDropFormBuilderModal from './Modals/FormBuilderModal';
 import {
   ClassDto,
@@ -138,12 +138,14 @@ export default function StudentManagementComponent({
         <Stack spacing={1} direction={'row'}>
           <Tooltip
             title={
-              !isElevated ? 'Only the class teacher can publish homework.' : ''
+              !isElevated 
+                ? 'Only the class instructor can create modules.' 
+                : 'Create a new homework module with questions, due dates, and grading criteria for your trainees.'
             }
           >
             <span>
               <Button
-                variant="outlined"
+                variant="contained"
                 onClick={() => {
                   setEditingHomework(null);
                   setBuilderOpen(true);
@@ -156,6 +158,9 @@ export default function StudentManagementComponent({
             </span>
           </Tooltip>
         </Stack>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Click any row in the modules table to edit it. Use the action buttons for publish, unpublish, or delete.
+        </Typography>
       </Box>
       <Box
         sx={{
@@ -209,6 +214,7 @@ export default function StudentManagementComponent({
                   onAfterChange={() =>
                     setModulesRefreshIndex((prev) => prev + 1)
                   }
+                  onRowClick={(homeworkId) => handleEditDraftModule(homeworkId)}
                 />
               </Box>
             </DataGridTabPanel>

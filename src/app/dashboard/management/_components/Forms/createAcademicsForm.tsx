@@ -87,9 +87,10 @@ export default function CreateAcademicsForm({
           error={!educationSystem.valid}
           helperText={
             educationSystem.errors?.join(', ') ||
-            'Optional descriptor that appears in analytics and exports.'
+            'Descriptor that appears in analytics and exports.'
           }
           fullWidth
+          required
         />
       </Stack>
     </Box>

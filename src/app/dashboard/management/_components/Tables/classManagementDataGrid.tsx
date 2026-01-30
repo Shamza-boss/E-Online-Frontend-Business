@@ -15,7 +15,7 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import useSWR from 'swr';
 import {
   AcademicLevelDto,
@@ -82,6 +82,7 @@ export default function ClassManagementDataGrid({
   const [deleteTarget, setDeleteTarget] = useState<ClassroomDetailsDto | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: DEFAULT_PAGE_SIZE,
@@ -377,6 +378,7 @@ export default function ClassManagementDataGrid({
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',
+      description: 'Edit course details inline or remove a course. A confirmation dialog will appear before deletion.',
       width: 140,
       getActions: ({ id, row }: GridRowParams<ClassroomDetailsDto>) => {
         const isInEditMode = rowModesModelRef.current[id]?.mode === GridRowModes.Edit;
@@ -412,11 +414,10 @@ export default function ClassManagementDataGrid({
           />,
           <GridActionsCellItem
             key="delete"
-            icon={<DeleteIcon />}
+            icon={<DeleteOutlineIcon sx={{ color: 'error.main' }} />}
             label="Delete"
             onClick={() => handlePromptDelete(row)}
             disabled={!isElevated}
-            color="inherit"
             style={{ border: 0, backgroundColor: 'transparent' }}
           />,
         ];
@@ -449,6 +450,11 @@ export default function ClassManagementDataGrid({
     }
 
     setIsDeleting(true);
+    setDeletingRowId(deleteTarget.classroomId);
+    
+    // Small delay to show the delete animation
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
     try {
       await deleteClassroom(deleteTarget.classroomId);
       alert.success('Course deleted successfully');
@@ -460,6 +466,7 @@ export default function ClassManagementDataGrid({
       alert.error(message);
     } finally {
       setIsDeleting(false);
+      setDeletingRowId(null);
     }
   }, [deleteTarget?.classroomId, alert, mutateClasses]);
 
@@ -543,8 +550,8 @@ export default function ClassManagementDataGrid({
   const dataGridSlotProps = useMemo(
     () => ({
       loadingOverlay: {
-        variant: 'linear-progress' as const,
-        noRowsVariant: 'linear-progress' as const,
+        variant: 'skeleton' as const,
+        noRowsVariant: 'skeleton' as const,
       },
     }),
     []
@@ -555,8 +562,19 @@ export default function ClassManagementDataGrid({
   const confirmButtonProps = useMemo(() => ({ variant: 'contained' as const }), []);
 
   const getRowClassName = useCallback(
-    (params: any) => params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd',
-    []
+    (params: any) => {
+      const classes = [];
+      if (params.indexRelativeToCurrentPage % 2 === 0) {
+        classes.push('even');
+      } else {
+        classes.push('odd');
+      }
+      if (deletingRowId === params.row.classroomId) {
+        classes.push('row-deleted');
+      }
+      return classes.join(' ');
+    },
+    [deletingRowId]
   );
 
   const getRowId = useCallback((r: any) => r.classroomId, []);
@@ -564,7 +582,6 @@ export default function ClassManagementDataGrid({
   return (
     <>
       <EDataGrid
-        checkboxSelection={isElevated}
         rows={rows}
         columns={columns}
         getRowId={getRowId}

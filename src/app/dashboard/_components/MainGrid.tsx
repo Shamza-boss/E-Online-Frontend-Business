@@ -101,6 +101,19 @@ export default function MainGrid() {
         flexDirection: 'row',
       }}
     >
+      {/* Dashboard Overview Header */}
+      <Grid size={{ xs: 12 }}>
+        <Box sx={{ mb: 1 }}>
+          <Typography variant="h5" fontWeight={600} gutterBottom>
+            Dashboard Overview
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 800 }}>
+            Track your institution's key metrics at a glance. The cards below show activity over the <strong>last 30 days</strong>—hover 
+            over the trend chip to see how performance compares between the first and second half of the period. 
+            The sparkline visualizes daily activity.
+          </Typography>
+        </Box>
+      </Grid>
       {institutionStats.map((card, index) => (
         <Grid key={index} size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard {...card} />

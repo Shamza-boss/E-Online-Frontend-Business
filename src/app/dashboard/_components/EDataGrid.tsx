@@ -21,7 +21,7 @@ export default function EDataGrid(
   // Use noSsr to prevent state update before component mounts
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
 
-  const { sx, slotProps, ...rest } = props as any;
+  const { sx, slotProps, checkboxSelection, disableRowSelectionOnClick, ...rest } = props as any;
 
   const baseGridSx = React.useMemo(() => {
     const core = {
@@ -51,6 +51,26 @@ export default function EDataGrid(
       '& .MuiDataGrid-footerContainer': {
         flexShrink: 0,
       },
+      // Row animation styles for updates and deletes
+      '& .MuiDataGrid-row': {
+        transition: 'opacity 0.3s ease-in-out, background-color 0.3s ease-in-out, transform 0.3s ease-in-out',
+      },
+      '& .MuiDataGrid-row.row-deleted': {
+        opacity: 0,
+        transform: 'translateX(-20px)',
+        backgroundColor: theme.palette.error.light,
+      },
+      '& .MuiDataGrid-row.row-updated': {
+        animation: 'rowFlash 0.6s ease-in-out',
+      },
+      '@keyframes rowFlash': {
+        '0%': {
+          backgroundColor: theme.palette.success.light,
+        },
+        '100%': {
+          backgroundColor: 'transparent',
+        },
+      },
     };
 
     if (!sx) {
@@ -58,7 +78,7 @@ export default function EDataGrid(
     }
 
     return Array.isArray(sx) ? [core, ...sx] : [core, sx];
-  }, [sx]);
+  }, [sx, theme.palette.error.light, theme.palette.success.light]);
 
   const mergedSlotProps = React.useMemo(() => {
     const defaultFilterPanel = {
@@ -140,6 +160,9 @@ export default function EDataGrid(
       <DataGrid
         {...rest}
         sx={baseGridSx}
+        // Globally disable row selection - allow clicking but not selecting
+        checkboxSelection={false}
+        disableRowSelectionOnClick
         //Make densiity controlable
         density="standard"
         slotProps={mergedSlotProps}

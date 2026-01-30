@@ -1,7 +1,8 @@
 'use client';
 
-import { Button, IconButton, Stack, Tooltip } from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Button, Stack, Tooltip, Typography, Box } from '@mui/material';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import SchoolIcon from '@mui/icons-material/School';
 
 interface ManagementHeaderProps {
     activeTab: string;
@@ -21,68 +22,79 @@ export default function ManagementHeader({
     onOpenAcademicsCreator,
 }: ManagementHeaderProps) {
     const noPermissionTooltip = !isElevated
-        ? 'Only administrators and moderators can make changes on this page. Please contact your administrator for assistance.'
+        ? 'Only administrators can make changes on this page. Please contact your administrator for assistance.'
         : '';
 
     return (
-        <Stack spacing={2} direction="row">
-            {activeTab === '2' && (
-                <>
-                    <Tooltip title={noPermissionTooltip}>
-                        <span>
-                            <Button
-                                sx={{ maxWidth: 'max-content' }}
-                                variant="outlined"
-                                onClick={onOpenClassCreator}
-                                disabled={!isElevated}
-                            >
-                                Create course
-                            </Button>
-                        </span>
-                    </Tooltip>
-                    <Button
-                        sx={{ maxWidth: 'max-content' }}
-                        variant="outlined"
-                        onClick={onOpenSubjectCreator}
-                        disabled={!isElevated}
-                    >
-                        Create subjects
-                    </Button>
-                    <Button
-                        sx={{ maxWidth: 'max-content' }}
-                        variant="outlined"
-                        onClick={onOpenAcademicsCreator}
-                        disabled={!isElevated}
-                    >
-                        Create academic levels
-                    </Button>
-                </>
-            )}
-            {activeTab === '1' && (
-                <>
-                    <Tooltip title={noPermissionTooltip}>
-                        <span>
-                            <Button
-                                sx={{ maxWidth: 'max-content' }}
-                                variant="outlined"
-                                onClick={onOpenRegisterPerson}
-                                disabled={!isElevated}
-                            >
-                                Register person
-                            </Button>
-                        </span>
-                    </Tooltip>
-                    <Tooltip title="Use the trash icon in the table actions to remove a person. A confirmation dialog will appear before deletion.">
-                        <IconButton
-                            size="small"
-                            sx={{ alignSelf: 'center' }}
-                            aria-label="People management help"
-                        >
-                            <InfoOutlinedIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                </>
-            )}
-        </Stack>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Stack spacing={2} direction="row" alignItems="center">
+                {activeTab === '2' && (
+                    <>
+                        <Tooltip title={isElevated ? 'Add a new course to your institution' : noPermissionTooltip}>
+                            <span>
+                                <Button
+                                    sx={{ maxWidth: 'max-content' }}
+                                    variant="contained"
+                                    startIcon={<SchoolIcon />}
+                                    onClick={onOpenClassCreator}
+                                    disabled={!isElevated}
+                                >
+                                    New Course
+                                </Button>
+                            </span>
+                        </Tooltip>
+                        <Tooltip title={isElevated ? 'Add a new subject that courses can be linked to' : noPermissionTooltip}>
+                            <span>
+                                <Button
+                                    sx={{ maxWidth: 'max-content' }}
+                                    variant="outlined"
+                                    onClick={onOpenSubjectCreator}
+                                    disabled={!isElevated}
+                                >
+                                    Add Subject
+                                </Button>
+                            </span>
+                        </Tooltip>
+                        <Tooltip title={isElevated ? 'Add a new academic level (e.g., Grade 10, Year 1)' : noPermissionTooltip}>
+                            <span>
+                                <Button
+                                    sx={{ maxWidth: 'max-content' }}
+                                    variant="outlined"
+                                    onClick={onOpenAcademicsCreator}
+                                    disabled={!isElevated}
+                                >
+                                    Add Academic Level
+                                </Button>
+                            </span>
+                        </Tooltip>
+                    </>
+                )}
+                {activeTab === '1' && (
+                    <>
+                        <Tooltip title={isElevated ? 'Invite a new user (student, instructor, or admin) to your institution' : noPermissionTooltip}>
+                            <span>
+                                <Button
+                                    sx={{ maxWidth: 'max-content' }}
+                                    variant="contained"
+                                    startIcon={<PersonAddIcon />}
+                                    onClick={onOpenRegisterPerson}
+                                    disabled={!isElevated}
+                                >
+                                    Add New User
+                                </Button>
+                            </span>
+                        </Tooltip>
+                    </>
+                )}
+            </Stack>
+            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 'fit-content' }}>
+                {activeTab === '1' && (
+                    <>Use the <strong>Actions</strong> column to edit or remove users. Click a row&apos;s edit icon to modify details inline.</>
+                )}
+                {activeTab === '2' && (
+                    <>Manage your courses here. Use <strong>Actions</strong> to edit or delete. Click Subjects or Academic Levels using the buttons above.</>
+                )}
+            </Typography>
+        </Box>
     );
 }

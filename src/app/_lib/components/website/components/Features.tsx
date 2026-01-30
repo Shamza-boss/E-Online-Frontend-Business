@@ -193,9 +193,13 @@ export default function Features() {
         py: { xs: 10, sm: 16 },
         position: 'relative',
         overflow: 'hidden',
+        // Space background for dark, clean white for light
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(180deg, #0a0a1a 0%, #020617 50%, #000000 100%)'
+          : 'linear-gradient(180deg, #f1f5f9 0%, #ffffff 50%, #f8fafc 100%)',
       }}
     >
-      {/* Background gradient orbs */}
+      {/* Background gradient orbs - nebula effects */}
       <Box
         sx={{
           position: 'absolute',
@@ -205,7 +209,7 @@ export default function Features() {
           height: 500,
           borderRadius: '50%',
           background: theme.palette.mode === 'dark'
-            ? 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)'
+            ? 'radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%)'
             : 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)',
           filter: 'blur(40px)',
           pointerEvents: 'none',
@@ -220,9 +224,29 @@ export default function Features() {
           height: 400,
           borderRadius: '50%',
           background: theme.palette.mode === 'dark'
-            ? 'radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%)'
+            ? 'radial-gradient(circle, rgba(236, 72, 153, 0.25) 0%, transparent 70%)'
             : 'radial-gradient(circle, rgba(236, 72, 153, 0.08) 0%, transparent 70%)',
           filter: 'blur(40px)',
+          pointerEvents: 'none',
+        }}
+      />
+      {/* Additional stars for Features section */}
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `
+            radial-gradient(1px 1px at 20px 30px, white, transparent),
+            radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.8), transparent),
+            radial-gradient(1.5px 1.5px at 90px 40px, white, transparent),
+            radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+            radial-gradient(1.2px 1.2px at 160px 120px, white, transparent),
+            radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.7), transparent),
+            radial-gradient(1.5px 1.5px at 250px 150px, white, transparent),
+            radial-gradient(1px 1px at 300px 100px, rgba(255,255,255,0.5), transparent)
+          `,
+          backgroundSize: '350px 200px',
+          opacity: theme.palette.mode === 'dark' ? 0.6 : 0,
           pointerEvents: 'none',
         }}
       />
@@ -239,7 +263,7 @@ export default function Features() {
             component="span"
             variant="overline"
             sx={{
-              color: 'primary.main',
+              color: theme.palette.mode === 'dark' ? '#A5B4FC' : 'primary.main',
               fontWeight: 700,
               letterSpacing: 2,
               mb: 1,
@@ -254,6 +278,7 @@ export default function Features() {
             sx={{
               fontWeight: 800,
               mb: 2,
+              color: theme.palette.mode === 'dark' ? '#fff' : 'text.primary',
             }}
           >
             Everything Your Organization Needs
@@ -261,7 +286,7 @@ export default function Features() {
           <Typography
             variant="h6"
             sx={{
-              color: 'text.secondary',
+              color: theme.palette.mode === 'dark' ? alpha('#fff', 0.7) : 'text.secondary',
               maxWidth: 700,
               fontWeight: 400,
             }}

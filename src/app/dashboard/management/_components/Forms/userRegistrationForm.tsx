@@ -8,6 +8,7 @@ import {
   Box,
   TextField,
   Button,
+  Alert,
 } from '@mui/material';
 import { useForm, getFormProps } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
@@ -66,19 +67,25 @@ export default function UserRegistrationForm() {
         fullWidth
         margin="normal"
       />
+      <Alert severity="info" sx={{ my: 2 }}>
+        <strong>Important:</strong> Please ensure the email address is correct. Email addresses cannot be changed after registration. If a change is needed, you will need to contact support.
+      </Alert>
       <TextField
         placeholder="Email"
+        label="Email"
         key={email.key}
         name={email.name}
         defaultValue={email.initialValue}
         error={!email.valid}
-        helperText={email.errors || ''}
+        helperText={email.errors || 'This will be used for login and cannot be changed later.'}
         fullWidth
         margin="normal"
       />
       <FormControl fullWidth error={!role.valid} margin="normal">
-        <InputLabel>Role</InputLabel>
+        <InputLabel id="role-label">Role</InputLabel>
         <Select
+          labelId="role-label"
+          label="Role"
           key={role.key}
           name={role.name}
           defaultValue={`${role.initialValue || ''}`}

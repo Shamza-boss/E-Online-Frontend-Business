@@ -17,6 +17,7 @@ import ColorModeIconDropdown from '../../shared-theme/ColorModelIconDropdown';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import useAuthActions from '../../../hooks/useAuthActions';
+import { useWarp } from '../../shared-theme/WarpTransition';
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -36,6 +37,7 @@ export default function AppAppBar() {
   const [open, setOpen] = React.useState(false);
   const { data: session } = useSession();
   const { handleSignOut } = useAuthActions();
+  const { warpTo } = useWarp();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -108,16 +110,12 @@ export default function AppAppBar() {
           >
             {!session ? (
               <>
-                <Link href="/signin">
-                  <Button color="primary" variant="text" size="small">
-                    Sign in
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button color="primary" variant="contained" size="small">
-                    Sign up
-                  </Button>
-                </Link>
+                <Button color="primary" variant="text" size="small" onClick={() => warpTo('/signin', { direction: 'right' })}>
+                  Sign in
+                </Button>
+                <Button color="primary" variant="contained" size="small" onClick={() => warpTo('/signup')}>
+                  Sign up
+                </Button>
               </>
             ) : (
               <>

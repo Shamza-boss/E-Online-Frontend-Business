@@ -24,7 +24,7 @@ export const ClassToolbar: React.FC<ClassToolbarProps> = ({
                 </IconButton>
             </Tooltip>
 
-            <Button variant="outlined" onClick={onToggleNotes}>
+            <Button variant="contained" onClick={onToggleNotes}>
                 {notesOpen ? 'Hide' : 'Show'} notes
             </Button>
         </Stack>

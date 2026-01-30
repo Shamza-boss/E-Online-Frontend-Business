@@ -32,6 +32,24 @@ function getDaysInMonth(month: number, year: number) {
   return days;
 }
 
+/**
+ * Generate labels for the last 30 days ending today
+ */
+function getLast30DaysLabels(): string[] {
+  const labels: string[] = [];
+  const today = new Date();
+  
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+    const day = date.getDate();
+    labels.push(`${monthName} ${day}`);
+  }
+  
+  return labels;
+}
+
 function AreaGradient({ color, id }: { color: string; id: string }) {
   return (
     <defs>
@@ -115,7 +133,7 @@ export default function StatCard({
   loading,
 }: StatCardProps) {
   const theme = useTheme();
-  const daysInWeek = getDaysInMonth(4, 2024);
+  const last30DaysLabels = getLast30DaysLabels();
   const trendData = calculateTrendValue(data);
   const displayValue = formatDisplayValue(value);
 
@@ -256,7 +274,7 @@ export default function StatCard({
               showTooltip
               xAxis={{
                 scaleType: 'band',
-                data: daysInWeek,
+                data: last30DaysLabels,
               }}
               sx={{
                 [`& .${areaElementClasses.root}`]: {

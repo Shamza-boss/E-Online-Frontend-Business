@@ -3,33 +3,27 @@ import React from 'react';
 import {
   GridActionsCellItem,
   GridColDef,
-  GridRowId,
-  GridRowModes,
-  GridRowModesModel,
-  GridRowModel,
   GridRowParams,
   GridPaginationModel,
   GridSortModel,
 } from '@mui/x-data-grid';
 import { useSession } from 'next-auth/react';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import useSWR from 'swr';
-import { getAllowedRoles, roleOptions } from '@/app/_lib/common/functions';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { RoleChip } from '@/app/_lib/components/role/roleChip';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { UserDto } from '@/app/_lib/interfaces/types';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
-import { deleteUser, getUsers, updateUser } from '@/app/_lib/actions/users';
+import { deleteUser, getUsers } from '@/app/_lib/actions/users';
 import { useRegisterSearch } from '@/app/_lib/context/SearchContext';
 import {
   PagedResult,
   PaginationParams,
 } from '@/app/_lib/interfaces/pagination';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
+import EditUserModal from '../Modals/EditUserModal';
 
 interface UserManagementDataGridProps {
   active: boolean;
@@ -64,12 +58,12 @@ const sanitizeOptionalInput = (value: unknown) => {
 export default function UserManagementDataGrid({
   active,
 }: UserManagementDataGridProps) {
-  const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
-    {}
-  );
+  const [editTarget, setEditTarget] = React.useState<UserDto | null>(null);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<UserDto | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [deletingRowId, setDeletingRowId] = React.useState<string | null>(null);
   const [paginationModel, setPaginationModel] =
     React.useState<GridPaginationModel>({
       page: 0,
@@ -172,19 +166,18 @@ export default function UserManagementDataGrid({
   const userRole = Number(currentUserRole);
   const isElevated = userRole === UserRole.Admin;
 
-  const handleEditClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+  const handleEditClick = (user: UserDto) => {
+    setEditTarget(user);
+    setEditModalOpen(true);
   };
 
-  const handleSaveClick = (id: GridRowId) => async () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setEditTarget(null);
   };
 
-  const handleCancelClick = (id: GridRowId) => () => {
-    setRowModesModel({
-      ...rowModesModel,
-      [id]: { mode: GridRowModes.View, ignoreModifications: true },
-    });
+  const handleEditSuccess = async () => {
+    await mutateUsers();
   };
 
   const columns: GridColDef[] = [
@@ -193,91 +186,49 @@ export default function UserManagementDataGrid({
       headerName: 'First Name',
       flex: 1,
       minWidth: 120,
-      editable: isElevated,
     },
     {
       field: 'lastName',
       headerName: 'Last Name',
       flex: 1,
       minWidth: 120,
-      editable: isElevated,
     },
     {
       field: 'email',
       headerName: 'Email',
       flex: 1,
       minWidth: 200,
-      editable: isElevated,
     },
     {
       field: 'role',
       headerName: 'Role',
       flex: 1,
       minWidth: 120,
-      editable: isElevated,
-      type: 'singleSelect',
-      valueOptions: (params) => {
-        const allowedRoles = getAllowedRoles(currentUserRole, params.row);
-        const currentRole = roleOptions.find(
-          (r) => r.value === params.row.role
-        );
-        if (
-          currentRole &&
-          !allowedRoles.some((r) => r.value === currentRole.value)
-        ) {
-          return [...allowedRoles, currentRole].map((r) => ({
-            value: r.value,
-            label: r.label,
-          }));
-        }
-        return allowedRoles.map((r) => ({ value: r.value, label: r.label }));
-      },
       renderCell: (params) => <RoleChip role={params.value} />,
     },
     {
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',
+      description: 'Edit user details or remove a user. A confirmation dialog will appear before deletion.',
       minWidth: 110,
-      getActions: ({ id, row }: GridRowParams<UserDto>) => {
-        const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-        if (isInEditMode) {
-          return [
-            <GridActionsCellItem
-              key="save"
-              icon={<SaveIcon />}
-              label="Save"
-              onClick={handleSaveClick(id)}
-              color="primary"
-              style={{ border: 0, backgroundColor: 'transparent' }}
-            />,
-            <GridActionsCellItem
-              key="cancel"
-              icon={<CancelIcon />}
-              label="Cancel"
-              onClick={handleCancelClick(id)}
-              color="inherit"
-              style={{ border: 0, backgroundColor: 'transparent' }}
-            />,
-          ];
-        }
+      getActions: ({ row }: GridRowParams<UserDto>) => {
         return [
           <GridActionsCellItem
             key="edit"
             icon={<EditIcon />}
             label="Edit"
             disabled={!isElevated}
-            onClick={handleEditClick(id)}
+            onClick={() => handleEditClick(row)}
             color="primary"
             style={{ border: 0, backgroundColor: 'transparent' }}
           />,
           <GridActionsCellItem
             key="delete"
-            icon={<DeleteIcon />}
+            icon={<DeleteOutlineIcon sx={{ color: 'error.main' }} />}
             label="Delete"
             disabled={!isElevated}
             onClick={() => handlePromptDelete(row)}
-            color="inherit"
             style={{ border: 0, backgroundColor: 'transparent' }}
           />,
         ];
@@ -303,6 +254,11 @@ export default function UserManagementDataGrid({
       return;
     }
     setIsDeleting(true);
+    setDeletingRowId(deleteTarget.userId);
+    
+    // Small delay to show the delete animation
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
     try {
       await deleteUser(deleteTarget.userId);
       alert.success('User deleted successfully');
@@ -314,49 +270,43 @@ export default function UserManagementDataGrid({
       alert.error(message);
     } finally {
       setIsDeleting(false);
+      setDeletingRowId(null);
     }
-  };
-
-  const processRowUpdate = async (
-    newRow: GridRowModel,
-    oldRow: GridRowModel
-  ) => {
-    try {
-      await updateUser(newRow as UserDto);
-      alert.success('User details updated successfully');
-      await mutateUsers();
-      return { ...newRow };
-    } catch (err: any) {
-      alert.error(`Failed to update user: ${err.message}`);
-      return oldRow;
-    }
-  };
-
-  const handleRowUpdateError = (error: Error) => {
-    alert.error(`Failed to update row: ${error.message}`);
   };
 
   const dataGridSlotProps = React.useMemo(
     () => ({
       loadingOverlay: {
-        variant: 'linear-progress' as const,
-        noRowsVariant: 'linear-progress' as const,
+        variant: 'skeleton' as const,
+        noRowsVariant: 'skeleton' as const,
       },
     }),
     []
   );
 
+  const getRowClassName = React.useCallback(
+    (params: any) => {
+      const classes = [];
+      if (params.indexRelativeToCurrentPage % 2 === 0) {
+        classes.push('even');
+      } else {
+        classes.push('odd');
+      }
+      if (deletingRowId === params.row.userId) {
+        classes.push('row-deleted');
+      }
+      return classes.join(' ');
+    },
+    [deletingRowId]
+  );
+
   return (
     <>
       <EDataGrid
-        checkboxSelection={isElevated}
         rows={users?.items ?? []}
         columns={columns}
         getRowId={(r) => r.userId}
-        getRowClassName={(params) =>
-          params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
-        }
-        editMode="row"
+        getRowClassName={getRowClassName}
         paginationMode="server"
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}
@@ -365,12 +315,15 @@ export default function UserManagementDataGrid({
         sortingMode="server"
         sortModel={sortModel}
         onSortModelChange={setSortModel}
-        rowModesModel={rowModesModel}
-        onRowModesModelChange={setRowModesModel}
-        processRowUpdate={processRowUpdate}
-        onProcessRowUpdateError={handleRowUpdateError}
         loading={usersLoading || usersValidating}
         slotProps={dataGridSlotProps}
+      />
+      <EditUserModal
+        open={editModalOpen}
+        user={editTarget}
+        isAdmin={isElevated}
+        onClose={handleCloseEditModal}
+        onSuccess={handleEditSuccess}
       />
       <ConfirmDialog
         open={deleteDialogOpen}

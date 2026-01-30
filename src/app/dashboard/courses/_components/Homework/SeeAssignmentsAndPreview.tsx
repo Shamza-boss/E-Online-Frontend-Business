@@ -50,8 +50,14 @@ export default function SeeAssignmentsAndPreview({
   const { data: allAssignments, isLoading } = useSWR<HomeworkAssignmentDto[]>(
     userId ? ['student-assignments', userId] : null,
     () => getStudentAssignmentsClient(userId!),
-    { revalidateOnFocus: true }
+    { 
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
   );
+
+  // Show loading when session is loading or data is fetching
+  const isDataLoading = !session || isLoading;
 
   // Filter assignments for this classroom
   const data = useMemo(() => {
@@ -188,11 +194,11 @@ export default function SeeAssignmentsAndPreview({
             }
             initialState={{ pagination: { paginationModel: { pageSize: 20 } } }}
             pageSizeOptions={[10, 20, 50]}
-            loading={isLoading}
+            loading={isDataLoading}
             slotProps={{
               loadingOverlay: {
-                variant: 'linear-progress',
-                noRowsVariant: 'linear-progress',
+                variant: 'skeleton',
+                noRowsVariant: 'skeleton',
               },
             }}
           />

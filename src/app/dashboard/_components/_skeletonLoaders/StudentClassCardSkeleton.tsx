@@ -1,59 +1,123 @@
 import Box from '@mui/material/Box';
 import Skeleton from '@mui/material/Skeleton';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import { Grid } from '@mui/material';
+import {
+  StyledCard,
+  StyledCardContent,
+} from '@/app/_lib/components/website/components/styled/StyledComponents';
+
+interface StudentClassCardSkeletonProps {
+  count?: number;
+}
 
 export default function StudentClassCardSkeleton({
-  count = 4, // Default count to 4 if not provided
-}: {
-  count: Number | undefined;
-}) {
+  count = 4,
+}: StudentClassCardSkeletonProps) {
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Grid container spacing={2}>
-        {[...Array(count)].map((_, idx) => (
-          <Grid key={idx} size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ width: '100%', padding: 0 }}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: 'repeat(1, 1fr)',
+          sm: 'repeat(2, 1fr)',
+          md: 'repeat(3, 1fr)',
+          lg: 'repeat(4, 1fr)',
+        },
+        gap: 2,
+      }}
+    >
+      {[...Array(count)].map((_, idx) => (
+        <Box key={idx} sx={{ width: '100%' }}>
+          <StyledCard variant="outlined" tabIndex={-1} sx={{ borderRadius: 3 }}>
+            {/* Image area - glass skeleton effect matching the gradient header */}
+            <Box
+              sx={{
+                width: '100%',
+                aspectRatio: '16 / 9',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                borderTopLeftRadius: 10,
+                borderTopRightRadius: 10,
+                overflow: 'hidden',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Skeleton
+                variant="rectangular"
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                }}
+                animation="wave"
+              />
+              {/* Floating icon skeleton */}
+              <Skeleton
+                variant="circular"
+                width={80}
+                height={80}
+                sx={{
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+                animation="wave"
+              />
+            </Box>
+
+            {/* Content area - matching ClassCard structure */}
+            <StyledCardContent sx={{ padding: 2 }}>
+              {/* Academic level caption */}
+              <Skeleton variant="text" width="30%" height={18} />
+
+              {/* Class name (h6) */}
+              <Skeleton variant="text" width="70%" height={28} sx={{ mt: 0.5 }} />
+
+              {/* Description text (2 lines) */}
+              <Skeleton variant="text" width="100%" height={20} sx={{ mt: 1 }} />
+              <Skeleton variant="text" width="85%" height={20} />
+            </StyledCardContent>
+
+            {/* Footer area - avatar, teacher name, subject */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                gap: 2,
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px',
+              }}
+            >
               <Box
                 sx={{
                   display: 'flex',
-                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 1,
                   alignItems: 'center',
-                  height: 194, // matches CalculateIcon size in ClassCard
-                  width: '100%',
-                  backgroundColor: '#5d99a8',
                 }}
               >
-                <Skeleton
-                  variant="circular"
-                  width={120}
-                  height={120}
-                  sx={{ bgcolor: '#7fbac9' }}
-                />
+                <Skeleton variant="circular" width={24} height={24} />
+                <Skeleton variant="text" width={60} height={18} />
               </Box>
-              <CardContent sx={{ padding: 2 }}>
-                <Skeleton
-                  variant="text"
-                  width="60%"
-                  height={32}
-                  sx={{ mb: 1 }}
-                />
-                <Skeleton
-                  variant="text"
-                  width="40%"
-                  height={24}
-                  sx={{ mb: 2 }}
-                />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Skeleton variant="text" width="40%" height={20} />
-                  <Skeleton variant="text" width="30%" height={20} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                <Skeleton variant="circular" width={16} height={16} />
+                <Skeleton variant="text" width={60} height={18} />
+              </Box>
+            </Box>
+          </StyledCard>
+        </Box>
+      ))}
     </Box>
   );
 }
