@@ -49,7 +49,7 @@ import type {
     StatsGraphDto,
 } from '@/app/_lib/interfaces/types';
 import useSWR from 'swr';
-import { getMySettingsClient } from '@/app/_lib/actions';
+import { getMySettings } from '@/app/_lib/actions';
 
 type ChipTone = ChipProps['color'];
 
@@ -267,7 +267,7 @@ export default function SettingsExperience() {
     const theme = useTheme();
     const { data, error, isLoading } = useSWR<SettingsResponseDto>(
         'my-settings',
-        getMySettingsClient
+        getMySettings
     );
 
     // Loading state

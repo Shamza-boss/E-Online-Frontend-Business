@@ -42,7 +42,7 @@ export default function StudentClassesManagementClient({ fallbackClasses }: Prop
               </span>
             </Tooltip>
           </Stack>
-          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 600 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 'max-content' }}>
             {hasClasses 
               ? <>Select a course below to manage it, or use <strong>Enroll Students</strong> to add students to any of your courses.</>
               : "You don't have any courses yet. Create a course to start enrolling students."

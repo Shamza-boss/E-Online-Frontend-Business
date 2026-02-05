@@ -59,7 +59,7 @@ export default function LibraryHeader({
             </Stack>
             
             {/* Explanatory section */}
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: 700 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: 'max-content' }}>
                 Your organization's centralized document library. PDFs uploaded here are available to trainees 
                 enrolled in your institution's courses. Instructors and admins can publish training materials, 
                 policies, and reference documents.
