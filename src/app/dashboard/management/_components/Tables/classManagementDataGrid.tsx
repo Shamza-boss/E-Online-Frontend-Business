@@ -1,19 +1,14 @@
 'use client';
 
-import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   GridActionsCellItem,
   GridColDef,
   GridPaginationModel,
-  GridRowId,
-  GridRowModel,
-  GridRowModes,
-  GridRowModesModel,
   GridRowParams,
   GridSortModel,
 } from '@mui/x-data-grid';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Close';
+import { Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import useSWR from 'swr';
@@ -27,8 +22,8 @@ import EDataGrid from '@/app/dashboard/_components/EDataGrid';
 import {
   deleteClassroom,
   getClassroomsAndData,
-  updateClassroom,
 } from '@/app/_lib/actions/classrooms';
+import EditClassroomModal from '../Modals/EditClassroomModal';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { useSession } from 'next-auth/react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
@@ -76,9 +71,8 @@ export default function ClassManagementDataGrid({
   const isElevated = userRole === UserRole.Admin;
 
   const alert = useAlert();
-  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-  const rowModesModelRef = useRef<GridRowModesModel>(rowModesModel);
-  rowModesModelRef.current = rowModesModel;
+  const [editTarget, setEditTarget] = useState<ClassroomDetailsDto | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ClassroomDetailsDto | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -266,20 +260,19 @@ export default function ClassManagementDataGrid({
     [classesResult?.items]
   );
 
-  const handleEditClick = useCallback((id: GridRowId) => () => {
-    setRowModesModel((prev) => ({ ...prev, [id]: { mode: GridRowModes.Edit } }));
+  const handleEditClick = useCallback((classroom: ClassroomDetailsDto) => {
+    setEditTarget(classroom);
+    setEditModalOpen(true);
   }, []);
 
-  const handleSaveClick = useCallback((id: GridRowId) => () => {
-    setRowModesModel((prev) => ({ ...prev, [id]: { mode: GridRowModes.View } }));
+  const handleCloseEditModal = useCallback(() => {
+    setEditModalOpen(false);
+    setEditTarget(null);
   }, []);
 
-  const handleCancelClick = useCallback((id: GridRowId) => () => {
-    setRowModesModel((prev) => ({
-      ...prev,
-      [id]: { mode: GridRowModes.View, ignoreModifications: true },
-    }));
-  }, []);
+  const handleEditSuccess = useCallback(async () => {
+    await mutateClasses();
+  }, [mutateClasses]);
 
   const handlePromptDelete = useCallback((row: ClassroomDetailsDto) => {
     if (!isElevated) return;
@@ -293,15 +286,12 @@ export default function ClassManagementDataGrid({
       headerName: 'Course name',
       flex: 1,
       minWidth: 150,
-      editable: isElevated,
     },
     {
       field: 'teacherId',
       headerName: 'Instructor',
       flex: 1,
       minWidth: 160,
-      type: 'singleSelect',
-      valueOptions: teacherOptions,
       valueFormatter: (params: any, row: any) => {
         const teacherId = params.value as string | undefined;
         if (!teacherId) {
@@ -315,36 +305,29 @@ export default function ClassManagementDataGrid({
           'N/A'
         );
       },
-      editable: isElevated,
     },
     {
       field: 'numberOfUsers',
       headerName: 'Users in class',
       flex: 1,
       minWidth: 120,
-      editable: false,
     },
     {
       field: 'academicLevelId',
       headerName: 'Academic level',
       flex: 1,
       minWidth: 130,
-      type: 'singleSelect',
-      valueOptions: academicOptions,
       valueFormatter: (value: any, row: any) => {
         const levelId = value as string | undefined;
         if (!levelId) return row.academicLevelName ?? 'N/A';
         return academicLabelMap.get(levelId) ?? row.academicLevelName ?? 'N/A';
       },
-      editable: isElevated,
     },
     {
       field: 'subjectId',
       headerName: 'Subject',
       flex: 1,
       minWidth: 130,
-      type: 'singleSelect',
-      valueOptions: subjectValueOptions,
       valueFormatter: (value: any, row: any) => {
         const subjectId = value as string | undefined;
         if (!subjectId) {
@@ -358,14 +341,12 @@ export default function ClassManagementDataGrid({
           ? `${row.subjectName} — ${row.subjectCode}`
           : 'N/A';
       },
-      editable: isElevated,
     },
     {
       field: 'subjectCode',
       headerName: 'Subject code',
       flex: 1,
       minWidth: 120,
-      editable: false,
       valueGetter: (_value, row) => {
         if (row.subjectId) {
           const entry = subjectLabelMap.get(row.subjectId);
@@ -378,61 +359,60 @@ export default function ClassManagementDataGrid({
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',
-      description: 'Edit course details inline or remove a course. A confirmation dialog will appear before deletion.',
-      width: 140,
-      getActions: ({ id, row }: GridRowParams<ClassroomDetailsDto>) => {
-        const isInEditMode = rowModesModelRef.current[id]?.mode === GridRowModes.Edit;
-        if (isInEditMode) {
-          return [
-            <GridActionsCellItem
-              key="save"
-              icon={<SaveIcon />}
-              label="Save"
-              onClick={handleSaveClick(id)}
-              color="primary"
-              style={{ border: 0, backgroundColor: 'transparent' }}
-            />,
-            <GridActionsCellItem
-              key="cancel"
-              icon={<CancelIcon />}
-              label="Cancel"
-              onClick={handleCancelClick(id)}
-              color="inherit"
-              style={{ border: 0, backgroundColor: 'transparent' }}
-            />,
-          ];
-        }
+      description: 'Edit course details or remove a course. A confirmation dialog will appear before deletion.',
+      minWidth: 110,
+      getActions: ({ row }: GridRowParams<ClassroomDetailsDto>) => {
+        const isDeleteDisabled = !isElevated;
+        const isEditDisabled = !isElevated;
+        
+        const getDeleteTooltip = () => {
+          if (!isElevated) return 'Only administrators can delete courses';
+          return 'Delete course';
+        };
+        
+        const getEditTooltip = () => {
+          if (!isElevated) return 'Only administrators can edit courses';
+          return 'Edit course';
+        };
+        
         return [
-          <GridActionsCellItem
-            key="edit"
-            icon={<EditIcon />}
-            label="Edit"
-            onClick={handleEditClick(id)}
-            disabled={!isElevated}
-            color="primary"
-            style={{ border: 0, backgroundColor: 'transparent' }}
-          />,
-          <GridActionsCellItem
-            key="delete"
-            icon={<DeleteOutlineIcon sx={{ color: 'error.main' }} />}
-            label="Delete"
-            onClick={() => handlePromptDelete(row)}
-            disabled={!isElevated}
-            style={{ border: 0, backgroundColor: 'transparent' }}
-          />,
+          <Tooltip key="edit-tooltip" title={getEditTooltip()} arrow>
+            <span>
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                label="Edit"
+                disabled={isEditDisabled}
+                onClick={() => handleEditClick(row)}
+                color="primary"
+                style={{ border: 0, backgroundColor: 'transparent' }}
+              />
+            </span>
+          </Tooltip>,
+          <Tooltip key="delete-tooltip" title={getDeleteTooltip()} arrow>
+            <span>
+              <GridActionsCellItem
+                icon={
+                  <DeleteOutlineIcon 
+                    sx={{ 
+                      color: isDeleteDisabled ? 'action.disabled' : 'error.main' 
+                    }} 
+                  />
+                }
+                label="Delete"
+                disabled={isDeleteDisabled}
+                onClick={() => handlePromptDelete(row)}
+                style={{ border: 0, backgroundColor: 'transparent' }}
+              />
+            </span>
+          </Tooltip>,
         ];
       },
     },
   ], [
     isElevated,
-    teacherOptions,
     teacherLabelMap,
-    academicOptions,
     academicLabelMap,
-    subjectValueOptions,
     subjectLabelMap,
-    handleSaveClick,
-    handleCancelClick,
     handleEditClick,
     handlePromptDelete,
   ]);
@@ -470,82 +450,7 @@ export default function ClassManagementDataGrid({
     }
   }, [deleteTarget?.classroomId, alert, mutateClasses]);
 
-  const processRowUpdate = useCallback(async (
-    newRow: GridRowModel,
-    oldRow: GridRowModel
-  ) => {
-    const mergedRow = {
-      ...(oldRow as ClassroomDetailsDto),
-      ...(newRow as ClassroomDetailsDto),
-    } as ClassroomDetailsDto;
 
-    try {
-      const payloadName =
-        typeof mergedRow.classroomName === 'string'
-          ? mergedRow.classroomName.trim()
-          : '';
-
-      if (!payloadName) {
-        throw new Error('Course name is required.');
-      }
-
-      const academicLevelId = mergedRow.academicLevelId ?? '';
-      const subjectId = mergedRow.subjectId ?? '';
-
-      if (!mergedRow.classroomId) {
-        throw new Error('Missing course identifier.');
-      }
-
-      if (!academicLevelId || !subjectId) {
-        throw new Error(
-          'Missing academic level or subject details required for updates.'
-        );
-      }
-
-      await updateClassroom({
-        id: mergedRow.classroomId,
-        name: payloadName,
-        teacherId: mergedRow.teacherId ?? null,
-        academicLevelId,
-        subjectId,
-      });
-
-      const updatedTeacher = instructorUsers.find(
-        (teacher) => teacher.userId === mergedRow.teacherId
-      );
-      const updatedAcademic = academics?.find(
-        (level) => level.id === academicLevelId
-      );
-      const updatedSubject = subjects?.find(
-        (subject) => subject.id === subjectId
-      );
-
-      const updatedRow: ClassroomDetailsDto = {
-        ...mergedRow,
-        teacherFirstName: mergedRow.teacherId
-          ? (updatedTeacher?.firstName ?? mergedRow.teacherFirstName)
-          : '',
-        teacherLastName: mergedRow.teacherId
-          ? (updatedTeacher?.lastName ?? mergedRow.teacherLastName)
-          : '',
-        academicLevelName: updatedAcademic?.name ?? mergedRow.academicLevelName,
-        subjectName: updatedSubject?.name ?? mergedRow.subjectName,
-        subjectCode: updatedSubject?.subjectCode ?? mergedRow.subjectCode,
-      };
-
-      alert.success('Course updated successfully');
-      await mutateClasses();
-      return updatedRow;
-    } catch (err: any) {
-      const message = err?.message || 'Failed to update course.';
-      alert.error(message);
-      return oldRow;
-    }
-  }, [instructorUsers, academics, subjects, alert, mutateClasses]);
-
-  const handleRowUpdateError = useCallback((error: Error) => {
-    alert.error(`Failed to update row: ${error.message}`);
-  }, [alert]);
 
   const dataGridSlotProps = useMemo(
     () => ({
@@ -586,7 +491,6 @@ export default function ClassManagementDataGrid({
         columns={columns}
         getRowId={getRowId}
         getRowClassName={getRowClassName}
-        editMode="row"
         paginationMode="server"
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}
@@ -595,12 +499,18 @@ export default function ClassManagementDataGrid({
         sortingMode="server"
         sortModel={sortModel}
         onSortModelChange={setSortModel}
-        rowModesModel={rowModesModel}
-        onRowModesModelChange={setRowModesModel}
-        processRowUpdate={processRowUpdate}
-        onProcessRowUpdateError={handleRowUpdateError}
         loading={classLoading}
         slotProps={dataGridSlotProps}
+      />
+      <EditClassroomModal
+        open={editModalOpen}
+        classroom={editTarget}
+        isAdmin={isElevated}
+        onClose={handleCloseEditModal}
+        onSuccess={handleEditSuccess}
+        teachers={instructorUsers}
+        academicLevels={academics ?? []}
+        subjects={subjects ?? []}
       />
       <ConfirmDialog
         open={deleteDialogOpen}

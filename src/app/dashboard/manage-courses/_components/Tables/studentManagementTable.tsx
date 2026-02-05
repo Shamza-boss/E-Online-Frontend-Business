@@ -18,7 +18,7 @@ import useSWR from 'swr';
 import { GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
 import EDataGrid from '../../../_components/EDataGrid';
 
-import { EnrollStudents, getAllStudentsClient, getAllClassroomsAndDataClient, getAllUsersInClassroomClient } from '../../../../_lib/actions';
+import { EnrollStudents, getAllStudents, getAllUsersInClassroom, getAllClassroomsAndData } from '../../../../_lib/actions';
 import {
   UserDto,
   EnrollStudentsDto,
@@ -36,7 +36,7 @@ const StudentManagementTable = () => {
 
   const { data: students, isLoading: studentsLoading } = useSWR<UserDto[]>(
     'all-students',
-    getAllStudentsClient,
+    getAllStudents,
     {
       revalidateOnFocus: false,
     }
@@ -44,13 +44,13 @@ const StudentManagementTable = () => {
 
   const { data: classRooms, isLoading: classesLoading } = useSWR<
     ClassroomDetailsDto[]
-  >('all-classrooms-details', getAllClassroomsAndDataClient, {
+    >('all-classrooms-details', getAllClassroomsAndData, {
     revalidateOnFocus: false,
   });
 
   const { data: enrolledStudents = [] } = useSWR<UserDto[]>(
     classId ? ['classroom-users', classId] : null,
-    () => getAllUsersInClassroomClient(classId),
+    () => getAllUsersInClassroom(classId),
     {
       revalidateOnFocus: false,
     }

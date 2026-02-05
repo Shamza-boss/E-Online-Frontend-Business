@@ -47,6 +47,9 @@ export default function UserRegistrationForm() {
       action={action}
       sx={{ padding: 3 }}
     >
+      <Alert severity="info" sx={{ my: 2 }}>
+        <strong>Important:</strong> Please ensure the email address is correct. Email addresses cannot be changed after registration. If a change is needed, you will need to contact support.
+      </Alert>
       <TextField
         placeholder="First Name"
         key={firstName.key}
@@ -67,9 +70,6 @@ export default function UserRegistrationForm() {
         fullWidth
         margin="normal"
       />
-      <Alert severity="info" sx={{ my: 2 }}>
-        <strong>Important:</strong> Please ensure the email address is correct. Email addresses cannot be changed after registration. If a change is needed, you will need to contact support.
-      </Alert>
       <TextField
         placeholder="Email"
         label="Email"

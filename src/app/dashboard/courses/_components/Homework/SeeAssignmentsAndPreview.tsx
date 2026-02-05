@@ -20,8 +20,8 @@ import {
 } from '../../../../_lib/interfaces/types';
 import {
   getAssignmentById,
+  getStudentAssignments,
   submitHomework,
-  getStudentAssignmentsClient,
 } from '../../../../_lib/actions';
 import HomeworkView from './HomeworkView';
 import HomeworkReview from './HomeworkReview';
@@ -49,7 +49,7 @@ export default function SeeAssignmentsAndPreview({
   const userId = session?.user.id;
   const { data: allAssignments, isLoading } = useSWR<HomeworkAssignmentDto[]>(
     userId ? ['student-assignments', userId] : null,
-    () => getStudentAssignmentsClient(userId!),
+    () => getStudentAssignments(userId!),
     { 
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
@@ -98,7 +98,7 @@ export default function SeeAssignmentsAndPreview({
       submittedAt: new Date().toISOString(),
     };
     await submitHomework(newAssignment);
-    mutate('homeworkForClass');
+    mutate(['student-assignments', userId]);
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {

@@ -9,31 +9,35 @@ import {
   Button,
   DialogActions,
 } from '@mui/material';
-import { UserDto } from '@/app/_lib/interfaces/types';
-import EditUserForm from '../Forms/editUserForm';
+import { ClassroomDetailsDto, UserDto, AcademicLevelDto, SubjectDto } from '@/app/_lib/interfaces/types';
+import EditClassroomForm from '../Forms/editClassroomForm';
 
-interface EditUserModalProps {
+interface EditClassroomModalProps {
   open: boolean;
-  user: UserDto | null;
+  classroom: ClassroomDetailsDto | null;
   isAdmin: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  teachers: UserDto[];
+  academicLevels: AcademicLevelDto[];
+  subjects: SubjectDto[];
 }
 
-
-
-export default function EditUserModal({
+export default function EditClassroomModal({
   open,
-  user,
+  classroom,
   isAdmin,
   onClose,
   onSuccess,
-}: EditUserModalProps) {
+  teachers,
+  academicLevels,
+  subjects,
+}: EditClassroomModalProps) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ m: 0, p: 2 }}>
-        Edit User Details
+        Edit Course Details
       </DialogTitle>
       <IconButton
         aria-label="close"
@@ -47,7 +51,15 @@ export default function EditUserModal({
         <Close />
       </IconButton>
       <DialogContent dividers>
-        <EditUserForm user={user} isAdmin={isAdmin} handleClose={onClose} onSuccess={onSuccess} />
+        <EditClassroomForm 
+          classroom={classroom} 
+          isAdmin={isAdmin} 
+          handleClose={onClose} 
+          onSuccess={onSuccess}
+          teachers={teachers}
+          academicLevels={academicLevels}
+          subjects={subjects}
+        />
       </DialogContent>
       <DialogActions>
         <Button autoFocus onClick={onClose}>

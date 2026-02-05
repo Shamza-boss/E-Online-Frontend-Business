@@ -7,6 +7,7 @@ import {
   GridPaginationModel,
   GridSortModel,
 } from '@mui/x-data-grid';
+import { Tooltip } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -16,7 +17,6 @@ import { RoleChip } from '@/app/_lib/components/role/roleChip';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { UserDto } from '@/app/_lib/interfaces/types';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
-import { deleteUser, getUsers } from '@/app/_lib/actions/users';
 import { useRegisterSearch } from '@/app/_lib/context/SearchContext';
 import {
   PagedResult,
@@ -24,6 +24,7 @@ import {
 } from '@/app/_lib/interfaces/pagination';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 import EditUserModal from '../Modals/EditUserModal';
+import { deleteUser, getUsers } from '@/app/_lib/actions';
 
 interface UserManagementDataGridProps {
   active: boolean;
@@ -162,9 +163,12 @@ export default function UserManagementDataGrid({
   }, [users?.totalCount]);
 
   const currentUserRole = session?.user?.role as UserRole;
+  const currentUserEmail = session?.user?.email;
+  const primaryAdminEmail = session?.user?.primaryAdminEmail;
 
   const userRole = Number(currentUserRole);
   const isElevated = userRole === UserRole.Admin;
+  const isPrimaryAdmin = isElevated && currentUserEmail === primaryAdminEmail;
 
   const handleEditClick = (user: UserDto) => {
     setEditTarget(user);
@@ -213,24 +217,52 @@ export default function UserManagementDataGrid({
       description: 'Edit user details or remove a user. A confirmation dialog will appear before deletion.',
       minWidth: 110,
       getActions: ({ row }: GridRowParams<UserDto>) => {
+        const isAdminUser = row.role === UserRole.Admin;
+        const canDeleteAdmin = isPrimaryAdmin;
+        const isDeleteDisabled = !isElevated || (isAdminUser && !canDeleteAdmin);
+        const isEditDisabled = !isElevated;
+        
+        const getDeleteTooltip = () => {
+          if (!isElevated) return 'Only administrators can delete users';
+          if (isAdminUser && !canDeleteAdmin) return 'Only the primary administrator can delete admin accounts';
+          return 'Delete user';
+        };
+        
+        const getEditTooltip = () => {
+          if (!isElevated) return 'Only administrators can edit users';
+          return 'Edit user';
+        };
+        
         return [
-          <GridActionsCellItem
-            key="edit"
-            icon={<EditIcon />}
-            label="Edit"
-            disabled={!isElevated}
-            onClick={() => handleEditClick(row)}
-            color="primary"
-            style={{ border: 0, backgroundColor: 'transparent' }}
-          />,
-          <GridActionsCellItem
-            key="delete"
-            icon={<DeleteOutlineIcon sx={{ color: 'error.main' }} />}
-            label="Delete"
-            disabled={!isElevated}
-            onClick={() => handlePromptDelete(row)}
-            style={{ border: 0, backgroundColor: 'transparent' }}
-          />,
+          <Tooltip key="edit-tooltip" title={getEditTooltip()} arrow>
+            <span>
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                label="Edit"
+                disabled={isEditDisabled}
+                onClick={() => handleEditClick(row)}
+                color="primary"
+                style={{ border: 0, backgroundColor: 'transparent' }}
+              />
+            </span>
+          </Tooltip>,
+          <Tooltip key="delete-tooltip" title={getDeleteTooltip()} arrow>
+            <span>
+              <GridActionsCellItem
+                icon={
+                  <DeleteOutlineIcon 
+                    sx={{ 
+                      color: isDeleteDisabled ? 'action.disabled' : 'error.main' 
+                    }} 
+                  />
+                }
+                label="Delete"
+                disabled={isDeleteDisabled}
+                onClick={() => handlePromptDelete(row)}
+                style={{ border: 0, backgroundColor: 'transparent' }}
+              />
+            </span>
+          </Tooltip>,
         ];
       },
     },
@@ -238,6 +270,7 @@ export default function UserManagementDataGrid({
 
   const handlePromptDelete = (user: UserDto) => {
     if (!isElevated) return;
+    if (user.role === UserRole.Admin && !isPrimaryAdmin) return;
     setDeleteTarget(user);
     setDeleteDialogOpen(true);
   };
@@ -251,6 +284,12 @@ export default function UserManagementDataGrid({
   const handleConfirmDelete = async () => {
     if (!deleteTarget?.userId) {
       alert.error('Unable to determine which user to delete.');
+      return;
+    }
+    if (deleteTarget.role === UserRole.Admin && !isPrimaryAdmin) {
+      alert.error('Only the primary administrator can delete admin accounts.');
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
       return;
     }
     setIsDeleting(true);
@@ -320,7 +359,7 @@ export default function UserManagementDataGrid({
       />
       <EditUserModal
         open={editModalOpen}
-        user={editTarget}
+        user={editTarget} // <-- fix: never pass null, only undefined or UserDto
         isAdmin={isElevated}
         onClose={handleCloseEditModal}
         onSuccess={handleEditSuccess}

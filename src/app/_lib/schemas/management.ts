@@ -35,6 +35,19 @@ export const registrationSchema = z.object({
     .transform(Number), // Transform the string to a number
 });
 
+export const editUserSchema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters').max(20).nonempty('First name is required'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters').max(20).nonempty('Last name is required'),
+  email: z.string().email('Invalid email format').nonempty('Email is required'),
+  role: z
+    .enum([
+      String(UserRole.Admin),
+      String(UserRole.Trainee),
+      String(UserRole.Instructor),
+    ])
+    .transform(Number),
+});
+
 export const subjectsSchema = z.object({
   name: z.string().min(2).max(20).nonempty('Subject name is required'),
   group: z.string().min(2).max(20).nonempty('Group name is required'),
