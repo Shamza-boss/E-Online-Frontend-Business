@@ -160,9 +160,8 @@ export default function EDataGrid(
       <DataGrid
         {...rest}
         sx={baseGridSx}
-        // Globally disable row selection - allow clicking but not selecting
-        checkboxSelection={false}
-        disableRowSelectionOnClick
+        checkboxSelection={checkboxSelection}
+        disableRowSelectionOnClick={disableRowSelectionOnClick}
         //Make densiity controlable
         density="standard"
         slotProps={mergedSlotProps}
