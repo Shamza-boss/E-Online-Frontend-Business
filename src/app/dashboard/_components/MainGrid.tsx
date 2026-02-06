@@ -1,18 +1,11 @@
 'use client';
-import * as React from 'react';
+
 import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import ChartUserByCountry from './ChartUserByCountry';
-import CustomizedTreeView from './CustomizedTreeView';
 import CustomizedDataGrid from './CustomizedDataGrid';
-import HighlightedCard from './HighlightedCard';
 import PageViewsBarChart from './PageViewBarChart';
-import SessionsChart from './ActiveSubjectChart';
 import StatCard, { StatCardProps } from './StartCard';
-import { Grid, useTheme } from '@mui/material';
-import { useSession } from 'next-auth/react';
-import { UserRole } from '@/app/_lib/Enums/UserRole';
+import { Grid } from '@mui/material';
 import {
   useSystemDashboard,
   useInstitutionDashboard,
@@ -20,19 +13,7 @@ import {
 import ActiveSubjectsChart from './ActiveSubjectChart';
 
 export default function MainGrid() {
-  const { data: session } = useSession();
-  const isSystemAdmin = session?.user?.role === UserRole.PlatformAdmin;
-  const theme = useTheme();
-
-  const { data: systemData } = useSystemDashboard();
   const { data: institutionData, isLoading } = useInstitutionDashboard();
-
-  const peakHoursData = (systemData?.peakUsageHours || []).map(
-    (hourStat) => `${hourStat.hour}:00`
-  );
-  const peakLogins = (systemData?.peakUsageHours || []).map(
-    (hourStat) => hourStat.count
-  );
 
   const institutionStats: StatCardProps[] = [
     {
@@ -107,7 +88,7 @@ export default function MainGrid() {
           <Typography variant="h5" fontWeight={600} gutterBottom>
             Dashboard Overview
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 800 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 'max-content' }}>
             Track your institution's key metrics at a glance. The cards below show activity over the <strong>last 30 days</strong>—hover 
             over the trend chip to see how performance compares between the first and second half of the period. 
             The sparkline visualizes daily activity.
