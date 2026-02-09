@@ -291,7 +291,7 @@ export default function Features() {
               fontWeight: 400,
             }}
           >
-            Built for enterprises, designed for results. A complete corporate training
+            Built for enterprises, designed for results. A complete private internal training
             platform with powerful tools for content creation, certification, and analytics.
           </Typography>
         </MotionBox>

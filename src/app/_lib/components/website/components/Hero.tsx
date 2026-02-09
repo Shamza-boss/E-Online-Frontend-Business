@@ -182,7 +182,7 @@ export default function Hero() {
               >
                 <Chip
                   icon={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
-                  label="Your Private Corporate Learning Platform"
+                  label="Your Private Internal Training Platform"
                   size="small"
                   sx={{
                     mb: 3,
@@ -236,7 +236,7 @@ export default function Hero() {
                       WebkitTextFillColor: 'transparent',
                     }}
                   >
-                    Private Udemy
+                    Private Internal Training Platform
                   </Box>
                 </Typography>
               </MotionBox>
@@ -256,7 +256,7 @@ export default function Hero() {
                     maxWidth: 540,
                   }}
                 >
-                  AO Launchpad gives you complete control over your corporate training. 
+                  AO Launchpad gives you complete control over your private internal training. 
                   Create proprietary courses, certifications, and assessments—all private 
                   to your organization with enterprise-grade security.
                 </Typography>

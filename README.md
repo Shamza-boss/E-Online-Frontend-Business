@@ -1,6 +1,6 @@
 ### **Project Description**
 
-This project is a comprehensive educational platform designed to digitise the traditional classroom experience by streamlining homework management, note-taking, and learning content delivery. It empowers teachers to create, publish, and grade structured assignments while enabling students to submit and track their work through an intuitive interface. The platform includes a split-screen textbook viewer, rich note editor, and real-time feedback mechanisms to enhance study efficiency. Additionally, it aims to expand into a Udemy-like module, allowing expert educators to upload courses and create interactive exercises that deepen subject understanding. Ultimately, the platform addresses core challenges in education—such as paper dependency, limited teacher reach, and fragmented learning tools—by offering a unified, scalable, and learner-centered solution.
+This project is a comprehensive educational platform designed to digitise the traditional classroom experience by streamlining homework management, note-taking, and learning content delivery. It empowers teachers to create, publish, and grade structured assignments while enabling students to submit and track their work through an intuitive interface. The platform includes a split-screen textbook viewer, rich note editor, and real-time feedback mechanisms to enhance study efficiency. Additionally, it enables organizations to create and manage their own courses, allowing expert educators to upload training content and create interactive exercises that deepen subject understanding. Ultimately, the platform addresses core challenges in education—such as paper dependency, limited teacher reach, and fragmented learning tools—by offering a unified, scalable, and learner-centered solution.
 
 
 ### 🎯 **Project Summary**
@@ -10,7 +10,7 @@ The platform provides a structured ecosystem for:
 * **Teachers** to create, publish, and grade homework.
 * **Students** to complete, submit, and review their assignments.
 * **Institutions** to manage classes, users, subjects, and educational levels.
-* **Extended use** for note-taking, textbook referencing (split-screen), and eventually course hosting like Udemy.
+* **Extended use** for note-taking, textbook referencing (split-screen), and internal course hosting for organizations.
 
 ---
 
@@ -33,7 +33,7 @@ The platform provides a structured ecosystem for:
 
 4. **🧑‍🏫 Empowering Teachers to Teach at Scale**
 
-   * Teachers can build and share modular coursework (future Udemy-like feature).
+   * Teachers can build and share modular coursework for their organization.
    * Makes quality education accessible beyond the physical classroom.
 
 5. **📈 Supporting Adaptive & Personalized Learning**

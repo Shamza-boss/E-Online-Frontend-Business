@@ -276,7 +276,7 @@ export default function AboutPage(props: { disableCustomTheme?: boolean }) {
             >
               Every technology choice we made was deliberate. We selected tools that prioritize 
               performance, security, and long-term maintainability—because building 
-              a corporate training platform demands nothing less.
+              a private internal training platform demands nothing less.
             </Typography>
           </MotionBox>
 

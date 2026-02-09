@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     template: '%s | AO Launchpad',
   },
   description:
-    'AO Launchpad is a corporate Learning Management System by Absolute Online. Empower your organization to train employees with your own proprietary content.',
-  keywords: ['corporate training', 'LMS', 'employee training', 'enterprise learning', 'Absolute Online', 'workforce development'],
+    'AO Launchpad is a private internal Learning Management System by Absolute Online. Empower your organization to train employees with your own proprietary content.',
+  keywords: ['private internal training', 'LMS', 'employee training', 'enterprise learning', 'Absolute Online', 'workforce development'],
   authors: [{ name: 'Absolute Online' }],
   robots: {
     index: true,
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     title: 'AO Launchpad',
-    description: 'AO Launchpad is a corporate Learning Management System by Absolute Online. Empower your organization to train employees with your own proprietary content.',
+    description: 'AO Launchpad is a private internal Learning Management System by Absolute Online. Empower your organization to train employees with your own proprietary content.',
     siteName: 'AO Launchpad',
   },
 };

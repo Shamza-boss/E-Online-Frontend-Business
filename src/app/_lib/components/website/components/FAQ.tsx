@@ -21,7 +21,7 @@ const faqs: FAQItem[] = [
   {
     question: 'What is AO Launchpad and who is it for?',
     answer:
-      'AO Launchpad is a private corporate Learning Management System (LMS) by Absolute Online—think of it as your organization\'s own Udemy. It serves enterprises needing to train employees with proprietary content that stays within your organization. Perfect for call centers, sales teams, compliance training, onboarding programs, and professional development. Only your employees can access your courses.',
+      'AO Launchpad is a private internal Learning Management System (LMS) by Absolute Online designed for organizations to create and manage their own internal training courses. It serves enterprises needing to train employees with proprietary content that stays within your organization. Perfect for call centers, sales teams, compliance training, onboarding programs, and professional development. Only your employees can access your courses.',
   },
   {
     question: 'How does the assessment and certification system work?',
