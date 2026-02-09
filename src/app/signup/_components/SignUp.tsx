@@ -417,7 +417,32 @@ export default function SignUpPage() {
                           }
                           label={
                             <Typography variant="body2" color="text.secondary">
-                              I accept the terms and conditions
+                              I accept the{' '}
+                              <Link
+                                href="https://absoluteonline.co.za/terms"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{
+                                  color: theme.palette.secondary.main,
+                                  textDecoration: 'none',
+                                  '&:hover': { textDecoration: 'underline' },
+                                }}
+                              >
+                                Terms of Service
+                              </Link>
+                              {' '}and{' '}
+                              <Link
+                                href="https://absoluteonline.co.za/privacy"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{
+                                  color: theme.palette.secondary.main,
+                                  textDecoration: 'none',
+                                  '&:hover': { textDecoration: 'underline' },
+                                }}
+                              >
+                                Privacy Policy
+                              </Link>
                             </Typography>
                           }
                         />
@@ -494,6 +519,47 @@ export default function SignUpPage() {
                     }}
                   >
                     Sign In
+                  </Link>
+                </Typography>
+              </Box>
+
+              {/* Legal links footer */}
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  mt: 2,
+                  animation: 'fadeIn 0.8s ease 0.6s both',
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}
+                >
+                  <Link
+                    href="https://absoluteonline.co.za/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: 'text.secondary',
+                      textDecoration: 'none',
+                      '&:hover': { textDecoration: 'underline' },
+                    }}
+                  >
+                    Privacy Policy
+                  </Link>
+                  <span>•</span>
+                  <Link
+                    href="https://absoluteonline.co.za/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: 'text.secondary',
+                      textDecoration: 'none',
+                      '&:hover': { textDecoration: 'underline' },
+                    }}
+                  >
+                    Terms of Service
                   </Link>
                 </Typography>
               </Box>

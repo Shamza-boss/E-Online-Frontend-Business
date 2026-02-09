@@ -8,6 +8,8 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
+import Link from '@mui/material/Link';
+import Box from '@mui/material/Box';
 
 import MenuButton from './MenuButton';
 import MenuContent from './MenuContent';
@@ -77,6 +79,47 @@ export default function SideMenuMobile({
           <Divider />
         </Stack>
         {/* <CardAlert /> */}
+        
+        {/* Legal links */}
+        <Box sx={{ px: 2, py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+              display: 'flex',
+              gap: 1,
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            <Link
+              href="https://absoluteonline.co.za/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                color: 'text.secondary',
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+            >
+              Privacy
+            </Link>
+            <span>•</span>
+            <Link
+              href="https://absoluteonline.co.za/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                color: 'text.secondary',
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+            >
+              Terms
+            </Link>
+          </Typography>
+        </Box>
+
         <Stack sx={{ p: 2 }}>
           <Button
             variant="outlined"

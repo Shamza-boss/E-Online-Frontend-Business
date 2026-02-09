@@ -148,13 +148,13 @@ export default function Footer() {
           <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             Legal
           </Typography>
-          <Link color="text.secondary" variant="body2" href="#">
+          <Link color="text.secondary" variant="body2" href="https://absoluteonline.co.za/terms" target="_blank" rel="noopener noreferrer">
             Terms
           </Link>
-          <Link color="text.secondary" variant="body2" href="#">
+          <Link color="text.secondary" variant="body2" href="https://absoluteonline.co.za/privacy" target="_blank" rel="noopener noreferrer">
             Privacy
           </Link>
-          <Link color="text.secondary" variant="body2" href="#">
+          <Link color="text.secondary" variant="body2" href="mailto:info@absoluteonline.co.za">
             Contact
           </Link>
         </Box>
@@ -170,13 +170,13 @@ export default function Footer() {
         }}
       >
         <div>
-          <Link color="text.secondary" variant="body2" href="#">
+          <Link color="text.secondary" variant="body2" href="https://absoluteonline.co.za/privacy" target="_blank" rel="noopener noreferrer">
             Privacy Policy
           </Link>
           <Typography sx={{ display: 'inline', mx: 0.5, opacity: 0.5 }}>
             &nbsp;•&nbsp;
           </Typography>
-          <Link color="text.secondary" variant="body2" href="#">
+          <Link color="text.secondary" variant="body2" href="https://absoluteonline.co.za/terms" target="_blank" rel="noopener noreferrer">
             Terms of Service
           </Link>
           <Copyright />

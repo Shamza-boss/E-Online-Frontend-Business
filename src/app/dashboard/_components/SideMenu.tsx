@@ -10,6 +10,7 @@ import MenuContent from './MenuContent';
 import OptionsMenu from './OptionsMenu';
 import { useSession } from 'next-auth/react';
 import { RoleChip } from '@/app/_lib/components/role/roleChip';
+import Link from '@mui/material/Link';
 
 const drawerWidth = 240;
 
@@ -58,6 +59,55 @@ export default function SideMenu() {
       <Divider />
       <MenuContent />
       {/* <CardAlert /> */}
+      
+      {/* Legal links */}
+      <Box
+        sx={{
+          px: 2,
+          py: 1.5,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          mt: 'auto',
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.secondary',
+            display: 'flex',
+            gap: 1,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Link
+            href="https://absoluteonline.co.za/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              color: 'text.secondary',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' },
+            }}
+          >
+            Privacy
+          </Link>
+          <span>•</span>
+          <Link
+            href="https://absoluteonline.co.za/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              color: 'text.secondary',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' },
+            }}
+          >
+            Terms
+          </Link>
+        </Typography>
+      </Box>
+
       <Stack
         direction="row"
         sx={{
