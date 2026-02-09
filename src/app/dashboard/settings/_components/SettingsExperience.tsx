@@ -43,6 +43,7 @@ import ProfileSettingsCard, {
     formatRoleLabel,
 } from './profile/ProfileSettingsCard';
 import SubscriptionSettingsPanel from './subscription/SubscriptionSettingsPanel';
+import LegalPanel from './legal/LegalPanel';
 import type {
     SettingsResponseDto,
     SettingsStatsDto,
@@ -91,6 +92,11 @@ const tabItems = [
         label: 'Guidance Center',
         helper:
             'Understand every role on Absolute Online and what each area of the dashboard enables.',
+    },
+    {
+        value: 'legal',
+        label: 'Terms & Privacy',
+        helper: 'Review our terms of service and privacy policy.',
     },
 ];
 
@@ -425,6 +431,7 @@ function SettingsExperienceContent({ data, theme }: { data: SettingsResponseDto;
                                     <InsightsPanel stats={stats} roleTheme={roleTheme} roleLabel={roleLabel} />
                                 )}
                                 {tab === 'guidance' && <GuidancePanel activeRole={resolvedUserRole} />}
+                                {tab === 'legal' && <LegalPanel />}
                             </Stack>
                         </Box>
                     </Box>

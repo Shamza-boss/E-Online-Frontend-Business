@@ -59,54 +59,6 @@ export default function SideMenu() {
       <Divider />
       <MenuContent />
       {/* <CardAlert /> */}
-      
-      {/* Legal links */}
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          mt: 'auto',
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{
-            color: 'text.secondary',
-            display: 'flex',
-            gap: 1,
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-          }}
-        >
-          <Link
-            href="https://absoluteonline.co.za/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{
-              color: 'text.secondary',
-              textDecoration: 'none',
-              '&:hover': { textDecoration: 'underline' },
-            }}
-          >
-            Privacy
-          </Link>
-          <span>•</span>
-          <Link
-            href="https://absoluteonline.co.za/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{
-              color: 'text.secondary',
-              textDecoration: 'none',
-              '&:hover': { textDecoration: 'underline' },
-            }}
-          >
-            Terms
-          </Link>
-        </Typography>
-      </Box>
 
       <Stack
         direction="row"
@@ -116,6 +68,7 @@ export default function SideMenu() {
           alignItems: 'center',
           borderTop: '1px solid',
           borderColor: 'divider',
+          mt: 'auto',
         }}
       >
         <Stack spacing={1} sx={{ mr: 'auto', maxWidth: '200px' }}>
