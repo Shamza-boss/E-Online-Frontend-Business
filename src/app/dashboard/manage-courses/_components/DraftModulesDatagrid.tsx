@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo } from 'react';
-import { Box, Chip, Typography } from '@mui/material';
+import { Box, Chip, Typography, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PublishIcon from '@mui/icons-material/Publish';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -18,7 +18,7 @@ import {
 import { useAlert } from '../../../_lib/components/alert/AlertProvider';
 import EDataGrid from '../../_components/EDataGrid';
 
-type HomeworkRow = Homework & { __gridId: string };
+type HomeworkRow = Homework;
 
 interface ModulesPanelProps {
   teacherId: string;
@@ -54,8 +54,7 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
     () =>
       modules.map((module, index) => ({
         ...module,
-        __gridId:
-          module.homeworkId ??
+        __gridId: module.homeworkId ??
           module.id ??
           `${module.title || 'module'}-${index}`,
       })),
@@ -187,59 +186,88 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
         getActions: ({ row }) => {
           const moduleId = resolveModuleId(row);
           const disabled = !moduleId;
+          const isPublished = row.isPublished ?? false;
           const actionStyle = {
             border: 0,
             backgroundColor: 'transparent',
           } as const;
 
           return [
-            <GridActionsCellItem
+            <Tooltip
               key={`edit-${moduleId}`}
-              icon={<EditIcon fontSize="small" />}
-              label="Edit module"
-              onClick={() => moduleId && onEdit(moduleId)}
-              disabled={disabled}
-              showInMenu={false}
-              style={actionStyle}
-            />,
-            row.isPublished ? (
-              <GridActionsCellItem
+              title={
+                isPublished
+                  ? 'Cannot edit published modules. Unpublish first to make changes.'
+                  : 'Edit this module'
+              }
+              arrow
+            >
+              <span>
+                <GridActionsCellItem
+                  icon={<EditIcon fontSize="small" />}
+                  label="Edit module"
+                  onClick={() => moduleId && onEdit(moduleId)}
+                  disabled={isPublished}
+                  showInMenu={false}
+                  style={actionStyle}
+                />
+              </span>
+            </Tooltip>,
+            isPublished ? (
+              <Tooltip
                 key={`unpublish-${moduleId}`}
-                icon={
-                  <PublishIcon
-                    fontSize="small"
-                    sx={{ transform: 'rotate(180deg)' }}
+                title="Move this module back to draft status"
+                arrow
+              >
+                <span>
+                  <GridActionsCellItem
+                    icon={
+                      <PublishIcon
+                        fontSize="small"
+                        sx={{ transform: 'rotate(180deg)' }}
+                      />
+                    }
+                    label="Move back to draft"
+                    onClick={() => moduleId && handleUnpublish(moduleId)}
+                    disabled={disabled}
+                    showInMenu={false}
+                    style={actionStyle}
                   />
-                }
-                label="Move back to draft"
-                onClick={() => moduleId && handleUnpublish(moduleId)}
-                disabled={disabled}
-                showInMenu={false}
-                style={actionStyle}
-              />
+                </span>
+              </Tooltip>
             ) : (
-              <GridActionsCellItem
+              <Tooltip
                 key={`publish-${moduleId}`}
-                icon={<PublishIcon fontSize="small" />}
-                label="Publish module"
-                onClick={() => moduleId && handlePublish(moduleId)}
-                disabled={disabled}
-                showInMenu={false}
-                style={actionStyle}
-              />
+                title="Publish this module to make it visible to students"
+                arrow
+              >
+                <span>
+                  <GridActionsCellItem
+                    icon={<PublishIcon fontSize="small" />}
+                    label="Publish module"
+                    onClick={() => moduleId && handlePublish(moduleId)}
+                    disabled={isPublished}
+                    showInMenu={false}
+                    style={actionStyle}
+                  />
+                </span>
+              </Tooltip>
             ),
-            <GridActionsCellItem
+            <Tooltip
               key={`delete-${moduleId}`}
-              icon={<DeleteIcon fontSize="small" />}
-              label="Delete draft"
-              onClick={() => moduleId && handleDelete(moduleId)}
-              disabled={disabled}
-              showInMenu={false}
-              style={{
-                ...actionStyle,
-                color: 'var(--mui-palette-error-main)',
-              }}
-            />,
+              title="Permanently delete this module"
+              arrow
+            >
+              <span>
+                <GridActionsCellItem
+                  icon={<DeleteIcon fontSize="small" />}
+                  label="Delete draft"
+                  onClick={() => moduleId && handleDelete(moduleId)}
+                  disabled={disabled}
+                  showInMenu={false}
+                />
+              </span>
+            </Tooltip>,
           ];
         },
       },

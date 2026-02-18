@@ -65,7 +65,8 @@ const QUESTION_TYPES = [
   { value: 'multi-select', label: 'Multiple Choice' },
 ] as const;
 
-const FORM_STORAGE_KEY = 'form_builder_modal_state_v3';
+const FORM_STORAGE_KEY = 'form_builder_homework_draft_v1';
+const LEGACY_FORM_STORAGE_KEY = 'form_builder_modal_state_v3';
 const BUILDER_STEPS = ['Module details', 'Create questions'] as const;
 
 const Transition = React.forwardRef(function Transition(
@@ -98,6 +99,13 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     null
   );
   const draftSaveTimeoutRef = useRef<number | null>(null);
+  const latestDraftPayloadRef = useRef<object | null>(null);
+
+  const clearDraftStorage = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(FORM_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_FORM_STORAGE_KEY);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -105,14 +113,38 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       const stored = localStorage.getItem(FORM_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
+        const homework: HomeworkPayload | null = parsed?.homework ?? null;
+        const storedQuestions: Question[] = Array.isArray(homework?.questions)
+          ? homework!.questions
+          : [];
+
+        setFormTitle(homework?.title ?? '');
+        setDescription(homework?.description ?? '');
+        setDueDate(homework?.dueDate ?? '');
+        setHasExpiry(Boolean(homework?.hasExpiry));
+        setExpiryDate(homework?.expiryDate ?? '');
+        setQuestions(storedQuestions);
+        if (storedQuestions.length > 0) {
+          const index = Math.min(
+            parsed.currentQuestionIndex ?? 0,
+            storedQuestions.length - 1
+          );
+          setCurrentQuestionIndex(index);
+        }
+        return;
+      }
+
+      const legacy = localStorage.getItem(LEGACY_FORM_STORAGE_KEY);
+      if (legacy) {
+        const parsed = JSON.parse(legacy);
+        const storedQuestions: Question[] = Array.isArray(parsed.questions)
+          ? parsed.questions
+          : [];
         setFormTitle(parsed.formTitle ?? '');
         setDescription(parsed.description ?? '');
         setDueDate(parsed.dueDate ?? '');
         setHasExpiry(Boolean(parsed.hasExpiry));
         setExpiryDate(parsed.expiryDate ?? '');
-        const storedQuestions: Question[] = Array.isArray(parsed.questions)
-          ? parsed.questions
-          : [];
         setQuestions(storedQuestions);
         if (storedQuestions.length > 0) {
           const index = Math.min(
@@ -131,8 +163,6 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
 
   useEffect(() => {
     if (!hydrated || typeof window === 'undefined') return;
-    if (activeHomeworkId) return;
-
     if (draftSaveTimeoutRef.current) {
       window.clearTimeout(draftSaveTimeoutRef.current);
       draftSaveTimeoutRef.current = null;
@@ -146,19 +176,22 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       expiryDate.trim() === '' &&
       questions.length === 0;
     if (isEmpty) {
-      localStorage.removeItem(FORM_STORAGE_KEY);
+      clearDraftStorage();
       return;
     }
 
     const payload = {
-      formTitle,
-      description,
-      dueDate,
-      hasExpiry,
-      expiryDate,
-      questions,
+      homework: {
+        title: formTitle,
+        description,
+        dueDate,
+        hasExpiry,
+        expiryDate: hasExpiry ? expiryDate : null,
+        questions,
+      } satisfies HomeworkPayload,
       currentQuestionIndex,
     };
+    latestDraftPayloadRef.current = payload;
 
     draftSaveTimeoutRef.current = window.setTimeout(() => {
       localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(payload));
@@ -168,6 +201,13 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       if (draftSaveTimeoutRef.current) {
         window.clearTimeout(draftSaveTimeoutRef.current);
         draftSaveTimeoutRef.current = null;
+        const latestPayload = latestDraftPayloadRef.current;
+        if (latestPayload) {
+          localStorage.setItem(
+            FORM_STORAGE_KEY,
+            JSON.stringify(latestPayload)
+          );
+        }
       }
     };
   }, [
@@ -179,7 +219,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     expiryDate,
     questions,
     currentQuestionIndex,
-    activeHomeworkId,
+    clearDraftStorage,
   ]);
 
   useEffect(() => {
@@ -247,9 +287,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     setValidationErrors([]);
     setActiveHomeworkId(null);
     setPrefillSource(null);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(FORM_STORAGE_KEY);
-    }
+    clearDraftStorage();
   };
 
   const handleQuestionFieldChange = (

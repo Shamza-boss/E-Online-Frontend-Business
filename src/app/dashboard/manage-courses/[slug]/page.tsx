@@ -8,7 +8,7 @@ import { Metadata } from 'next';
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
-// Optional: set dynamic title using className if passed
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {

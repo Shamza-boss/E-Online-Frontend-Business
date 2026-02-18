@@ -177,8 +177,6 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
 }) => {
   const fieldId = useId();
   const editorRef = useRef<RichTextEditorRef>(null);
-  const updateTimeoutRef = useRef<number | null>(null);
-  const pendingHtmlRef = useRef<string>('');
   const extensions = useExtensions({ placeholder });
   const normalizedValue = value ?? '';
 
@@ -198,41 +196,13 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
     }
   }, [normalizedValue]);
 
-  useEffect(() => {
-    return () => {
-      if (updateTimeoutRef.current) {
-        window.clearTimeout(updateTimeoutRef.current);
-        updateTimeoutRef.current = null;
-      }
-
-      // Flush any pending change so the last keystrokes aren't lost
-      if (pendingHtmlRef.current !== normalizedValue) {
-        onChange(pendingHtmlRef.current);
-      }
-    };
-    // Intentionally omit normalizedValue from deps: this cleanup should use the
-    // latest refs and onChange function.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChange]);
-
   const handleUpdate = () => {
     const editor = editorRef.current?.editor;
     if (!editor) return;
 
     const html = editor.isEmpty ? '' : editor.getHTML();
     if (html !== normalizedValue) {
-      pendingHtmlRef.current = html;
-      if (updateTimeoutRef.current) {
-        window.clearTimeout(updateTimeoutRef.current);
-      }
-
-      // Debounce: typing in TipTap can fire lots of updates per second.
-      updateTimeoutRef.current = window.setTimeout(() => {
-        updateTimeoutRef.current = null;
-        if (pendingHtmlRef.current !== normalizedValue) {
-          onChange(pendingHtmlRef.current);
-        }
-      }, 150);
+      onChange(html);
     }
   };
 

@@ -10,14 +10,8 @@ const parseDisplaySegments = (displayOrder?: string): number[] | null => {
 };
 
 const compareDisplayOrder = (a?: string, b?: string): number => {
-  if (!a && !b) {
+  if (!a || !b) {
     return 0;
-  }
-  if (!a) {
-    return 1;
-  }
-  if (!b) {
-    return -1;
   }
 
   const segmentsA = parseDisplaySegments(a) ?? [];
