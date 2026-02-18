@@ -13,6 +13,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import useSWR from 'swr';
 import {
+  ClassDto,
   AcademicLevelDto,
   ClassroomDetailsDto,
   SubjectDto,
@@ -21,6 +22,7 @@ import {
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
 import {
   deleteClassroom,
+  getClassroomById,
   getClassroomsAndData,
 } from '@/app/_lib/actions/classrooms';
 import EditClassroomModal from '../Modals/EditClassroomModal';
@@ -71,7 +73,7 @@ export default function ClassManagementDataGrid({
   const isElevated = userRole === UserRole.Admin;
 
   const alert = useAlert();
-  const [editTarget, setEditTarget] = useState<ClassroomDetailsDto | null>(null);
+  const [editTarget, setEditTarget] = useState<ClassDto | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ClassroomDetailsDto | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -260,10 +262,16 @@ export default function ClassManagementDataGrid({
     [classesResult?.items]
   );
 
-  const handleEditClick = useCallback((classroom: ClassroomDetailsDto) => {
-    setEditTarget(classroom);
-    setEditModalOpen(true);
-  }, []);
+  const handleEditClick = useCallback(async (classroom: ClassroomDetailsDto) => {
+    try {
+      const fullClassroom = await getClassroomById(classroom.classroomId);
+      setEditTarget(fullClassroom);
+      setEditModalOpen(true);
+    } catch (error) {
+      console.error('Failed to load course for editing', error);
+      alert.error('Unable to load course details for editing. Please try again.');
+    }
+  }, [alert]);
 
   const handleCloseEditModal = useCallback(() => {
     setEditModalOpen(false);
@@ -382,7 +390,9 @@ export default function ClassManagementDataGrid({
                 icon={<EditIcon />}
                 label="Edit"
                 disabled={isEditDisabled}
-                onClick={() => handleEditClick(row)}
+                onClick={() => {
+                  void handleEditClick(row);
+                }}
                 color="primary"
                 style={{ border: 0, backgroundColor: 'transparent' }}
               />
@@ -508,9 +518,6 @@ export default function ClassManagementDataGrid({
         isAdmin={isElevated}
         onClose={handleCloseEditModal}
         onSuccess={handleEditSuccess}
-        teachers={instructorUsers}
-        academicLevels={academics ?? []}
-        subjects={subjects ?? []}
       />
       <ConfirmDialog
         open={deleteDialogOpen}

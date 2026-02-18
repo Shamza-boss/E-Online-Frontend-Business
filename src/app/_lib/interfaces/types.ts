@@ -258,6 +258,11 @@ export interface ClassDto {
   textbookKey: string;
   textbookHash: string;
   textbookUrl: string;
+  textbookFileName?: string | null;
+  textbookFileSizeBytes?: number | null;
+  textbookPreviewImageKey?: string | null;
+  textbookUploadedAt?: string | null;
+  textbookUploadedByUserId?: string | null;
 }
 
 export interface ClassroomDetailsDto {
@@ -281,6 +286,14 @@ export interface UpdateClassroomDto {
   teacherId?: string | null;
   academicLevelId: string;
   subjectId: string;
+  textbookKey: string;
+  textbookHash: string;
+  textbookUrl?: string;
+  textbookFileName?: string;
+  textbookFileSizeBytes?: number;
+  textbookPreviewImageKey?: string;
+  textbookUploadedAt?: string;
+  textbookUploadedByUserId?: string;
 }
 
 export interface EnrollStudentsDto {

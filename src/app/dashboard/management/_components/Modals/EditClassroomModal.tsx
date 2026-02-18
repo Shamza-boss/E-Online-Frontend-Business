@@ -5,22 +5,16 @@ import {
   Dialog,
   DialogTitle,
   IconButton,
-  DialogContent,
-  Button,
-  DialogActions,
 } from '@mui/material';
-import { ClassroomDetailsDto, UserDto, AcademicLevelDto, SubjectDto } from '@/app/_lib/interfaces/types';
-import EditClassroomForm from '../Forms/editClassroomForm';
+import { ClassDto } from '@/app/_lib/interfaces/types';
+import ClassroomCreationForm from '../Forms/classroomCreationForm';
 
 interface EditClassroomModalProps {
   open: boolean;
-  classroom: ClassroomDetailsDto | null;
+  classroom: ClassDto | null;
   isAdmin: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  teachers: UserDto[];
-  academicLevels: AcademicLevelDto[];
-  subjects: SubjectDto[];
 }
 
 export default function EditClassroomModal({
@@ -29,13 +23,10 @@ export default function EditClassroomModal({
   isAdmin,
   onClose,
   onSuccess,
-  teachers,
-  academicLevels,
-  subjects,
 }: EditClassroomModalProps) {
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
       <DialogTitle sx={{ m: 0, p: 2 }}>
         Edit Course Details
       </DialogTitle>
@@ -50,22 +41,14 @@ export default function EditClassroomModal({
       >
         <Close />
       </IconButton>
-      <DialogContent dividers>
-        <EditClassroomForm 
-          classroom={classroom} 
-          isAdmin={isAdmin} 
-          handleClose={onClose} 
+      <ClassroomCreationForm
+          formId={classroom?.id ? `edit-classroom-form-${classroom.id}` : 'edit-classroom-form'}
+          mode="edit"
+          initialClassroom={classroom}
+          isAdmin={isAdmin}
           onSuccess={onSuccess}
-          teachers={teachers}
-          academicLevels={academicLevels}
-          subjects={subjects}
+          onCancel={onClose}
         />
-      </DialogContent>
-      <DialogActions>
-        <Button autoFocus onClick={onClose}>
-          Close
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }

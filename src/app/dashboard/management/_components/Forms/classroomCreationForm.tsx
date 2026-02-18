@@ -34,9 +34,14 @@ import { parseWithZod } from '@conform-to/zod';
 import { useActionState } from 'react';
 
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
-import { AcademicLevelDto, SubjectDto } from '@/app/_lib/interfaces/types';
+import {
+  AcademicLevelDto,
+  ClassDto,
+  SubjectDto,
+} from '@/app/_lib/interfaces/types';
 import { classroomSchema } from '@/app/_lib/schemas/management';
 import { SubmitClassroom } from './submitClassroom';
+import { UpdateClassroomAction } from './updateClassroomAction';
 import CreateSubjectModal from '../Modals/CreateSubjectModal';
 import CreateAcademicsModal from '../Modals/CreateAcademicsModal';
 import { useAssetUpload } from '@/app/_lib/hooks/useAssetUpload';
@@ -49,6 +54,9 @@ interface ClassroomCreationFormProps {
   formId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+  mode?: 'create' | 'edit';
+  initialClassroom?: ClassDto | null;
+  isAdmin?: boolean;
 }
 
 function formatFileSize(bytes: number): string {
@@ -62,7 +70,11 @@ export default function ClassroomCreationForm({
   formId = 'create-classroom-form',
   onSuccess,
   onCancel,
+  mode = 'create',
+  initialClassroom = null,
+  isAdmin = true,
 }: ClassroomCreationFormProps) {
+  const isEditMode = mode === 'edit';
   const { showAlert } = useAlert();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -79,10 +91,27 @@ export default function ClassroomCreationForm({
     usersLoading,
   } = useClassroomLookups();
 
-  const [lastResult, action, pending] = useActionState(SubmitClassroom, false);
+  const [createResult, createAction, createPending] = useActionState(
+    SubmitClassroom,
+    false
+  );
+  const [updateResult, updateAction, updatePending] = useActionState(
+    UpdateClassroomAction,
+    false
+  );
+  const lastResult = isEditMode ? updateResult : createResult;
+  const action = isEditMode ? updateAction : createAction;
+  const pending = isEditMode ? updatePending : createPending;
+
   const [form, fields] = useForm({
     id: formId,
     lastResult,
+    defaultValue: {
+      name: initialClassroom?.name ?? '',
+      teacherId: initialClassroom?.teacherId ?? '',
+      academicLevelId: initialClassroom?.academicLevelId ?? '',
+      subjectId: initialClassroom?.subjectId ?? '',
+    },
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: classroomSchema });
     },
@@ -93,24 +122,73 @@ export default function ClassroomCreationForm({
   const { name, teacherId, academicLevelId, subjectId } = fields;
 
   const [selectedTeacher, setSelectedTeacher] = useState(
-    () => `${teacherId.initialValue ?? ''}`
+    () => `${teacherId.initialValue ?? initialClassroom?.teacherId ?? ''}`
   );
   const [selectedAcademic, setSelectedAcademic] = useState(
-    () => `${academicLevelId.initialValue ?? ''}`
+    () => `${academicLevelId.initialValue ?? initialClassroom?.academicLevelId ?? ''}`
   );
   const [selectedSubject, setSelectedSubject] = useState(
-    () => `${subjectId.initialValue ?? ''}`
+    () => `${subjectId.initialValue ?? initialClassroom?.subjectId ?? ''}`
+  );
+  const [existingTextbook, setExistingTextbook] = useState<{
+    key: string;
+    hash: string;
+    url: string;
+    fileName?: string;
+    fileSizeBytes?: number;
+    previewImageKey?: string;
+    uploadedAt?: string;
+    uploadedByUserId?: string;
+  } | null>(
+    initialClassroom?.textbookKey
+      ? {
+          key: initialClassroom.textbookKey,
+          hash: initialClassroom.textbookHash,
+          url: initialClassroom.textbookUrl,
+          fileName: initialClassroom.textbookFileName ?? undefined,
+          fileSizeBytes: initialClassroom.textbookFileSizeBytes ?? undefined,
+          previewImageKey: initialClassroom.textbookPreviewImageKey ?? undefined,
+          uploadedAt: initialClassroom.textbookUploadedAt ?? undefined,
+          uploadedByUserId: initialClassroom.textbookUploadedByUserId ?? undefined,
+        }
+      : null
   );
 
   useEffect(() => {
+    if (!initialClassroom) {
+      setExistingTextbook(null);
+      return;
+    }
+
+    setSelectedTeacher(`${initialClassroom.teacherId ?? ''}`);
+    setSelectedAcademic(`${initialClassroom.academicLevelId ?? ''}`);
+    setSelectedSubject(`${initialClassroom.subjectId ?? ''}`);
+    setExistingTextbook(
+      initialClassroom.textbookKey
+        ? {
+            key: initialClassroom.textbookKey,
+            hash: initialClassroom.textbookHash,
+            url: initialClassroom.textbookUrl,
+            fileName: initialClassroom.textbookFileName ?? undefined,
+            fileSizeBytes: initialClassroom.textbookFileSizeBytes ?? undefined,
+            previewImageKey: initialClassroom.textbookPreviewImageKey ?? undefined,
+            uploadedAt: initialClassroom.textbookUploadedAt ?? undefined,
+            uploadedByUserId: initialClassroom.textbookUploadedByUserId ?? undefined,
+          }
+        : null
+    );
+  }, [initialClassroom]);
+
+  useEffect(() => {
     if (lastResult && (lastResult as any)?.name) {
+      const actionVerb = isEditMode ? 'updated' : 'created';
       showAlert(
         'success',
-        `The ${(lastResult as any).name} classroom was successfully created 🚀!`
+        `The ${(lastResult as any).name} classroom was successfully ${actionVerb} 🚀!`
       );
       onSuccess?.();
     }
-  }, [lastResult, onSuccess, showAlert]);
+  }, [isEditMode, lastResult, onSuccess, showAlert]);
 
   const {
     asset: textbookAsset,
@@ -130,6 +208,12 @@ export default function ClassroomCreationForm({
 
   const [subjectModalOpen, setSubjectModalOpen] = useState(false);
   const [academicModalOpen, setAcademicModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (textbookAsset) {
+      setExistingTextbook(null);
+    }
+  }, [textbookAsset]);
 
   const handleUploadClick = () => fileInputRef.current?.click();
 
@@ -178,7 +262,22 @@ export default function ClassroomCreationForm({
     [revalidateAcademics, upsertAcademic]
   );
 
-  const canSubmit = Boolean(textbookAsset);
+  const effectiveTextbook = textbookAsset
+    ? {
+        key: textbookAsset.key,
+        hash: textbookAsset.hash,
+        url: textbookAsset.proxyDownload,
+        fileName: textbookAsset.name,
+        fileSizeBytes: textbookAsset.size,
+        uploadedAt: new Date().toISOString(),
+      }
+    : existingTextbook;
+  const canSubmit = Boolean(effectiveTextbook);
+
+  const handleRemoveTextbook = () => {
+    removeTextbookAsset();
+    setExistingTextbook(null);
+  };
 
   return (
     <>
@@ -218,7 +317,7 @@ export default function ClassroomCreationForm({
                       onChange={handleFileChange}
                     />
 
-                    {!textbookAsset ? (
+                    {!effectiveTextbook ? (
                       <Box
                         onClick={handleUploadClick}
                         role="button"
@@ -251,11 +350,15 @@ export default function ClassroomCreationForm({
                           </Avatar>
                           <Box>
                             <Typography fontWeight={600}>
-                              {textbookAsset.name}
+                              {textbookAsset?.name ?? effectiveTextbook?.fileName ?? 'Current course PDF'}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {formatFileSize(textbookAsset.size)}
-                            </Typography>
+                            {(textbookAsset?.size ?? effectiveTextbook?.fileSizeBytes) ? (
+                              <Typography variant="body2" color="text.secondary">
+                                {formatFileSize(
+                                  Number(textbookAsset?.size ?? effectiveTextbook?.fileSizeBytes)
+                                )}
+                              </Typography>
+                            ) : null}
                           </Box>
                           <Chip
                             color="success"
@@ -286,6 +389,7 @@ export default function ClassroomCreationForm({
                             size="small"
                             onClick={handleUploadClick}
                             startIcon={<ReplayIcon />}
+                            disabled={!isAdmin}
                           >
                             Replace PDF
                           </Button>
@@ -293,7 +397,8 @@ export default function ClassroomCreationForm({
                             variant="text"
                             size="small"
                             color="error"
-                            onClick={removeTextbookAsset}
+                            onClick={handleRemoveTextbook}
+                            disabled={!isAdmin}
                           >
                             Remove
                           </Button>
@@ -321,18 +426,49 @@ export default function ClassroomCreationForm({
                   <input
                     type="hidden"
                     name="textbookKey"
-                    value={textbookAsset?.key ?? ''}
+                    value={effectiveTextbook?.key ?? ''}
                   />
                   <input
                     type="hidden"
                     name="textbookHash"
-                    value={textbookAsset?.hash ?? ''}
+                    value={effectiveTextbook?.hash ?? ''}
                   />
                   <input
                     type="hidden"
                     name="textbookUrl"
-                    value={textbookAsset?.proxyDownload ?? ''}
+                    value={effectiveTextbook?.url ?? ''}
                   />
+                  <input
+                    type="hidden"
+                    name="textbookFileName"
+                    value={effectiveTextbook?.fileName ?? ''}
+                  />
+                  <input
+                    type="hidden"
+                    name="textbookFileSizeBytes"
+                    value={effectiveTextbook?.fileSizeBytes ?? ''}
+                  />
+                  <input
+                    type="hidden"
+                    name="textbookPreviewImageKey"
+                    value={effectiveTextbook?.previewImageKey ?? ''}
+                  />
+                  <input
+                    type="hidden"
+                    name="textbookUploadedAt"
+                    value={effectiveTextbook?.uploadedAt ?? ''}
+                  />
+                  <input
+                    type="hidden"
+                    name="textbookUploadedByUserId"
+                    value={effectiveTextbook?.uploadedByUserId ?? ''}
+                  />
+                  {isEditMode && initialClassroom?.id ? (
+                    <>
+                      <input type="hidden" name="classroomId" value={initialClassroom.id} />
+                      <input type="hidden" name="isAdmin" value={String(isAdmin)} />
+                    </>
+                  ) : null}
                 </Card>
               </Box>
 
@@ -505,9 +641,9 @@ export default function ClassroomCreationForm({
           form={formId}
           variant="contained"
           loading={pending}
-          disabled={!canSubmit}
+          disabled={!canSubmit || !isAdmin}
         >
-          Create course
+          {isEditMode ? 'Update course' : 'Create course'}
         </Button>
       </DialogActions>
     </>
