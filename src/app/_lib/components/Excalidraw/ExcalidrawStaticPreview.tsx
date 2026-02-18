@@ -13,6 +13,26 @@ import ExcalidrawModal from './ExcaliDrawModal.client';
 import { sanitizeExcalidrawElements } from './sanitizeElements';
 import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 
+const normalizeSvgElement = (svgEl: SVGSVGElement) => {
+  const viewBox = svgEl.getAttribute('viewBox');
+  if (!viewBox) {
+    const widthAttr = svgEl.getAttribute('width');
+    const heightAttr = svgEl.getAttribute('height');
+    const width = widthAttr ? Number.parseFloat(widthAttr) : undefined;
+    const height = heightAttr ? Number.parseFloat(heightAttr) : undefined;
+    if (width && height) {
+      svgEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    }
+  }
+  svgEl.setAttribute('width', '100%');
+  svgEl.setAttribute('height', '100%');
+  svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  svgEl.style.display = 'block';
+  svgEl.style.maxWidth = '100%';
+  svgEl.style.maxHeight = '100%';
+  svgEl.style.overflow = 'hidden';
+};
+
 interface ExcalidrawStaticPreviewProps {
   data?: string | null;
   height?: number;
@@ -77,6 +97,7 @@ const ExcalidrawStaticPreview: React.FC<ExcalidrawStaticPreviewProps> = ({
         });
 
         if (!active) return;
+        normalizeSvgElement(svgElement);
         const xml = new XMLSerializer().serializeToString(svgElement);
         setSvgMarkup(xml);
       } catch (error) {
@@ -103,7 +124,8 @@ const ExcalidrawStaticPreview: React.FC<ExcalidrawStaticPreviewProps> = ({
       sx={{
         position: 'relative',
         width: '100%',
-        minHeight: hasDrawing ? 'auto' : height,
+        height: '100%',
+        minHeight: height,
         borderRadius: 1,
         border: (themeArg) => `1px solid ${themeArg.palette.divider}`,
         overflow: 'hidden',
@@ -116,7 +138,8 @@ const ExcalidrawStaticPreview: React.FC<ExcalidrawStaticPreviewProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height,
+            height: '100%',
+            minHeight: height,
           }}
         >
           <CircularProgress size={24} />
@@ -125,10 +148,16 @@ const ExcalidrawStaticPreview: React.FC<ExcalidrawStaticPreviewProps> = ({
         <Box
           sx={{
             width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             '& svg': {
               display: 'block',
               width: '100%',
-              height: 'auto',
+              height: '100%',
+              maxWidth: '100%',
+              maxHeight: '100%',
             },
           }}
           dangerouslySetInnerHTML={{ __html: svgMarkup }}
@@ -139,7 +168,8 @@ const ExcalidrawStaticPreview: React.FC<ExcalidrawStaticPreviewProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height,
+            height: '100%',
+            minHeight: height,
             p: 2,
           }}
         >

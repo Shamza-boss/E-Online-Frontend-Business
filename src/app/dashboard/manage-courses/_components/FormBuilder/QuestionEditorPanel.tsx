@@ -977,7 +977,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           />
         )}
 
-        <Stack spacing={1} direction="row">
+        <Stack spacing={1} mt={2} direction="row">
           <FormControl fullWidth margin="normal">
             <InputLabel>Type</InputLabel>
             <Select

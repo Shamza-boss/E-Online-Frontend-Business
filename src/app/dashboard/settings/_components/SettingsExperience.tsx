@@ -124,9 +124,8 @@ const roleGuidance: RoleGuidanceCard[] = [
         summary:
             'Delivers learning experiences. Owns classrooms, assignments, grading, and live sessions.',
         actions: [
-            'Create homework, notes, and resources',
+            'Create test modules, notes, and resources',
             'Track class progress & engagement',
-            'Host live streams or sessions',
             'Give qualitative and numeric feedback',
         ],
     },
@@ -134,12 +133,12 @@ const roleGuidance: RoleGuidanceCard[] = [
         title: 'Trainee',
         role: UserRole.Trainee,
         summary:
-            'Learns within assigned classrooms. Engages with notes, homework, and live events.',
+            'Learns within assigned classrooms. Engages with notes, modules, and live events.',
         actions: [
-            'Submit homework & quizzes',
+            'Submit modules/quizzes',
             'Collaborate in shared notes',
             'Track personal progress',
-            'Download institution resources safely',
+            'Access institution resources safely',
         ],
     },
 ];

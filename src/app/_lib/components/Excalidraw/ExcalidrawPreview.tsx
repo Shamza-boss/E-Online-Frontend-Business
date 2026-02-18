@@ -12,6 +12,26 @@ import { useRichTextEditorContext } from 'mui-tiptap';
 import { sanitizeExcalidrawElements } from './sanitizeElements';
 import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 
+const normalizeSvgElement = (svgEl: SVGSVGElement) => {
+  const viewBox = svgEl.getAttribute('viewBox');
+  if (!viewBox) {
+    const widthAttr = svgEl.getAttribute('width');
+    const heightAttr = svgEl.getAttribute('height');
+    const width = widthAttr ? Number.parseFloat(widthAttr) : undefined;
+    const height = heightAttr ? Number.parseFloat(heightAttr) : undefined;
+    if (width && height) {
+      svgEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    }
+  }
+  svgEl.setAttribute('width', '100%');
+  svgEl.setAttribute('height', '100%');
+  svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  svgEl.style.display = 'block';
+  svgEl.style.maxWidth = '100%';
+  svgEl.style.maxHeight = '100%';
+  svgEl.style.overflow = 'hidden';
+};
+
 const ExcalidrawPreview = forwardRef<
   HTMLDivElement,
   ReactNodeViewProps<HTMLDivElement>
@@ -59,6 +79,7 @@ const ExcalidrawPreview = forwardRef<
           files: {},
         });
         if (!cancelled) {
+          normalizeSvgElement(svgEl);
           const xml = new XMLSerializer().serializeToString(svgEl);
           setSvgHtml(xml);
         }
@@ -87,7 +108,17 @@ const ExcalidrawPreview = forwardRef<
     >
       {svgHtml ? (
         <Box
-          sx={{ width: '100%' }}
+          sx={{
+            width: '100%',
+            maxWidth: '100%',
+            overflow: 'hidden',
+            '& svg': {
+              width: '100%',
+              height: 'auto',
+              maxWidth: '100%',
+              maxHeight: '100%',
+            },
+          }}
           dangerouslySetInnerHTML={{ __html: svgHtml }}
         />
       ) : (
