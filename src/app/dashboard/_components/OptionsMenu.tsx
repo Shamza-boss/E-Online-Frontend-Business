@@ -1,86 +1,57 @@
 'use client';
 import * as React from 'react';
-import { styled } from '@mui/material/styles';
-import Divider, { dividerClasses } from '@mui/material/Divider';
-import Menu from '@mui/material/Menu';
-import MuiMenuItem from '@mui/material/MenuItem';
-import { paperClasses } from '@mui/material/Paper';
-import { listClasses } from '@mui/material/List';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon, { listItemIconClasses } from '@mui/material/ListItemIcon';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
-import MenuButton from './MenuButton';
 import useAuthActions from '../../_lib/hooks/useAuthActions';
-
-const MenuItem = styled(MuiMenuItem)({
-  margin: '2px 0',
-});
+import { IconButton, Tooltip } from '@mui/material';
 
 export default function OptionsMenu() {
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
   const { handleSignOut } = useAuthActions();
-  const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleLogOutClick = () => {
+    setConfirmOpen(true);
   };
-  const handleClose = () => {
-    setAnchorEl(null);
+
+  const handleCancelLogout = () => {
+    setConfirmOpen(false);
   };
-  const handleLogOut = () => {
-    setAnchorEl(null);
+
+  const handleConfirmLogout = () => {
+    setConfirmOpen(false);
     handleSignOut();
   };
+
   return (
     <React.Fragment>
-      <MenuButton
-        aria-label="Open menu"
-        onClick={handleClick}
-        sx={{ borderColor: 'transparent' }}
-      >
-        <MoreVertRoundedIcon />
-      </MenuButton>
-      <Menu
-        anchorEl={anchorEl}
-        id="menu"
-        open={open}
-        onClose={handleClose}
-        onClick={handleClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        sx={{
-          [`& .${listClasses.root}`]: {
-            padding: '4px',
-          },
-          [`& .${paperClasses.root}`]: {
-            padding: 0,
-          },
-          [`& .${dividerClasses.root}`]: {
-            margin: '4px -4px',
-          },
-        }}
-      >
-        {/* <MenuItem onClick={handleClose}>Profile</MenuItem>
-        <MenuItem onClick={handleClose}>My account</MenuItem>
-        <Divider />
-        <MenuItem onClick={handleClose}>Add another account</MenuItem>
-        <MenuItem onClick={handleClose}>Settings</MenuItem>
-        <Divider /> */}
-        <MenuItem
-          onClick={handleLogOut}
-          sx={{
-            [`& .${listItemIconClasses.root}`]: {
-              ml: 'auto',
-              minWidth: 0,
-            },
-          }}
-        >
-          <ListItemText>Logout</ListItemText>
-          <ListItemIcon>
+      <Tooltip title="Click to logout">
+        <IconButton color="warning" onClick={handleLogOutClick}>
             <LogoutRoundedIcon fontSize="small" />
-          </ListItemIcon>
-        </MenuItem>
-      </Menu>
+          </IconButton>
+      </Tooltip> 
+      <Dialog
+        open={confirmOpen}
+        onClose={handleCancelLogout}
+        aria-labelledby="logout-confirmation-title"
+        aria-describedby="logout-confirmation-description"
+      >
+        <DialogTitle id="logout-confirmation-title">Confirm logout</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="logout-confirmation-description">
+            You are about to log out. Do you want to continue?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelLogout}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={handleConfirmLogout}>
+            Log out
+          </Button>
+        </DialogActions>
+      </Dialog>
     </React.Fragment>
   );
 }

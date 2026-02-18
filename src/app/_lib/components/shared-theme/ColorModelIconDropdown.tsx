@@ -10,6 +10,9 @@ import { useColorScheme } from '@mui/material/styles';
 export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
   const { mode, systemMode, setMode } = useColorScheme();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const { touchRippleRef: _touchRippleRef, ...iconButtonProps } = props as IconButtonOwnProps & {
+    touchRippleRef?: unknown;
+  };
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -52,7 +55,7 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
         aria-controls={open ? 'color-scheme-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}
-        {...props}
+        {...iconButtonProps}
       >
         {icon}
       </IconButton>
