@@ -8,6 +8,25 @@ import {
 } from '../../../../_lib/components/shared-theme/themePrimitives';
 
 export const datePickersCustomizations: PickerComponents<Theme> = {
+  MuiPickersTextField: {
+    styleOverrides: {
+      root: {
+        '& .MuiPickersInputBase-root, & .MuiInputBase-root': {
+          height: '2.5rem',
+          padding: '8px 12px',
+        },
+        '& .MuiPickersInputBase-input, & .MuiInputBase-input': {
+          padding: 0,
+        },
+        '& .MuiInputAdornment-root .MuiIconButton-root': {
+          padding: 0,
+          marginRight: 4,
+          width: 32,
+          height: 32,
+        },
+      },
+    },
+  },
   MuiPickerPopper: {
     styleOverrides: {
       paper: ({ theme }) => ({

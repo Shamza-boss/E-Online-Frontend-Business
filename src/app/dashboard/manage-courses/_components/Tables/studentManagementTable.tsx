@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Stack,
@@ -12,25 +12,60 @@ import {
   MenuItem,
   FormHelperText,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
   styled,
 } from '@mui/material';
 import useSWR from 'swr';
 import { GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
 import EDataGrid from '../../../_components/EDataGrid';
 
-import { EnrollStudents, getAllStudents, getAllUsersInClassroom, getAllClassroomsAndData } from '../../../../_lib/actions';
+import {
+  EnrollStudents,
+  UnenrollStudents,
+  getAllStudents,
+  getAllUsersInClassroom,
+  getAllUserClassrooms,
+} from '../../../../_lib/actions';
 import {
   UserDto,
   EnrollStudentsDto,
   ClassroomDetailsDto,
 } from '../../../../_lib/interfaces/types';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
+import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
 
-const StudentManagementTable = () => {
+interface EnrollmentState {
+  canEnroll: boolean;
+  selectedCount: number;
+  enroll: () => void;
+}
+
+interface StudentManagementTableProps {
+  onEnrollmentStateChange?: (state: EnrollmentState) => void;
+}
+
+type NormalizedSelection = {
+  type: 'include' | 'exclude';
+  ids: Set<string>;
+};
+
+const StudentManagementTable: React.FC<StudentManagementTableProps> = ({
+  onEnrollmentStateChange,
+}) => {
   const [selectedIds, setSelectedIds] = useState<GridRowSelectionModel>({
     type: 'include',
     ids: new Set(),
   });
+  const [unenrollingId, setUnenrollingId] = useState<string | null>(null);
+  const [confirmUnenroll, setConfirmUnenroll] = useState<{
+    open: boolean;
+    studentId: string | null;
+    studentName: string;
+  }>({ open: false, studentId: null, studentName: '' });
   const { showAlert } = useAlert();
   const [classId, setClassId] = useState<string>('');
 
@@ -44,11 +79,11 @@ const StudentManagementTable = () => {
 
   const { data: classRooms, isLoading: classesLoading } = useSWR<
     ClassroomDetailsDto[]
-    >('all-classrooms-details', getAllClassroomsAndData, {
+    >('user-classrooms', getAllUserClassrooms, {
     revalidateOnFocus: false,
   });
 
-  const { data: enrolledStudents = [] } = useSWR<UserDto[]>(
+  const { data: enrolledStudents = [], mutate: mutateEnrolledStudents } = useSWR<UserDto[]>(
     classId ? ['classroom-users', classId] : null,
     () => getAllUsersInClassroom(classId),
     {
@@ -56,12 +91,20 @@ const StudentManagementTable = () => {
     }
   );
 
-  // Filter eligible students (not already enrolled)
-  const eligibleStudents = useMemo(() => {
-    if (!students || !classId) return students || [];
-    const enrolledIds = new Set(enrolledStudents.map((s) => s.userId));
-    return students.filter((s) => !enrolledIds.has(s.userId));
-  }, [students, enrolledStudents, classId]);
+  const enrolledIds = useMemo(
+    () =>
+      new Set(
+        enrolledStudents
+          .map((s) => s.userId)
+          .filter((id): id is string => Boolean(id))
+      ),
+    [enrolledStudents]
+  );
+
+  const studentsWithIds = useMemo(
+    () => (students ?? []).filter((s): s is UserDto & { userId: string } => Boolean(s.userId)),
+    [students]
+  );
 
   const handleValueChange = (e: any) => {
     setClassId(e.target.value);
@@ -69,14 +112,62 @@ const StudentManagementTable = () => {
   };
 
   const handleRowSelectionModelChange = (model: GridRowSelectionModel) => {
-    setSelectedIds(model);
+    if (Array.isArray(model)) {
+      setSelectedIds({ type: 'include', ids: new Set(model.map(String)) });
+      return;
+    }
+    setSelectedIds({
+      type: model.type,
+      ids: new Set(model.ids),
+    });
   };
 
-  const handleAssignToClass = async () => {
-    if (classId && selectedIds.ids.size > 0) {
+  const normalizedSelection = useMemo<NormalizedSelection>(() => {
+    if (Array.isArray(selectedIds)) {
+      return { type: 'include', ids: new Set(selectedIds.map(String)) };
+    }
+    return {
+      type: selectedIds.type,
+      ids: new Set(Array.from(selectedIds.ids).map(String)),
+    };
+  }, [selectedIds]);
+
+  const selectableStudentIds = useMemo(() => {
+    if (!classId) return [] as string[];
+    return studentsWithIds
+      .filter((student) => !enrolledIds.has(student.userId))
+      .map((student) => student.userId);
+  }, [classId, enrolledIds, studentsWithIds]);
+
+  const selectableStudentIdSet = useMemo(
+    () => new Set(selectableStudentIds),
+    [selectableStudentIds]
+  );
+
+  const selectedStudentIds = useMemo(() => {
+    if (!classId) return [] as string[];
+    if (normalizedSelection.type === 'exclude') {
+      return selectableStudentIds.filter(
+        (id) => !normalizedSelection.ids.has(id)
+      );
+    }
+    return Array.from(normalizedSelection.ids).filter((id) =>
+      selectableStudentIdSet.has(id)
+    ) as string[];
+  }, [classId, normalizedSelection, selectableStudentIdSet]);
+
+  const selectedCount = selectedStudentIds.length;
+  const canEnroll = Boolean(classId) && selectedCount > 0;
+  const selectionKey = useMemo(
+    () => `${normalizedSelection.type}|${Array.from(normalizedSelection.ids).join('|')}`,
+    [normalizedSelection]
+  );
+
+  const handleAssignToClass = useCallback(async () => {
+    if (classId && selectedStudentIds.length > 0) {
       const payload: EnrollStudentsDto = {
         classroomId: classId,
-        studentIds: Array.from(selectedIds.ids) as string[],
+        studentIds: selectedStudentIds,
       };
       await EnrollStudents(payload);
       setSelectedIds({ type: 'include', ids: new Set() });
@@ -84,13 +175,109 @@ const StudentManagementTable = () => {
         'success',
         `Successfully enrolled ${payload.studentIds.length} students to the class.`
       );
+      await mutateEnrolledStudents();
     }
+  }, [classId, mutateEnrolledStudents, selectedStudentIds, showAlert]);
+
+  const handleUnenrollStudent = useCallback(
+    async (studentId: string) => {
+      if (!classId) return;
+      setUnenrollingId(studentId);
+      try {
+        await UnenrollStudents({ classroomId: classId, studentIds: [studentId] });
+        showAlert('success', 'Student removed from the class.');
+        await mutateEnrolledStudents();
+      } catch (error) {
+        console.error('[UnenrollStudents]', error);
+        showAlert('error', 'Unable to remove the student. Please try again.');
+      } finally {
+        setUnenrollingId(null);
+      }
+    },
+    [classId, mutateEnrolledStudents, showAlert]
+  );
+
+  const handleOpenUnenrollDialog = (studentId: string, studentName: string) => {
+    setConfirmUnenroll({ open: true, studentId, studentName });
   };
+
+  const handleCloseUnenrollDialog = () => {
+    setConfirmUnenroll({ open: false, studentId: null, studentName: '' });
+  };
+
+  const handleConfirmUnenroll = async () => {
+    if (!confirmUnenroll.studentId) return;
+    await handleUnenrollStudent(confirmUnenroll.studentId);
+    handleCloseUnenrollDialog();
+  };
+
+  const lastEnrollmentState = useRef<{
+    canEnroll: boolean;
+    selectedCount: number;
+    classId: string;
+    selectionKey: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!onEnrollmentStateChange) return;
+    const nextState = {
+      canEnroll,
+      selectedCount,
+      classId,
+      selectionKey,
+    };
+    if (
+      lastEnrollmentState.current &&
+      lastEnrollmentState.current.canEnroll === nextState.canEnroll &&
+      lastEnrollmentState.current.selectedCount === nextState.selectedCount &&
+      lastEnrollmentState.current.classId === nextState.classId &&
+      lastEnrollmentState.current.selectionKey === nextState.selectionKey
+    ) {
+      return;
+    }
+    lastEnrollmentState.current = nextState;
+    onEnrollmentStateChange({
+      canEnroll,
+      selectedCount,
+      enroll: handleAssignToClass,
+    });
+  }, [
+    canEnroll,
+    classId,
+    handleAssignToClass,
+    onEnrollmentStateChange,
+    selectedCount,
+    selectionKey,
+  ]);
 
   const columns: GridColDef[] = [
     { field: 'firstName', headerName: 'First Name', flex: 1, minWidth: 120 },
     { field: 'lastName', headerName: 'Last Name', flex: 1, minWidth: 120 },
     { field: 'email', headerName: 'Email', flex: 1, minWidth: 200 },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      sortable: false,
+      filterable: false,
+      minWidth: 160,
+      renderCell: (params) => {
+        const studentId = params.row.userId as string | undefined;
+        const isEnrolled = Boolean(classId) && !!studentId ? enrolledIds.has(studentId) : false;
+        const isBusy = unenrollingId === studentId;
+        const studentName = `${params.row.firstName ?? ''} ${params.row.lastName ?? ''}`.trim();
+
+        return (
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={!isEnrolled || isBusy}
+            onClick={() => studentId && handleOpenUnenrollDialog(studentId, studentName)}
+          >
+            {isBusy ? 'Removing...' : 'Unenroll'}
+          </Button>
+        );
+      },
+    },
   ];
 
   const dataGridSlotProps = useMemo(
@@ -104,13 +291,16 @@ const StudentManagementTable = () => {
   );
 
   return (
-    <Box flexGrow={1}>
-      <Stack spacing={2}>
-        <Alert severity="info">
-          {!classId
-            ? 'Please select a trainee class you want to enroll trainees to.'
-            : 'Select trainees who are not yet enrolled in this class.'}
-        </Alert>
+    <Box flexGrow={1} display="flex" flexDirection="column" minHeight={0}>
+      <Stack spacing={2} sx={{ flexShrink: 0 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600} gutterBottom>
+            Enroll students
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Step 1: pick a class. Step 2: select students to enroll.
+          </Typography>
+        </Box>
 
         <FormControl fullWidth disabled={classesLoading}>
           <InputLabel id="trainee-class-label">Select trainee class</InputLabel>
@@ -118,7 +308,8 @@ const StudentManagementTable = () => {
             labelId="trainee-class-label"
             value={classId}
             onChange={handleValueChange}
-            label="Select trainee class">
+            label="Select trainee class"
+          >
             {classRooms?.map((c) => (
               <MenuItem key={c.classroomId} value={c.classroomId}>
                 {c.classroomName}
@@ -129,39 +320,76 @@ const StudentManagementTable = () => {
             You must select a trainee class to begin enrolling.
           </FormHelperText>
         </FormControl>
-        <Box
-          sx={{
-            width: '100%',
-            height: 300, // or a specific height like '400px'
-            maxHeight: 300, // adjust as needed for modal padding
-            overflow: 'hidden',
-          }}
-        >
-          <EDataGrid
-            checkboxSelection={!!classId}
-            rows={eligibleStudents || []}
-            columns={columns}
-            getRowId={(r) => r.userId}
-            rowSelectionModel={selectedIds}
-            onRowSelectionModelChange={handleRowSelectionModelChange}
-            disableRowSelectionOnClick
-            pageSizeOptions={[10, 20, 50, 100]}
-            loading={studentsLoading}
-            slotProps={dataGridSlotProps}
-            slots={{
-              noResultsOverlay: CustomNoResultsOverlay,
-            }}
-          />
-        </Box>
-
-        <Button
-          variant="outlined"
-          disabled={!classId || selectedIds.ids.size === 0}
-          onClick={handleAssignToClass}
-        >
-          Assign to class
-        </Button>
       </Stack>
+
+      <OutlinedWrapper
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  width: '100%',
+                  overflow: 'hidden',
+                  minHeight: 0,
+                }}
+              >
+        <EDataGrid
+          checkboxSelection={!!classId}
+          rows={studentsWithIds}
+          columns={columns}
+          getRowId={(r) => r.userId}
+          getRowClassName={(params) =>
+            `${params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'}${
+              enrolledIds.has(params.row.userId) ? ' row-disabled' : ''
+            }`
+          }
+          isRowSelectable={(params) =>
+            Boolean(classId) && !enrolledIds.has(params.row.userId)
+          }
+          rowSelectionModel={selectedIds}
+          onRowSelectionModelChange={handleRowSelectionModelChange}
+          disableRowSelectionOnClick
+          pageSizeOptions={[10, 20, 50, 100]}
+          initialState={{ pagination: { paginationModel: { pageSize: 20 } } }}
+          loading={studentsLoading}
+          slotProps={dataGridSlotProps}
+          slots={{
+            noResultsOverlay: CustomNoResultsOverlay,
+          }}
+          sx={{
+            '& .row-disabled': {
+              color: 'text.disabled',
+              bgcolor: 'action.disabledBackground',
+            },
+          }}
+        />
+      </OutlinedWrapper>
+
+      <Box sx={{ pt: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          {classId
+            ? `${selectedCount} student${selectedCount === 1 ? '' : 's'} selected.`
+            : 'Select a class to enable student selection.'}
+        </Typography>
+      </Box>
+
+      <Dialog open={confirmUnenroll.open} onClose={handleCloseUnenrollDialog}>
+        <DialogTitle>Remove student from class?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {confirmUnenroll.studentName
+              ? `This will remove ${confirmUnenroll.studentName} from the selected class. They will lose access immediately.`
+              : 'This will remove the student from the selected class. They will lose access immediately.'}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseUnenrollDialog} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmUnenroll} color="warning" variant="contained">
+            Remove student
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

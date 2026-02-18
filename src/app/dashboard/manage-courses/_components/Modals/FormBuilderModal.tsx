@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import dayjs from 'dayjs';
 import { NextPage } from 'next';
 import {
   Dialog,
@@ -24,6 +25,7 @@ import {
   DialogContentText,
   DialogActions,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Alert from '@mui/material/Alert';
 import CloseIcon from '@mui/icons-material/Close';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
@@ -1076,17 +1078,19 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                 />
-                <TextField
+                <DatePicker
                   label="Due Date"
-                  type="date"
-                  fullWidth
+                  value={dueDate ? dayjs(dueDate) : null}
+                  onChange={(newValue) =>
+                    setDueDate(newValue ? newValue.format('YYYY-MM-DD') : '')
+                  }
+                  minDate={dayjs(getTodayDate())}
                   slotProps={{
-                    inputLabel: { shrink: true },
-                    htmlInput: { min: getTodayDate() },
+                    textField: {
+                      fullWidth: true,
+                      helperText: 'Cannot select dates in the past',
+                    },
                   }}
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  helperText="Cannot select dates in the past"
                 />
               </Box>
               <TextField
@@ -1124,17 +1128,20 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                 )}
               </Stack>
               {hasExpiry && (
-                <TextField
+                <DatePicker
                   label="Expiry Date"
-                  type="date"
-                  fullWidth
+                  value={expiryDate ? dayjs(expiryDate) : null}
+                  onChange={(newValue) =>
+                    setExpiryDate(newValue ? newValue.format('YYYY-MM-DD') : '')
+                  }
+                  minDate={dayjs(dueDate || getTodayDate())}
                   slotProps={{
-                    inputLabel: { shrink: true },
-                    htmlInput: { min: dueDate || getTodayDate() },
+                    textField: {
+                      fullWidth: true,
+                      helperText:
+                        'When the module expires it will move back to draft. Must be after the due date.',
+                    },
                   }}
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                  helperText="When the module expires it will move back to draft. Must be after the due date."
                 />
               )}
               <Stack
