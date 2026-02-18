@@ -8,6 +8,8 @@ export interface RegisterRepositoryFilePayload {
   hash: string;
   isPublic: boolean;
   institutionId?: string;
+  fileName?: string;
+  sizeBytes?: number;
 }
 
 export async function getRepositoryFiles(): Promise<FileDto[]> {

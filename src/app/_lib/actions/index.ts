@@ -12,6 +12,7 @@ export * from './academics';
 export {
   createClassroom,
   EnrollStudents,
+  UnenrollStudents,
   getAllClassrooms,
   getAllClassroomsAndData,
   getClassroomsAndData,

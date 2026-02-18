@@ -43,6 +43,8 @@ export const useFileUpload = (institutionId?: string) => {
       hash: uploadResult.hash,
       isPublic: uploadIsPublic,
       institutionId,
+      fileName: selectedUploadFile.name,
+      sizeBytes: selectedUploadFile.size,
     };
     if (uploadThumbnail) {
       payload.thumbnail = uploadThumbnail;

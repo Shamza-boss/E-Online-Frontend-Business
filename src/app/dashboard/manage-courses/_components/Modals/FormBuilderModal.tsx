@@ -19,6 +19,10 @@ import {
   Stepper,
   Step,
   StepLabel,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import Alert from '@mui/material/Alert';
 import CloseIcon from '@mui/icons-material/Close';
@@ -67,7 +71,18 @@ const QUESTION_TYPES = [
 
 const FORM_STORAGE_KEY = 'form_builder_homework_draft_v1';
 const LEGACY_FORM_STORAGE_KEY = 'form_builder_modal_state_v3';
-const BUILDER_STEPS = ['Module details', 'Create questions'] as const;
+const BUILDER_STEPS = ['Module details', 'Create questions', 'Review and publish'] as const;
+
+const getTomorrowDate = (): string => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow.toISOString().split('T')[0];
+};
+
+const getTodayDate = (): string => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & { children: React.ReactElement<any> },
@@ -84,7 +99,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
 }) => {
   const [formTitle, setFormTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState(getTomorrowDate());
   const [hasExpiry, setHasExpiry] = useState(false);
   const [expiryDate, setExpiryDate] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -98,6 +113,10 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const [paletteDragType, setPaletteDragType] = useState<Question['type'] | null>(
     null
   );
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    type: 'reset' | 'saveDraft' | 'publish' | 'close' | null;
+  }>({ open: false, type: null });
   const draftSaveTimeoutRef = useRef<number | null>(null);
   const latestDraftPayloadRef = useRef<object | null>(null);
 
@@ -279,7 +298,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const resetForm = () => {
     setFormTitle('');
     setDescription('');
-    setDueDate('');
+    setDueDate(getTomorrowDate());
     setHasExpiry(false);
     setExpiryDate('');
     setQuestions([]);
@@ -288,6 +307,33 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     setActiveHomeworkId(null);
     setPrefillSource(null);
     clearDraftStorage();
+  };
+
+  const handleConfirmReset = () => {
+    resetForm();
+    setConfirmDialog({ open: false, type: null });
+  };
+
+  const handleConfirmClose = () => {
+    setConfirmDialog({ open: false, type: null });
+    onClose();
+  };
+
+  const handleCloseAttempt = () => {
+    const hasUnsavedChanges =
+      formTitle.trim() !== '' ||
+      description.trim() !== '' ||
+      questions.length > 0;
+
+    if (hasUnsavedChanges) {
+      setConfirmDialog({ open: true, type: 'close' });
+    } else {
+      onClose();
+    }
+  };
+
+  const handleCancelDialog = () => {
+    setConfirmDialog({ open: false, type: null });
   };
 
   const handleQuestionFieldChange = (
@@ -658,7 +704,16 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       homeworkId: submissionHomeworkId ?? undefined,
     });
     resetForm();
+    setConfirmDialog({ open: false, type: null });
     onClose();
+  };
+
+  const handleConfirmSubmit = () => {
+    if (confirmDialog.type === 'saveDraft') {
+      handleSubmit(true);
+    } else if (confirmDialog.type === 'publish') {
+      handleSubmit(false);
+    }
   };
 
   const computeTotalWeight = (question: Question): number => {
@@ -818,6 +873,16 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const handlePreviousStep = () => goToStep(activeStep - 1);
   const canAdvanceToBuilder = Boolean(formTitle.trim()) && Boolean(dueDate);
   const onDetailsStep = activeStep === 0;
+  const onBuilderStep = activeStep === 1;
+  const onReviewStep = activeStep === 2;
+
+  const handlePublishClick = () => {
+    setConfirmDialog({ open: true, type: 'publish' });
+  };
+
+  const handleReviewBeforePublish = () => {
+    goToStep(2); // Move to review step
+  };
 
   const handleSplitResizeFinished = useCallback(
     (_gutterIdx: number, sizes: number[]) => {
@@ -827,48 +892,64 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   );
 
   return (
-    <Dialog
-      fullScreen
-      open={open}
-      onClose={onClose}
-      slots={{ transition: Transition }}
-      slotProps={{
-        paper: {
-          sx: {
-            display: 'flex',
-            flexDirection: 'column',
-            bgcolor: 'background.default',
+    <>
+      <Dialog
+        fullScreen
+        open={open}
+        onClose={handleCloseAttempt}
+        slots={{ transition: Transition }}
+        slotProps={{
+          paper: {
+            sx: {
+              display: 'flex',
+              flexDirection: 'column',
+              bgcolor: 'background.default',
+            },
           },
-        },
-      }}
-    >
-      <AppBar sx={{ position: 'relative' }}>
-        <Toolbar>
-          <IconButton edge="start" color="inherit" onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
-          <Typography sx={{ flex: 1 }} variant="h6">
-            {modalTitle}
-          </Typography>
-          <Button color="inherit" onClick={resetForm} sx={{ mr: 1 }}>
-            Reset {isEditing ? 'form' : 'draft'}
-          </Button>
-          <Button
-            color="inherit"
-            onClick={() => handleSubmit(true)}
-            sx={{ mr: 1 }}
-          >
-            Save draft
-          </Button>
-          <Button
-            color="inherit"
-            variant="outlined"
-            onClick={() => handleSubmit(false)}
-          >
-            Publish module
-          </Button>
-        </Toolbar>
-      </AppBar>
+        }}
+      >
+        <AppBar sx={{ position: 'relative' }}>
+          <Toolbar sx={{ gap: 2, flexWrap: 'wrap', py: 1 }}>
+            <IconButton edge="start" onClick={handleCloseAttempt}>
+              <CloseIcon />
+            </IconButton>
+            <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>
+              {modalTitle}
+            </Typography>
+          <Box sx={{ flex: 1, paddingInline: 5 }}>
+            <Stepper  activeStep={activeStep}>
+              {BUILDER_STEPS.map((label) => (
+                <Step  key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+          </Box>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Button
+                color="warning"
+                variant="contained"
+                onClick={() => setConfirmDialog({ open: true, type: 'reset' })}
+              >
+                Reset {isEditing ? 'form' : 'draft'}
+              </Button>
+              <Button
+                color="primary"
+                variant="contained"
+                onClick={() => setConfirmDialog({ open: true, type: 'saveDraft' })}
+              >
+                Save draft
+              </Button>
+              <Button
+                color="success"
+                variant="contained"
+                onClick={handleReviewBeforePublish}
+              >
+                Publish module
+              </Button>
+            </Box>
+          </Toolbar>
+        </AppBar>
       <Box
         sx={{
           flex: 1,
@@ -881,13 +962,6 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           overflow: 'hidden',
         }}
       >
-        <Stepper activeStep={activeStep} alternativeLabel>
-          {BUILDER_STEPS.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
         {validationErrors.length > 0 && (
           <Alert severity="error">
             <Box component="ul" sx={{ pl: 2, m: 0 }}>
@@ -899,7 +973,76 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
         )}
 
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          {onDetailsStep ? (
+          {onReviewStep ? (
+            <Paper
+              sx={{
+                p: { xs: 2, md: 4 },
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3,
+                maxWidth: 960,
+                mx: 'auto',
+                overflow: 'auto',
+              }}
+            >
+              <Box>
+                <Typography variant="h5" fontWeight={600} gutterBottom>
+                  Review and publish
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Review your module details before publishing to students.
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                  Module Title
+                </Typography>
+                <Typography variant="body1">{formTitle || 'Untitled module'}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                  Description
+                </Typography>
+                <Typography variant="body1">{description || 'No description provided'}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                  Due Date
+                </Typography>
+                <Typography variant="body1">{dueDate || 'Not set'}</Typography>
+              </Box>
+              {hasExpiry && (
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                    Expiry Date
+                  </Typography>
+                  <Typography variant="body1">{expiryDate || 'Not set'}</Typography>
+                </Box>
+              )}
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                  Questions
+                </Typography>
+                <Typography variant="body1">
+                  {questions.length} question{questions.length !== 1 ? 's' : ''} created
+                </Typography>
+              </Box>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent="space-between"
+                spacing={2}
+                mt={{ xs: 1, sm: 3 }}
+              >
+                <Button onClick={handlePreviousStep} variant="outlined">
+                  Back to questions
+                </Button>
+                <Button onClick={handlePublishClick} color="success" variant="contained">
+                  Confirm and publish
+                </Button>
+              </Stack>
+            </Paper>
+          ) : onDetailsStep ? (
             <Paper
               sx={{
                 p: { xs: 2, md: 4 },
@@ -937,9 +1080,13 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                   label="Due Date"
                   type="date"
                   fullWidth
-                  slotProps={{ inputLabel: { shrink: true } }}
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                    htmlInput: { min: getTodayDate() },
+                  }}
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  helperText="Cannot select dates in the past"
                 />
               </Box>
               <TextField
@@ -981,10 +1128,13 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                   label="Expiry Date"
                   type="date"
                   fullWidth
-                  slotProps={{ inputLabel: { shrink: true } }}
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                    htmlInput: { min: dueDate || getTodayDate() },
+                  }}
                   value={expiryDate}
                   onChange={(e) => setExpiryDate(e.target.value)}
-                  helperText="When the module expires it will move back to draft."
+                  helperText="When the module expires it will move back to draft. Must be after the due date."
                 />
               )}
               <Stack
@@ -1139,6 +1289,58 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
         </Box>
       </Box>
     </Dialog>
+
+    <Dialog
+      open={confirmDialog.open}
+      onClose={handleCancelDialog}
+      maxWidth="sm"
+      fullWidth
+    >
+      <DialogTitle>
+        {confirmDialog.type === 'reset' && 'Reset Form?'}
+        {confirmDialog.type === 'saveDraft' && 'Save Draft?'}
+        {confirmDialog.type === 'publish' && 'Publish Module?'}
+        {confirmDialog.type === 'close' && 'Unsaved Changes'}
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          {confirmDialog.type === 'reset' &&
+            'This will clear all your work and remove the local draft. This action cannot be undone.'}
+          {confirmDialog.type === 'saveDraft' &&
+            `This will save your module as a draft to the database. The module will remain hidden from students until you publish it. Your local browser draft will be cleared after saving.`}
+          {confirmDialog.type === 'publish' &&
+            `This will publish the module immediately, making it visible to all students in the class. Students will be able to view and submit this module. Your local browser draft will be cleared after publishing.`}
+          {confirmDialog.type === 'close' &&
+            `You have unsaved changes that only exist in your current browser session. These changes are NOT saved to the database and will be lost if you clear browser data or use a different device. Click "Save draft" to persist your work to the database before closing.`}
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleCancelDialog} color="inherit">
+          Cancel
+        </Button>
+        {confirmDialog.type === 'reset' && (
+          <Button onClick={handleConfirmReset} color="error" variant="contained">
+            Reset
+          </Button>
+        )}
+        {confirmDialog.type === 'saveDraft' && (
+          <Button onClick={handleConfirmSubmit} color="primary" variant="contained">
+            Save Draft
+          </Button>
+        )}
+        {confirmDialog.type === 'publish' && (
+          <Button onClick={handleConfirmSubmit} color="success" variant="contained">
+            Publish Module
+          </Button>
+        )}
+        {confirmDialog.type === 'close' && (
+          <Button onClick={handleConfirmClose} color="primary" variant="contained">
+            Close Anyway
+          </Button>
+        )}
+      </DialogActions>
+    </Dialog>
+  </>
   );
 };
 

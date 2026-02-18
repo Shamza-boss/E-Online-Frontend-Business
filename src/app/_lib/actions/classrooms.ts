@@ -31,6 +31,18 @@ export async function EnrollStudents(
   });
 }
 
+export async function UnenrollStudents(
+  studentsToRemove: EnrollStudentsDto
+): Promise<any> {
+  const session = await auth();
+  if (!session) redirect('/signin');
+
+  return serverFetch('/classrooms/UnenrollStudents', {
+    method: 'POST',
+    body: studentsToRemove,
+  });
+}
+
 export async function getAllClassrooms(): Promise<ClassDto[]> {
   return serverFetch<ClassDto[]>('/classrooms');
 }
