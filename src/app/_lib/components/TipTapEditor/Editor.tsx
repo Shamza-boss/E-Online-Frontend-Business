@@ -18,7 +18,7 @@ import {
   LinkBubbleMenu,
   TableBubbleMenu,
 } from 'mui-tiptap';
-import { Box, Fade, Typography, GlobalStyles } from '@mui/material';
+import { Box, Button, Fade, Typography, GlobalStyles } from '@mui/material';
 import { Lock, LockOpen, TextFields } from '@mui/icons-material';
 import useExtensions from './useExtensions';
 import EditorMenuControls from './EditorMenuControls';
@@ -39,6 +39,11 @@ import {
   type PdfNoteLinkSummary,
   type PdfNoteLinkNodeAttributes,
 } from '@/app/_lib/utils/pdfNoteLinks';
+import {
+  getNoteDraft,
+  removeNoteDraft,
+  setNoteDraft,
+} from '@/app/_lib/utils/noteDraftStore';
 
 export interface EditorProps {
   note?: NoteDto;
@@ -69,6 +74,12 @@ const serializePdfPayload = (payload: Record<string, unknown>) => {
   };
 };
 
+const AUTOSAVE_IDLE_MS = 30000;
+const NETWORK_FLUSH_INTERVAL_MS = 30000;
+const LOCAL_DRAFT_WRITE_MS = 2000;
+const CONTENT_CHANGE_EMIT_MS = 250;
+const AUTOSAVE_ENABLED = true;
+
 const Editor = forwardRef<EditorHandle, EditorProps>(
   ({ note, loading, onSave, onContentChange, onPdfLinkClick }: EditorProps, ref) => {
     const [editable, setEditable] = useState(true);
@@ -77,10 +88,51 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
       null
     );
     const [pendingSave, setPendingSave] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
+    const lastSavedContentRef = useRef(note?.content ?? '');
+    const latestContentRef = useRef(note?.content ?? '');
+    const isFlushingRef = useRef(false);
+    const draftStorageKey = note?.id ? `note-draft:${note.id}` : null;
 
     const extensions = useExtensions({
       placeholder: `Add your own content here...`,
     });
+
+    const flushLatestRef = useRef<() => Promise<void>>(async () => {});
+
+    const persistLocalDraftRef = useRef(
+      debounce((content: string, key: string, noteUpdatedAt?: string) => {
+        void setNoteDraft({
+          noteId: key,
+          content,
+          updatedAt: Date.now(),
+          noteUpdatedAt,
+        });
+      }, LOCAL_DRAFT_WRITE_MS) as unknown as {
+        (content: string, key: string, noteUpdatedAt?: string): void;
+        cancel: () => void;
+      }
+    );
+
+    const emitContentChangeRef = useRef(
+      debounce((content: string) => {
+        onContentChange?.(content);
+      }, CONTENT_CHANGE_EMIT_MS) as unknown as {
+        (content: string): void;
+        cancel: () => void;
+      }
+    );
+
+    const saveLatestContentRef = useRef<(content: string) => void>(() => {});
+
+    const debouncedSaveRef = useRef(
+      debounce((content: string) => {
+        saveLatestContentRef.current(content);
+      }, AUTOSAVE_IDLE_MS) as unknown as {
+        (content: string): void;
+        cancel: () => void;
+      }
+    );
 
     const editor = useEditor({
       editable,
@@ -90,12 +142,29 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
       editorProps: {},
       onUpdate: ({ editor }) => {
         const content = editor.getHTML();
-        onContentChange?.(content);
-        if (content !== note?.content) {
+        emitContentChangeRef.current(content);
+
+        latestContentRef.current = content;
+
+        if (draftStorageKey && content !== lastSavedContentRef.current) {
+          persistLocalDraftRef.current(content, draftStorageKey, note?.updatedAt);
+        }
+
+        if (content !== lastSavedContentRef.current) {
+          if (!AUTOSAVE_ENABLED) {
+            setIsDirty(true);
+            return;
+          }
+
           debouncedSaveRef.current(content);
         }
       },
     });
+
+    useEffect(() => {
+      if (!editor) return;
+      editor.setEditable(editable);
+    }, [editor, editable]);
 
     const handleDrop: NonNullable<EditorOptions['editorProps']['handleDrop']> =
       useCallback((view, event) => {
@@ -229,6 +298,25 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
       [editor]
     );
 
+    const handleManualSave = useCallback(async () => {
+      if (!editor || pendingSave) return;
+
+      const content = editor.getHTML();
+
+      try {
+        setPendingSave(true);
+        setSaveStatus('saving');
+        await onSave(content);
+        setIsDirty(false);
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus(null), 2000);
+      } catch {
+        setSaveStatus(null);
+      } finally {
+        setPendingSave(false);
+      }
+    }, [editor, onSave, pendingSave]);
+
     if (ref) {
       (ref as RefObject<EditorHandle | null>).current = {
         insertHtml: (html: string) => {
@@ -286,40 +374,150 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
       };
     }, [editor, onPdfLinkClick, handlePdfLinkActivation]);
 
-    const saveContent = useCallback(
-      async (content: string) => {
-        if (pendingSave) return;
-        try {
-          setPendingSave(true);
-          setSaveStatus('saving');
-          await onSave(content);
-          setSaveStatus('saved');
-          setTimeout(() => setSaveStatus(null), 2000);
-        } catch (error) {
-          setSaveStatus(null);
-        } finally {
-          setPendingSave(false);
-        }
-      },
-      [pendingSave, onSave]
-    );
+    const flushLatest = useCallback(async () => {
+      if (isFlushingRef.current) return;
 
-    const debouncedSaveRef = useRef(
-      debounce((content: string) => {
-        debouncedSaveRef.current.saveContent(content);
-      }, 800) as any
-    );
+      const contentToSave = latestContentRef.current;
+      if (contentToSave === lastSavedContentRef.current) return;
+
+      try {
+        isFlushingRef.current = true;
+        setPendingSave(true);
+        setSaveStatus('saving');
+
+        await onSave(contentToSave);
+        lastSavedContentRef.current = contentToSave;
+        setIsDirty(false);
+
+        if (draftStorageKey) {
+          const draft = await getNoteDraft(draftStorageKey);
+          if (draft?.content === contentToSave) {
+            await removeNoteDraft(draftStorageKey);
+          }
+        }
+
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus(null), 2000);
+      } catch {
+        setSaveStatus(null);
+      } finally {
+        isFlushingRef.current = false;
+        setPendingSave(false);
+
+        if (latestContentRef.current !== lastSavedContentRef.current) {
+          debouncedSaveRef.current(latestContentRef.current);
+        }
+      }
+    }, [onSave, draftStorageKey]);
 
     useEffect(() => {
-      debouncedSaveRef.current.saveContent = saveContent;
-    }, [saveContent]);
+      if (!AUTOSAVE_ENABLED) return;
+      flushLatestRef.current = flushLatest;
+    }, [flushLatest]);
+
+    useEffect(() => {
+      if (!AUTOSAVE_ENABLED) return;
+      saveLatestContentRef.current = (content: string) => {
+        latestContentRef.current = content;
+        void flushLatestRef.current();
+      };
+    }, []);
 
     useEffect(() => {
       const debounced = debouncedSaveRef.current;
       return () => {
         debounced.cancel();
+        persistLocalDraftRef.current.cancel();
+        emitContentChangeRef.current.cancel();
       };
     }, []);
+
+    useEffect(() => {
+      if (!AUTOSAVE_ENABLED) return;
+      emitContentChangeRef.current = debounce((content: string) => {
+        onContentChange?.(content);
+      }, CONTENT_CHANGE_EMIT_MS) as unknown as {
+        (content: string): void;
+        cancel: () => void;
+      };
+
+      return () => {
+        emitContentChangeRef.current.cancel();
+      };
+    }, [onContentChange]);
+
+    useEffect(() => {
+      if (!AUTOSAVE_ENABLED) return;
+      const flushOnBackground = () => {
+        if (document.visibilityState === 'hidden') {
+          debouncedSaveRef.current.cancel();
+          void flushLatestRef.current();
+        }
+      };
+
+      const flushOnUnload = () => {
+        debouncedSaveRef.current.cancel();
+      };
+
+      document.addEventListener('visibilitychange', flushOnBackground);
+      window.addEventListener('beforeunload', flushOnUnload);
+
+      return () => {
+        document.removeEventListener('visibilitychange', flushOnBackground);
+        window.removeEventListener('beforeunload', flushOnUnload);
+      };
+    }, []);
+
+    useEffect(() => {
+      if (!AUTOSAVE_ENABLED) return;
+      const timer = window.setInterval(() => {
+        if (latestContentRef.current !== lastSavedContentRef.current) {
+          void flushLatestRef.current();
+        }
+      }, NETWORK_FLUSH_INTERVAL_MS);
+
+      return () => {
+        window.clearInterval(timer);
+      };
+    }, []);
+
+    useEffect(() => {
+      if (!AUTOSAVE_ENABLED) return;
+      const serverContent = note?.content ?? '';
+      lastSavedContentRef.current = serverContent;
+      latestContentRef.current = serverContent;
+
+      if (!draftStorageKey) return;
+
+      let cancelled = false;
+
+      void (async () => {
+        const draft = await getNoteDraft(draftStorageKey);
+        if (!draft || !editor || cancelled) return;
+
+        if (
+          draft.content &&
+          draft.content !== serverContent &&
+          draft.noteUpdatedAt === note?.updatedAt
+        ) {
+          queueMicrotask(() => {
+            if (!cancelled) {
+              editor.commands.setContent(draft.content, false);
+            }
+          });
+          latestContentRef.current = draft.content;
+          setIsDirty(true);
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [draftStorageKey, editor, note?.content, note?.updatedAt]);
+
+    useEffect(() => {
+      setIsDirty(false);
+    }, [note?.id, note?.updatedAt]);
 
     useEffect(() => {
       if (editor && note?.content && editor.getHTML() !== note.content) {
@@ -445,21 +643,33 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
               />
             </MenuControlsContainer>
 
-            <Fade in={saveStatus !== null}>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: (theme) =>
-                    saveStatus === 'saving'
-                      ? theme.palette.text.secondary
-                      : theme.palette.success.main,
-                  transition: 'color 0.2s ease',
-                  ml: 2,
-                }}
-              >
-                {saveStatus === 'saving' ? 'Saving…' : 'Saved'}
-              </Typography>
-            </Fade>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              {!AUTOSAVE_ENABLED && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={handleManualSave}
+                  disabled={pendingSave || !isDirty}
+                >
+                  {pendingSave ? 'Saving…' : 'Save'}
+                </Button>
+              )}
+              <Fade in={saveStatus !== null}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: (theme) =>
+                      saveStatus === 'saving'
+                        ? theme.palette.text.secondary
+                        : theme.palette.success.main,
+                    transition: 'color 0.2s ease',
+                    ml: 0.5,
+                  }}
+                >
+                  {saveStatus === 'saving' ? 'Saving…' : 'Saved'}
+                </Typography>
+              </Fade>
+            </Box>
           </Box>
         </Box>
       </RichTextEditorProvider>
