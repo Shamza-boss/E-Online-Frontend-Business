@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Dialog,
@@ -67,13 +67,43 @@ export default function ExcalidrawModal({
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const [shouldRender, setShouldRender] = useState(false);
+
+  // Fix for issue #7312: Delay Excalidraw rendering and trigger resize event
+  // to force canvas size recalculation after modal finishes animating
+  useEffect(() => {
+    if (open) {
+      // Delay rendering to allow modal animation to complete
+      const renderTimer = setTimeout(() => {
+        setShouldRender(true);
+      }, 200);
+
+      return () => {
+        clearTimeout(renderTimer);
+        setShouldRender(false);
+      };
+    } else {
+      setShouldRender(false);
+    }
+  }, [open]);
+
+  // Fire resize event to recalculate Excalidraw canvas dimensions
+  useEffect(() => {
+    if (shouldRender) {
+      const resizeTimer = setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 150);
+
+      return () => clearTimeout(resizeTimer);
+    }
+  }, [shouldRender]);
 
   const handleSave = useCallback(() => {
     if (excalidrawAPIRef.current) {
       const elements = excalidrawAPIRef.current.getSceneElements();
       onSave([...elements]);
+      onClose();
     }
-    onClose();
   }, [onSave, onClose]);
 
   return (
@@ -136,14 +166,29 @@ export default function ExcalidrawModal({
           backgroundColor: alpha(theme.palette.background.default, 1),
         }}
       >
-        <Excalidraw
-          excalidrawAPI={(api: ExcalidrawImperativeAPI) => {
-            excalidrawAPIRef.current = api;
-          }}
-          initialData={{ elements: initialElements }}
-          viewModeEnabled={readonly}
-          theme={isDark ? 'dark' : 'light'}
-        />
+        {shouldRender ? (
+          <Excalidraw
+            excalidrawAPI={(api: ExcalidrawImperativeAPI) => {
+              excalidrawAPIRef.current = api;
+            }}
+            initialData={{
+              elements: initialElements,
+            }}
+            viewModeEnabled={readonly}
+            theme={isDark ? 'dark' : 'light'}
+          />
+        ) : (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
       </Box>
     </Dialog>
   );

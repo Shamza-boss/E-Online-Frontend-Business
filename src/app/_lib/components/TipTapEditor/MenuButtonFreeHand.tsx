@@ -21,14 +21,30 @@ export default function DrawingButton() {
 
     const json = JSON.stringify(elements);
 
+    if (!editor.schema.nodes.excaliBlock) {
+      console.error('excaliBlock node is not registered in this editor instance');
+      return;
+    }
+
     const didInsert = editor
       .chain()
       .focus()
-      .insertContent({
-        type: 'excaliBlock',
-        attrs: { data: json },
-      })
+      .insertContent([
+        {
+          type: 'excaliBlock',
+          attrs: { data: json },
+        },
+        {
+          type: 'paragraph',
+          content: [{ type: 'hardBreak' }],
+        },
+      ])
       .run();
+
+    if (!didInsert) {
+      console.error('Failed to insert Excalidraw block into editor');
+      return;
+    }
 
     setModalOpen(false);
   };

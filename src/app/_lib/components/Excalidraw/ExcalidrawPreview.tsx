@@ -41,6 +41,7 @@ const ExcalidrawPreview = forwardRef<
 
   const [open, setOpen] = useState(false);
   const [svgHtml, setSvgHtml] = useState<string>('');
+  
   const elements = useMemo(() => {
     try {
       const parsed = JSON.parse(node.attrs.data || '[]');
@@ -163,7 +164,6 @@ const ExcalidrawPreview = forwardRef<
           onSave={(updated) => {
             const sanitized = sanitizeExcalidrawElements(updated);
             updateAttributes({ data: JSON.stringify(sanitized) });
-            setOpen(false);
           }}
           readonly={!isEditable}
         />

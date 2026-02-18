@@ -14,8 +14,20 @@ const emptyNoteList: NoteDto[] = [];
 export function useClassroomNote(classId?: string) {
   const key = classId ? ['classroom-note', classId] : null;
 
-  const swr = useSWR<NoteDto | null>(key, () =>
-    classId ? getOrCreateNoteByClassroomId(classId) : Promise.resolve(null)
+  const swr = useSWR<NoteDto | null>(
+    key,
+    () => (classId ? getOrCreateNoteByClassroomId(classId) : Promise.resolve(null)),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      errorRetryCount: 1, // Only retry once on error
+      shouldRetryOnError: false, // Don't retry indefinitely
+      dedupingInterval: 60000, // Cache for 1 minute
+      focusThrottleInterval: 300000, // Don't revalidate on focus within 5 minutes
+      onError: (error) => {
+        console.warn('Failed to load classroom note:', error);
+      },
+    }
   );
 
   const saveNote = async (payload: UpdateNotePayload) => {
@@ -47,8 +59,20 @@ export function useClassroomNote(classId?: string) {
 
 export function useClassroomNotesForTeacher(classId?: string) {
   const key = classId ? ['classroom-notes', classId] : null;
-  return useSWR<NoteDto[]>(key, () =>
-    classId ? getNotesForClassroom(classId) : Promise.resolve(emptyNoteList)
+  return useSWR<NoteDto[]>(
+    key,
+    () => (classId ? getNotesForClassroom(classId) : Promise.resolve(emptyNoteList)),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      errorRetryCount: 1,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
+      focusThrottleInterval: 300000,
+      onError: (error) => {
+        console.warn('Failed to load classroom notes for teacher:', error);
+      },
+    }
   );
 }
 

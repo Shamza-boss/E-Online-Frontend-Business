@@ -57,6 +57,8 @@ const AssignStudentsToClassModal: NextPage<AssignStudentsToClassModalProps> = ({
           <IconButton edge="start" aria-label="close" onClick={handleClose}>
             <Close />
           </IconButton>
+          <DialogTitle>Confirm enrollment</DialogTitle>
+          <Box sx={{ flex: 1 }}/>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <Button variant="outlined" onClick={handleClose}>
               Close
@@ -85,7 +87,7 @@ const AssignStudentsToClassModal: NextPage<AssignStudentsToClassModalProps> = ({
       </Box>
 
       <Dialog open={confirmEnrollOpen} onClose={handleCloseEnrollConfirm}>
-        <DialogTitle>Confirm enrollment</DialogTitle>
+        
         <DialogContent>
           <DialogContentText>
             {enrollmentState.selectedCount > 0

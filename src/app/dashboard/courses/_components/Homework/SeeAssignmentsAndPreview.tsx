@@ -7,6 +7,7 @@ import {
   Typography,
   Button,
   Chip,
+  Alert,
 } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import EDataGrid from '../../../_components/EDataGrid';
@@ -31,6 +32,7 @@ import { format } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { getStatusChipConfig } from '@/app/_lib/common/functions';
 import { GradeCell, PercentageCell } from '@/app/_lib/homework';
+import { UserRole } from '@/app/_lib/Enums/UserRole';
 
 export default function SeeAssignmentsAndPreview({
   canEdit,
@@ -47,12 +49,24 @@ export default function SeeAssignmentsAndPreview({
   >('pending');
 
   const userId = session?.user.id;
+  const userRole = session?.user?.role ? Number(session.user.role) : null;
+  const isStudent = userRole === UserRole.Trainee;
+
+  // Only fetch assignments if user is a student
+  // Teachers and admins cannot be enrolled in modules
   const { data: allAssignments, isLoading } = useSWR<HomeworkAssignmentDto[]>(
-    userId ? ['student-assignments', userId] : null,
+    isStudent && userId ? ['student-assignments', userId] : null,
     () => getStudentAssignments(userId!),
     { 
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
+      errorRetryCount: 1,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
+      focusThrottleInterval: 300000,
+      onError: (error) => {
+        console.warn('Failed to load student assignments:', error);
+      },
     }
   );
 
@@ -172,7 +186,45 @@ export default function SeeAssignmentsAndPreview({
           )}
         </Toolbar>
 
-      {!selectedAssignment ? (
+      {!isStudent ? (
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'auto',
+          }}
+        >
+          <EDataGrid
+            rows={[]}
+            sx={{ flex: 1, width: '100%', height: '100%' }}
+            columns={columns}
+            getRowId={(r) => r.assignmentId || r.id}
+            disableRowSelectionOnClick={canEdit}
+            initialState={{ pagination: { paginationModel: { pageSize: 20 } } }}
+            pageSizeOptions={[10, 20, 50]}
+            slots={{
+              noRowsOverlay: () => (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    flexDirection: 'column',
+                    gap: 2,
+                  }}
+                >
+                  <Alert severity="info" sx={{ mb: 0 }}>
+                    Only students can view enrolled modules
+                  </Alert>
+                </Box>
+              ),
+            }}
+          />
+        </Box>
+      ) : !selectedAssignment ? (
         <Box
           sx={{
             flex: 1,
