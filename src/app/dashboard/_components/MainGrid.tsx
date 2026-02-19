@@ -11,8 +11,25 @@ import {
   useInstitutionDashboard,
 } from '@/app/_lib/hooks/useDashboard';
 import ActiveSubjectsChart from './ActiveSubjectChart';
+import PlatformOwnerDashboard from './PlatformOwnerDashboard';
+import { useSession } from 'next-auth/react';
+import { UserRole } from '@/app/_lib/Enums/UserRole';
 
 export default function MainGrid() {
+  const { data: session } = useSession();
+  const rawRole = session?.user?.role;
+  const normalizedRole =
+    typeof rawRole === 'string' ? (parseInt(rawRole, 10) as UserRole) : (rawRole as UserRole | undefined);
+  const isPlatformOwner = normalizedRole === UserRole.PlatformAdmin;
+
+  if (isPlatformOwner) {
+    return <PlatformOwnerDashboard />;
+  }
+
+  return <InstitutionMainGrid />;
+}
+
+function InstitutionMainGrid() {
   const { data: institutionData, isLoading } = useInstitutionDashboard();
 
   const institutionStats: StatCardProps[] = [

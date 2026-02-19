@@ -34,23 +34,12 @@ export async function getInstitutionBillingHistory(
   );
 }
 
-export async function getInstitutionRates(
-  institutionId: string
-): Promise<BillingRateDto | null> {
-  return serverFetch<BillingRateDto | null>(
-    subscriptionPath(institutionId, '/rates'),
-    {
-      method: 'GET',
-    }
-  );
-}
-
-export async function setInstitutionRates(
+export async function setCreatorAddon(
   institutionId: string,
   payload: BillingRateDto
 ): Promise<void> {
-  await serverFetch<void>(subscriptionPath(institutionId, '/rates'), {
-    method: 'POST',
+  await serverFetch<void>(subscriptionPath(institutionId, '/creator'), {
+    method: 'PATCH',
     body: payload,
   });
 }

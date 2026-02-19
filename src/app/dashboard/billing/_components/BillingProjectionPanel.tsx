@@ -3,26 +3,23 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import {
     Alert,
     Box,
-    Chip,
     CircularProgress,
     Divider,
     IconButton,
-    LinearProgress,
     Paper,
     Stack,
     Tooltip,
     Typography,
 } from '@mui/material';
-import type { ChipProps } from '@mui/material/Chip';
 import { format } from 'date-fns';
-import {
+import type {
     BillingProjectionDto,
-    BillingSummaryDto,
+    InstitutionBillingDashboardDto,
 } from '@/app/_lib/interfaces/types';
 
 interface BillingProjectionPanelProps {
     projection?: BillingProjectionDto;
-    summary?: BillingSummaryDto;
+    billingDashboard?: InstitutionBillingDashboardDto;
     loading?: boolean;
     error?: Error;
     onRefresh?: () => void;
@@ -31,6 +28,12 @@ interface BillingProjectionPanelProps {
 const currencyZar = new Intl.NumberFormat('en-ZA', {
     style: 'currency',
     currency: 'ZAR',
+    currencyDisplay: 'symbol',
+});
+
+const currencyUsd = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
     currencyDisplay: 'symbol',
 });
 
@@ -63,7 +66,7 @@ const formatStorageVolume = (gigabytes: number) => {
 
 export default function BillingProjectionPanel({
     projection,
-    summary,
+    billingDashboard,
     loading,
     error,
     onRefresh,
@@ -98,14 +101,6 @@ export default function BillingProjectionPanel({
         );
     }
 
-    const allowedUsers = summary?.allowedUsers ?? 0;
-    const enrolledPeak = projection.usage?.enrolledUsersPeak ?? summary?.enrolledUsers ?? 0;
-    const usageRatio = allowedUsers > 0 ? (enrolledPeak / allowedUsers) * 100 : 0;
-    const progressPalette: 'error' | 'warning' | 'success' =
-        usageRatio > 100 ? 'error' : usageRatio > 85 ? 'warning' : 'success';
-    const usageChipColor: ChipProps['color'] =
-        usageRatio > 100 ? 'error' : usageRatio > 85 ? 'warning' : 'success';
-
     const chargeTotal = projection.chargeTotal;
     const infraCostZar = convertUsdToZar(projection.costsUsd.totalUsd);
     const expectedMargin = projection.expectedMargin ?? 0;
@@ -114,6 +109,7 @@ export default function BillingProjectionPanel({
     const projectionMonth = format(new Date(projection.year, projection.month - 1, 1), 'MMMM yyyy');
 
     const usageMetrics = [
+        { label: 'Users', value: projection.usage.userCount.toLocaleString() },
         { label: 'Stored minutes', value: `${numberFormat.format(projection.usage.storedVideoMinutes)} min` },
         { label: 'Delivered minutes', value: `${numberFormat.format(projection.usage.deliveredVideoMinutes)} min` },
         { label: 'PDF storage', value: formatStorageVolume(projection.usage.pdfStorageGb) },
@@ -151,6 +147,7 @@ export default function BillingProjectionPanel({
                     </Tooltip>
                 </Stack>
 
+                {/* Key financial metrics */}
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                     <Box sx={{ flex: 1, border: (theme) => `1px dashed ${theme.palette.success.light}`, borderRadius: 2, p: 2 }}>
                         <Typography variant="body2" color="text.secondary">
@@ -160,7 +157,7 @@ export default function BillingProjectionPanel({
                             {currencyZar.format(chargeTotal)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            Base + creator add-on + enterprise overage
+                            Based on per-user tiered pricing
                         </Typography>
                     </Box>
                     <Box sx={{ flex: 1, border: (theme) => `1px dashed ${theme.palette.info.light}`, borderRadius: 2, p: 2 }}>
@@ -187,44 +184,46 @@ export default function BillingProjectionPanel({
                     </Box>
                 </Stack>
 
-                <Box>
-                    <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-                        <Typography variant="subtitle2" color="text.secondary" textTransform="uppercase">
-                            Enrollment pressure
-                        </Typography>
-                        <Chip
-                            label={allowedUsers > 0 ? `${Math.round(usageRatio)}% of allowed users` : 'No cap available'}
-                            color={usageChipColor}
-                            variant="outlined"
-                            size="small"
-                        />
-                    </Stack>
-                    <Box sx={{ mt: 1 }}>
-                        <LinearProgress
-                            variant="determinate"
-                            value={Math.min(usageRatio, 100)}
-                            sx={{
-                                height: 8,
-                                borderRadius: 5,
-                                backgroundColor: (theme) => theme.palette.action.hover,
-                                '& .MuiLinearProgress-bar': {
-                                    backgroundColor: (theme) => theme.palette[progressPalette].main,
-                                },
-                            }}
-                        />
-                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                Peak enrolled: {enrolledPeak.toLocaleString()}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                                Allowed users: {allowedUsers > 0 ? allowedUsers.toLocaleString() : '—'}
-                            </Typography>
+                {/* Projected monthly cost from billing dashboard */}
+                {billingDashboard && (
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            border: (theme) => `1px solid ${theme.palette.divider}`,
+                            backgroundColor: (theme) => theme.palette.action.hover,
+                        }}
+                    >
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between">
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">Projected monthly cost (ZAR)</Typography>
+                                <Typography variant="h6" fontWeight={700}>
+                                    {currencyZar.format(billingDashboard.projectedMonthlyCostZar)}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">Cost per user (ZAR)</Typography>
+                                <Typography variant="h6" fontWeight={700}>
+                                    {currencyZar.format(billingDashboard.costPerUserZar)}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">Profit (ZAR)</Typography>
+                                <Typography
+                                    variant="h6"
+                                    fontWeight={700}
+                                    color={billingDashboard.profitZar >= 0 ? 'success.main' : 'error.main'}
+                                >
+                                    {currencyZar.format(billingDashboard.profitZar)}
+                                </Typography>
+                            </Box>
                         </Stack>
                     </Box>
-                </Box>
+                )}
 
                 <Divider />
 
+                {/* Usage and cost breakdown side-by-side */}
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                     <Box sx={{ flex: 1 }}>
                         <Typography variant="subtitle2" color="text.secondary" textTransform="uppercase" gutterBottom>
@@ -261,6 +260,69 @@ export default function BillingProjectionPanel({
                         </Stack>
                     </Box>
                 </Stack>
+
+                {/* Usage metrics from billing dashboard (Cloudflare/Railway detail) */}
+                {billingDashboard && (
+                    <>
+                        <Divider />
+                        <Typography variant="subtitle2" color="text.secondary" textTransform="uppercase">
+                            Accumulated usage metrics (current month)
+                        </Typography>
+                        <Box
+                            sx={{
+                                display: 'grid',
+                                gap: 2,
+                                gridTemplateColumns: {
+                                    xs: 'repeat(2, 1fr)',
+                                    md: 'repeat(4, 1fr)',
+                                },
+                            }}
+                        >
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">Stored video</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {numberFormat.format(billingDashboard.usageMetrics.storedVideoMinutes)} min
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">Delivered video</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {numberFormat.format(billingDashboard.usageMetrics.deliveredVideoMinutes)} min
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">PDF storage</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {formatStorageVolume(billingDashboard.usageMetrics.pdfStorageGb)}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">PDF downloads</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {billingDashboard.usageMetrics.pdfDownloads.toLocaleString()}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">Cloudflare cost</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {currencyUsd.format(billingDashboard.usageMetrics.cloudflareCostUsd)}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">Railway cost</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {currencyUsd.format(billingDashboard.usageMetrics.railwayCostUsd)}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="body2" color="text.secondary">Total infra cost (USD)</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {currencyUsd.format(billingDashboard.usageMetrics.totalCostUsd)}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </>
+                )}
             </Stack>
         </Paper>
     );

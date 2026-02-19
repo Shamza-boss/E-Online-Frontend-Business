@@ -93,15 +93,11 @@ export default function BillingSummaryTable({
                         <TableHead>
                             <TableRow>
                                 <TableCell>Institution</TableCell>
-                                <TableCell>Plan</TableCell>
                                 <TableCell>Billing Month</TableCell>
-                                <TableCell align="right">Active Users</TableCell>
-                                <TableCell align="right">Enrolled Users</TableCell>
-                                <TableCell align="right">Allowed Users</TableCell>
-                                <TableCell align="right">Overage Users</TableCell>
-                                <TableCell align="right">Base</TableCell>
-                                <TableCell align="right">Add-ons</TableCell>
-                                <TableCell align="right">Overage</TableCell>
+                                <TableCell align="right">Users</TableCell>
+                                <TableCell align="center">Creator</TableCell>
+                                <TableCell align="right">Rate / User</TableCell>
+                                <TableCell align="right">Creator Add-on / User</TableCell>
                                 <TableCell align="right">Total</TableCell>
                             </TableRow>
                         </TableHead>
@@ -110,21 +106,19 @@ export default function BillingSummaryTable({
                                 <TableRow key={`${summary.institutionName}-${summary.year}-${summary.month}`} hover>
                                     <TableCell>
                                         <Typography fontWeight={600}>{summary.institutionName}</Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {summary.subscription}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip label={summary.subscription} size="small" color="primary" variant="outlined" />
                                     </TableCell>
                                     <TableCell>{formatBillingMonth(summary)}</TableCell>
-                                    <TableCell align="right">{summary.activeUsers}</TableCell>
-                                    <TableCell align="right">{summary.enrolledUsers}</TableCell>
-                                    <TableCell align="right">{summary.allowedUsers}</TableCell>
-                                    <TableCell align="right">{summary.overageUsers}</TableCell>
-                                    <TableCell align="right">{formatCurrency(summary.baseMonthlyPrice)}</TableCell>
-                                    <TableCell align="right">{formatCurrency(summary.addonsMonthlyPrice)}</TableCell>
-                                    <TableCell align="right">{formatCurrency(summary.overagePrice)}</TableCell>
+                                    <TableCell align="right">{summary.userCount}</TableCell>
+                                    <TableCell align="center">
+                                        <Chip
+                                            label={summary.creatorEnabled ? 'Yes' : 'No'}
+                                            size="small"
+                                            color={summary.creatorEnabled ? 'secondary' : 'default'}
+                                            variant="outlined"
+                                        />
+                                    </TableCell>
+                                    <TableCell align="right">{formatCurrency(summary.ratePerUserZar)}</TableCell>
+                                    <TableCell align="right">{formatCurrency(summary.creatorAddonPerUserZar)}</TableCell>
                                     <TableCell align="right">
                                         <Typography fontWeight={700}>{formatCurrency(summary.totalPrice)}</Typography>
                                     </TableCell>

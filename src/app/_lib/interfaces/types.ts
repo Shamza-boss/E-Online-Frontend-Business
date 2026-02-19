@@ -15,11 +15,6 @@ export interface InstitutionSubscriptionPayload {
 }
 
 export interface BillingRateDto {
-  baseMonthlyPrice: number;
-  enterpriseBaseUsers: number;
-  enterpriseOveragePricePerUser: number;
-  creatorAddonMonthlyPrice: number;
-  plan: SubscriptionFeatureFlag;
   creatorEnabled: boolean;
 }
 
@@ -32,22 +27,17 @@ export interface SubscriptionInfoDto {
 
 export interface BillingSummaryDto {
   institutionName: string;
-  subscription: string;
   year: number;
   month: number;
-  activeUsers: number;
-  enrolledUsers: number;
-  allowedUsers: number;
-  overageUsers: number;
-  baseMonthlyPrice: number;
-  addonsMonthlyPrice: number;
-  overagePrice: number;
+  userCount: number;
+  creatorEnabled: boolean;
+  ratePerUserZar: number;
+  creatorAddonPerUserZar: number;
   totalPrice: number;
 }
 
 export interface BillingUsageSummary {
-  enrolledUsersPeak: number;
-  activeUsersPeak: number;
+  userCount: number;
   storedVideoMinutes: number;
   deliveredVideoMinutes: number;
   pdfStorageGb: number;
@@ -404,6 +394,58 @@ export interface SystemAdminDashboardDto {
   homeworkCreated: number;
   totalClassrooms: number;
   peakUsageHours: HourlyLoginStat[]; // may be empty if untracked
+}
+
+// Platform Owner Dashboard DTOs
+export interface PlatformOwnerDashboardDto {
+  totalInstitutions: number;
+  totalUsers: number;
+  totalModules: number;
+  totalCostZar: number;
+  averageProfitMarginPercent: number;
+  top3MostActiveInstitutions: TopActiveInstitutionDto[];
+  profitMarginBuckets: ProfitMarginBucketsDto;
+}
+
+export interface TopActiveInstitutionDto {
+  institutionId: string;
+  name: string;
+  userCount: number;
+  moduleCount: number;
+  activityScore: number;
+}
+
+export interface ProfitMarginBucketsDto {
+  below35: number;
+  between35And75: number;
+  above75: number;
+}
+
+export interface InstitutionBillingDashboardDto {
+  institutionId: string;
+  institutionName: string;
+  userCount: number;
+  ratePerUserZar: number;
+  monthlyRevenueZar: number;
+  usageMetrics: BillingUsageMetricsDto;
+  totalCostZar: number;
+  costPerUserZar: number;
+  projectedMonthlyCostZar: number;
+  profitZar: number;
+  profitMarginPercent: number;
+}
+
+export interface BillingUsageMetricsDto {
+  storedVideoMinutes: number;
+  deliveredVideoMinutes: number;
+  pdfStorageGb: number;
+  pdfDownloads: number;
+  cpuSeconds: number;
+  memoryGbSeconds: number;
+  egressGb: number;
+  cloudflareCostUsd: number;
+  railwayCostUsd: number;
+  totalCostUsd: number;
 }
 
 export interface EngagementStatDto {

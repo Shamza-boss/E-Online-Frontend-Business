@@ -16,16 +16,16 @@ import { UserRole } from '@/app/_lib/Enums/UserRole';
 import {
     useInstitutionBilling,
     useInstitutionBillingHistory,
-    useInstitutionRates,
     useInstitutionProjection,
 } from '@/app/_lib/hooks/useSubscriptions';
+import { useInstitutionBillingDashboard } from '@/app/_lib/hooks/useDashboard';
 import BillingRatesPanel from './BillingRatesPanel';
 import BillingSummaryTable from './BillingSummaryTable';
 import BillingOverviewCard from './BillingOverviewCard';
 import { getAllInstitutions } from '@/app/_lib/actions/institutions';
 import { InstitutionWithAdminDto, BillingRateDto } from '@/app/_lib/interfaces/types';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
-import { setInstitutionRates } from '@/app/_lib/actions/subscriptions';
+import { setCreatorAddon } from '@/app/_lib/actions/subscriptions';
 import BillingProjectionPanel from './BillingProjectionPanel';
 
 interface InstitutionOption {
@@ -74,18 +74,19 @@ export default function BillingExperience() {
 
     const summary = useInstitutionBilling(selectedInstitutionId ?? undefined);
     const history = useInstitutionBillingHistory(selectedInstitutionId ?? undefined);
-    const rates = useInstitutionRates(selectedInstitutionId ?? undefined);
     const projection = useInstitutionProjection(selectedInstitutionId ?? undefined);
+    const billingDashboard = useInstitutionBillingDashboard(selectedInstitutionId ?? undefined);
 
-    const handleSaveRates = async (nextRate: BillingRateDto) => {
+    const handleToggleCreator = async (creatorEnabled: boolean) => {
         if (!selectedInstitutionId) return;
         try {
-            await setInstitutionRates(selectedInstitutionId, nextRate);
-            showAlert('success', 'Rates updated successfully.');
-            await rates.mutate();
+            await setCreatorAddon(selectedInstitutionId, { creatorEnabled });
+            showAlert('success', creatorEnabled ? 'Creator add-on enabled.' : 'Creator add-on disabled.');
+            await summary.mutate();
+            await billingDashboard.mutate();
         } catch (error) {
-            console.error('Failed to save rates', error);
-            showAlert('error', 'Unable to save rates. Please try again.');
+            console.error('Failed to toggle creator add-on', error);
+            showAlert('error', 'Unable to update creator add-on. Please try again.');
         }
     };
 
@@ -113,7 +114,7 @@ export default function BillingExperience() {
                     Billing & Subscriptions
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                    Choose an institution to inspect its invoices, view history, and adjust plan-level pricing.
+                    Choose an institution to inspect its billing, view costs, projections, and toggle the creator add-on.
                 </Typography>
             </Box>
 
@@ -144,22 +145,22 @@ export default function BillingExperience() {
 
             <BillingOverviewCard
                 summary={summary.data}
-                loading={summary.isLoading || summary.isValidating}
+                billingDashboard={billingDashboard.data}
+                loading={summary.isLoading || summary.isValidating || billingDashboard.isLoading}
                 institutionName={selectedInstitutionName}
             />
 
             <BillingRatesPanel
                 institutionName={selectedInstitutionName}
-                rate={rates.data}
-                loading={rates.isLoading || rates.isValidating}
-                error={rates.error as Error | undefined}
+                creatorEnabled={summary.data?.creatorEnabled ?? false}
+                loading={summary.isLoading || summary.isValidating}
                 disabled={!selectedInstitutionId}
-                onSave={handleSaveRates}
+                onToggleCreator={handleToggleCreator}
             />
 
             <BillingProjectionPanel
                 projection={projection.data}
-                summary={summary.data}
+                billingDashboard={billingDashboard.data}
                 loading={projection.isLoading || projection.isValidating}
                 error={projection.error as Error | undefined}
                 onRefresh={() => projection.mutate()}
