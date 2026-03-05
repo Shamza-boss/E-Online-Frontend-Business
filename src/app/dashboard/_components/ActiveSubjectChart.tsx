@@ -26,12 +26,20 @@ interface ActiveSubjectsChartProps {
     data: number[];
   }[];
   isLoading?: boolean;
+  title?: string;
+  description?: string;
+  yAxisLabel?: string;
+  chipLabel?: string;
 }
 
 export default function ActiveSubjectsChart({
   labels,
   series,
   isLoading = false,
+  title = 'Most active courses',
+  description = 'Daily module submissions by course in the last 30 days',
+  yAxisLabel = 'Total Submissions',
+  chipLabel = 'Last 30 days',
 }: ActiveSubjectsChartProps) {
   const theme = useTheme();
 
@@ -95,7 +103,7 @@ export default function ActiveSubjectsChart({
       >
         <CardContent>
           <Typography component="h2" variant="subtitle2" gutterBottom>
-            Most active courses
+            {title}
           </Typography>
           <Stack sx={{ justifyContent: 'space-between' }}>
             <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
@@ -149,7 +157,7 @@ export default function ActiveSubjectsChart({
     <Card variant="outlined" sx={{ width: '100%' }}>
       <CardContent>
         <Typography component="h2" variant="subtitle2" gutterBottom>
-          Most active courses
+          {title}
         </Typography>
         <Stack sx={{ justifyContent: 'space-between' }}>
           <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
@@ -159,10 +167,10 @@ export default function ActiveSubjectsChart({
                 0
               )}
             </Typography>
-            <Chip size="small" color="success" label="Last 30 days" />
+            <Chip size="small" color="success" label={chipLabel} />
           </Stack>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Daily module submissions by course in the last 30 days
+            {description}
           </Typography>
         </Stack>
 
@@ -177,7 +185,7 @@ export default function ActiveSubjectsChart({
           ]}
           yAxis={[
             {
-              label: 'Total Submissions',
+              label: yAxisLabel,
               min: 0,
               max: chartMaxValue,
               tickInterval: yAxisTicks,

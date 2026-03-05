@@ -10,6 +10,9 @@ import { GradePerfomanceDto } from '@/app/_lib/interfaces/types';
 
 type PageViewsBarChartProps = {
   title?: string;
+  description?: string;
+  yAxisLabel?: string;
+  valueLabel?: string;
   total?: string;
   trend: 'success' | 'error' | 'default';
   average: string; // e.g., '+0%'
@@ -21,6 +24,9 @@ type PageViewsBarChartProps = {
 
 export default function PageViewsBarChart({
   title = 'Trainee Performance Distribution',
+  description = 'Breakdown of average trainee performance by grade range in the last 6 months',
+  yAxisLabel = 'Proportion of Trainees (%)',
+  valueLabel = 'trainees',
   total = '',
   trend,
   average,
@@ -187,8 +193,7 @@ export default function PageViewsBarChart({
             <Chip size="small" color={trend} label={average} />
           </Stack>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Breakdown of average trainee performance by grade range in the last
-            6 months
+            {description}
           </Typography>
         </Stack>
 
@@ -203,7 +208,7 @@ export default function PageViewsBarChart({
           ]}
           yAxis={[
             {
-              label: 'Proportion of Trainees (%)',
+              label: yAxisLabel,
               min: 0,
               max: chartMaxValue,
               tickInterval: yAxisTicks,
@@ -223,7 +228,7 @@ export default function PageViewsBarChart({
               const dataIndex = context?.dataIndex ?? 0;
               const rawValue = normalizedSeries[index]?.data?.[dataIndex] ?? 0;
 
-              return `${rawValue} trainees (${value.toFixed(1)}%)`;
+              return `${rawValue} ${valueLabel} (${value.toFixed(1)}%)`;
             },
           }))}
           height={550}

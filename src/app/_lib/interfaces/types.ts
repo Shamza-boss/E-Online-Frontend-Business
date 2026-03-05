@@ -398,27 +398,31 @@ export interface SystemAdminDashboardDto {
 
 // Platform Owner Dashboard DTOs
 export interface PlatformOwnerDashboardDto {
-  totalInstitutions: number;
-  totalUsers: number;
-  totalModules: number;
-  totalCostZar: number;
-  averageProfitMarginPercent: number;
-  top3MostActiveInstitutions: TopActiveInstitutionDto[];
-  profitMarginBuckets: ProfitMarginBucketsDto;
+  // Sparkline trend cards (30 daily data points, same shape as InstitutionTrendsDashboardDto)
+  institutions: TrendMetricDto;
+  users: TrendMetricDto;
+  modules: TrendMetricDto;
+  totalCost: TrendMetricDto;
+  averageProfit: TrendMetricDto;
+
+  // Top 3 most active institutions (same series format as MostActiveClassSubjectSeriesDto)
+  mostActiveInstitutions: MostActiveInstitutionSeriesDto;
+
+  // Profit margin buckets (same format as gradePerformance: 6-month bars)
+  profitMarginPerformance: GradePerfomanceDto[];
+  profitMarginMonths: string[];
+  profitMarginTrends: GradePerformanceLableTrendDto;
 }
 
-export interface TopActiveInstitutionDto {
-  institutionId: string;
-  name: string;
-  userCount: number;
-  moduleCount: number;
-  activityScore: number;
+export interface MostActiveInstitutionSeriesDto {
+  labels: string[];
+  series: InstitutionActivitySeries[];
 }
 
-export interface ProfitMarginBucketsDto {
-  below35: number;
-  between35And75: number;
-  above75: number;
+export interface InstitutionActivitySeries {
+  id: string;
+  label: string;
+  data: number[];
 }
 
 export interface InstitutionBillingDashboardDto {
