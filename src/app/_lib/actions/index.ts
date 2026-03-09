@@ -35,6 +35,9 @@ export * from './settings';
 // Institutions
 export * from './institutions';
 
+// Invoices
+export * from './invoices';
+
 // Notes
 export * from './notes';
 

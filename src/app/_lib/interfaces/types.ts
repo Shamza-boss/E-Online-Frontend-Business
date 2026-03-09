@@ -69,6 +69,78 @@ export interface BillingProjectionDto {
   expectedMargin: number;
 }
 
+// ── Invoice types ────────────────────────────────────────────────
+
+export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid' | 'Overdue' | 'Cancelled';
+
+export type InvoiceLineType = 'BaseRate' | 'CreatorAddon';
+
+export interface InvoiceLineItemDto {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPriceZar: number;
+  totalZar: number;
+  lineType: InvoiceLineType;
+}
+
+export interface InvoiceDto {
+  id: string;
+  institutionId: string;
+  institutionName: string;
+  invoiceNumber: string;
+  year: number;
+  month: number;
+  userCount: number;
+  creatorEnabled: boolean;
+  ratePerUserZar: number;
+  creatorAddonPerUserZar: number;
+  subtotalZar: number;
+  creatorTotalZar: number;
+  totalAmountZar: number;
+  rateTier: string;
+  status: InvoiceStatus;
+  issuedAt: string;
+  dueDate: string;
+  sentAt: string | null;
+  sentToEmail: string | null;
+  paidAt: string | null;
+  paymentReference: string | null;
+  notes: string | null;
+  lineItems: InvoiceLineItemDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SendInvoiceDto {
+  recipientEmail?: string;
+}
+
+export interface MarkInvoicePaidDto {
+  paymentReference?: string;
+  notes?: string;
+}
+
+export interface InvoiceSummaryDto {
+  totalInvoices: number;
+  paidCount: number;
+  unpaidCount: number;
+  overdueCount: number;
+  totalBilledZar: number;
+  totalPaidZar: number;
+  totalOutstandingZar: number;
+}
+
+export interface InvoiceStatusSummaryDto {
+  institutionId: string;
+  institutionName: string;
+  currentMonthInvoiced: boolean;
+  currentMonthStatus: InvoiceStatus | null;
+  lastInvoiceDate: string | null;
+  lastPaymentDate: string | null;
+  overdueCount: number;
+}
+
 //Homework
 export interface VideoMeta {
   provider: string;

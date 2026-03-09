@@ -23,4 +23,11 @@ export {
   useInstitutionBilling,
   useInstitutionBillingHistory,
 } from './useSubscriptions';
+export {
+  useInstitutionInvoices,
+  useInvoiceDetail,
+  useOverdueInvoices,
+  useInvoiceSummary,
+  useInvoiceStatusSummaries,
+} from './useInvoices';
 export { useCreatorAccess } from './useCreatorAccess';
