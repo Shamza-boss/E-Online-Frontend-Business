@@ -3,11 +3,9 @@ import {
   getInstitutionBilling,
   getInstitutionBillingHistory,
   getInstitutionProjection,
-  getInstitutionRates,
 } from '../actions/subscriptions';
 import {
   BillingProjectionDto,
-  BillingRateDto,
   BillingSummaryDto,
 } from '../interfaces/types';
 
@@ -34,19 +32,6 @@ export function useInstitutionBillingHistory(institutionId?: string) {
       revalidateIfStale: false,
       dedupingInterval: Number.POSITIVE_INFINITY,
       keepPreviousData: true,
-    }
-  );
-}
-
-export function useInstitutionRates(institutionId?: string) {
-  return useSWR<BillingRateDto | null>(
-    institutionId ? ['institution-billing-rates', institutionId] : null,
-    () => getInstitutionRates(institutionId as string),
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateIfStale: false,
-      dedupingInterval: Number.POSITIVE_INFINITY,
     }
   );
 }

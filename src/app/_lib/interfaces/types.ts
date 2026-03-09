@@ -15,11 +15,6 @@ export interface InstitutionSubscriptionPayload {
 }
 
 export interface BillingRateDto {
-  baseMonthlyPrice: number;
-  enterpriseBaseUsers: number;
-  enterpriseOveragePricePerUser: number;
-  creatorAddonMonthlyPrice: number;
-  plan: SubscriptionFeatureFlag;
   creatorEnabled: boolean;
 }
 
@@ -32,22 +27,17 @@ export interface SubscriptionInfoDto {
 
 export interface BillingSummaryDto {
   institutionName: string;
-  subscription: string;
   year: number;
   month: number;
-  activeUsers: number;
-  enrolledUsers: number;
-  allowedUsers: number;
-  overageUsers: number;
-  baseMonthlyPrice: number;
-  addonsMonthlyPrice: number;
-  overagePrice: number;
+  userCount: number;
+  creatorEnabled: boolean;
+  ratePerUserZar: number;
+  creatorAddonPerUserZar: number;
   totalPrice: number;
 }
 
 export interface BillingUsageSummary {
-  enrolledUsersPeak: number;
-  activeUsersPeak: number;
+  userCount: number;
   storedVideoMinutes: number;
   deliveredVideoMinutes: number;
   pdfStorageGb: number;
@@ -77,6 +67,78 @@ export interface BillingProjectionDto {
   costsUsd: BillingCostSummary;
   chargeTotal: number;
   expectedMargin: number;
+}
+
+// ── Invoice types ────────────────────────────────────────────────
+
+export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid' | 'Overdue' | 'Cancelled';
+
+export type InvoiceLineType = 'BaseRate' | 'CreatorAddon';
+
+export interface InvoiceLineItemDto {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPriceZar: number;
+  totalZar: number;
+  lineType: InvoiceLineType;
+}
+
+export interface InvoiceDto {
+  id: string;
+  institutionId: string;
+  institutionName: string;
+  invoiceNumber: string;
+  year: number;
+  month: number;
+  userCount: number;
+  creatorEnabled: boolean;
+  ratePerUserZar: number;
+  creatorAddonPerUserZar: number;
+  subtotalZar: number;
+  creatorTotalZar: number;
+  totalAmountZar: number;
+  rateTier: string;
+  status: InvoiceStatus;
+  issuedAt: string;
+  dueDate: string;
+  sentAt: string | null;
+  sentToEmail: string | null;
+  paidAt: string | null;
+  paymentReference: string | null;
+  notes: string | null;
+  lineItems: InvoiceLineItemDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SendInvoiceDto {
+  recipientEmail?: string;
+}
+
+export interface MarkInvoicePaidDto {
+  paymentReference?: string;
+  notes?: string;
+}
+
+export interface InvoiceSummaryDto {
+  totalInvoices: number;
+  paidCount: number;
+  unpaidCount: number;
+  overdueCount: number;
+  totalBilledZar: number;
+  totalPaidZar: number;
+  totalOutstandingZar: number;
+}
+
+export interface InvoiceStatusSummaryDto {
+  institutionId: string;
+  institutionName: string;
+  currentMonthInvoiced: boolean;
+  currentMonthStatus: InvoiceStatus | null;
+  lastInvoiceDate: string | null;
+  lastPaymentDate: string | null;
+  overdueCount: number;
 }
 
 //Homework
@@ -404,6 +466,62 @@ export interface SystemAdminDashboardDto {
   homeworkCreated: number;
   totalClassrooms: number;
   peakUsageHours: HourlyLoginStat[]; // may be empty if untracked
+}
+
+// Platform Owner Dashboard DTOs
+export interface PlatformOwnerDashboardDto {
+  // Sparkline trend cards (30 daily data points, same shape as InstitutionTrendsDashboardDto)
+  institutions: TrendMetricDto;
+  users: TrendMetricDto;
+  modules: TrendMetricDto;
+  totalCost: TrendMetricDto;
+  averageProfit: TrendMetricDto;
+
+  // Top 3 most active institutions (same series format as MostActiveClassSubjectSeriesDto)
+  mostActiveInstitutions: MostActiveInstitutionSeriesDto;
+
+  // Profit margin buckets (same format as gradePerformance: 6-month bars)
+  profitMarginPerformance: GradePerfomanceDto[];
+  profitMarginMonths: string[];
+  profitMarginTrends: GradePerformanceLableTrendDto;
+}
+
+export interface MostActiveInstitutionSeriesDto {
+  labels: string[];
+  series: InstitutionActivitySeries[];
+}
+
+export interface InstitutionActivitySeries {
+  id: string;
+  label: string;
+  data: number[];
+}
+
+export interface InstitutionBillingDashboardDto {
+  institutionId: string;
+  institutionName: string;
+  userCount: number;
+  ratePerUserZar: number;
+  monthlyRevenueZar: number;
+  usageMetrics: BillingUsageMetricsDto;
+  totalCostZar: number;
+  costPerUserZar: number;
+  projectedMonthlyCostZar: number;
+  profitZar: number;
+  profitMarginPercent: number;
+}
+
+export interface BillingUsageMetricsDto {
+  storedVideoMinutes: number;
+  deliveredVideoMinutes: number;
+  pdfStorageGb: number;
+  pdfDownloads: number;
+  cpuSeconds: number;
+  memoryGbSeconds: number;
+  egressGb: number;
+  cloudflareCostUsd: number;
+  railwayCostUsd: number;
+  totalCostUsd: number;
 }
 
 export interface EngagementStatDto {

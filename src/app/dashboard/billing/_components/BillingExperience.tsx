@@ -1,36 +1,56 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import {
     Alert,
     Box,
+    Button,
+    Chip,
     CircularProgress,
     MenuItem,
     Stack,
     TextField,
     Typography,
 } from '@mui/material';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useSession } from 'next-auth/react';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import {
     useInstitutionBilling,
-    useInstitutionBillingHistory,
-    useInstitutionRates,
     useInstitutionProjection,
 } from '@/app/_lib/hooks/useSubscriptions';
+import { useInstitutionBillingDashboard } from '@/app/_lib/hooks/useDashboard';
+import { useInstitutionInvoices } from '@/app/_lib/hooks/useInvoices';
 import BillingRatesPanel from './BillingRatesPanel';
 import BillingSummaryTable from './BillingSummaryTable';
 import BillingOverviewCard from './BillingOverviewCard';
-import { getAllInstitutions } from '@/app/_lib/actions/institutions';
-import { InstitutionWithAdminDto, BillingRateDto } from '@/app/_lib/interfaces/types';
-import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
-import { setInstitutionRates } from '@/app/_lib/actions/subscriptions';
 import BillingProjectionPanel from './BillingProjectionPanel';
+import OverdueInvoicesBanner from './OverdueInvoicesBanner';
+import SendInvoiceDialog from './SendInvoiceDialog';
+import MarkPaidDialog from './MarkPaidDialog';
+import InvoiceDetailPanel from './InvoiceDetailPanel';
+import { getAllInstitutions, deactivateInstitution, activateInstitution } from '@/app/_lib/actions/institutions';
+import {
+    generateInvoice,
+    generateAllInvoices,
+    sendInvoice as sendInvoiceAction,
+    markInvoicePaid as markPaidAction,
+    cancelInvoice as cancelInvoiceAction,
+    unpayInvoice as unpayInvoiceAction,
+} from '@/app/_lib/actions/invoices';
+import type { InstitutionWithAdminDto, InvoiceDto } from '@/app/_lib/interfaces/types';
+import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
+import { setCreatorAddon } from '@/app/_lib/actions/subscriptions';
 
 interface InstitutionOption {
     id: string;
     name: string;
+    isActive: boolean;
+    adminEmail?: string | null;
 }
 
 export default function BillingExperience() {
@@ -43,10 +63,19 @@ export default function BillingExperience() {
 
     const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
 
+    // Dialog state
+    const [sendDialogInvoice, setSendDialogInvoice] = useState<InvoiceDto | null>(null);
+    const [payDialogInvoice, setPayDialogInvoice] = useState<InvoiceDto | null>(null);
+    const [detailInvoice, setDetailInvoice] = useState<InvoiceDto | null>(null);
+    const [generating, setGenerating] = useState(false);
+    const [generatingAll, setGeneratingAll] = useState(false);
+    const [togglingStatus, setTogglingStatus] = useState(false);
+
     const {
         data: institutionEntries,
         isLoading: institutionsLoading,
         error: institutionsError,
+        mutate: mutateInstitutions,
     } = useSWR<InstitutionWithAdminDto[]>(
         isPlatformOwner ? 'billing-institutions' : null,
         getAllInstitutions,
@@ -59,6 +88,8 @@ export default function BillingExperience() {
             .map((entry) => ({
                 id: entry.institution!.id,
                 name: entry.institution!.name,
+                isActive: entry.institution!.isActive,
+                adminEmail: entry.admin?.email ?? entry.institution!.adminEmail,
             }));
     }, [institutionEntries]);
 
@@ -68,26 +99,131 @@ export default function BillingExperience() {
         }
     }, [institutionOptions, selectedInstitutionId]);
 
-    const selectedInstitutionName = useMemo(() => {
-        return institutionOptions.find((option) => option.id === selectedInstitutionId)?.name;
+    const selectedOption = useMemo(() => {
+        return institutionOptions.find((o) => o.id === selectedInstitutionId);
     }, [institutionOptions, selectedInstitutionId]);
 
     const summary = useInstitutionBilling(selectedInstitutionId ?? undefined);
-    const history = useInstitutionBillingHistory(selectedInstitutionId ?? undefined);
-    const rates = useInstitutionRates(selectedInstitutionId ?? undefined);
+    const invoices = useInstitutionInvoices(selectedInstitutionId ?? undefined);
     const projection = useInstitutionProjection(selectedInstitutionId ?? undefined);
+    const billingDashboard = useInstitutionBillingDashboard(selectedInstitutionId ?? undefined);
 
-    const handleSaveRates = async (nextRate: BillingRateDto) => {
+    // ── Handlers ──────────────────────────────────────────────────
+
+    const handleToggleCreator = async (creatorEnabled: boolean) => {
         if (!selectedInstitutionId) return;
         try {
-            await setInstitutionRates(selectedInstitutionId, nextRate);
-            showAlert('success', 'Rates updated successfully.');
-            await rates.mutate();
+            await setCreatorAddon(selectedInstitutionId, { creatorEnabled });
+            showAlert('success', creatorEnabled ? 'Creator add-on enabled.' : 'Creator add-on disabled.');
+            await summary.mutate();
+            await billingDashboard.mutate();
         } catch (error) {
-            console.error('Failed to save rates', error);
-            showAlert('error', 'Unable to save rates. Please try again.');
+            console.error('Failed to toggle creator add-on', error);
+            showAlert('error', 'Unable to update creator add-on. Please try again.');
         }
     };
+
+    const handleGenerate = async () => {
+        if (!selectedInstitutionId) return;
+        try {
+            setGenerating(true);
+            const inv = await generateInvoice(selectedInstitutionId);
+            showAlert('success', `Invoice ${inv.invoiceNumber} generated.`);
+            await invoices.mutate();
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Unknown error';
+            if (msg.includes('409')) {
+                showAlert('warning', 'An invoice already exists for this month.');
+            } else {
+                showAlert('error', 'Failed to generate invoice. Please try again.');
+            }
+        } finally {
+            setGenerating(false);
+        }
+    };
+
+    const handleGenerateAll = async () => {
+        try {
+            setGeneratingAll(true);
+            const created = await generateAllInvoices();
+            showAlert('success', `${created.length} invoice(s) generated for all active institutions.`);
+            await invoices.mutate();
+        } catch {
+            showAlert('error', 'Failed to generate invoices. Please try again.');
+        } finally {
+            setGeneratingAll(false);
+        }
+    };
+
+    const handleSend = useCallback(async (invoiceId: string, recipientEmail?: string) => {
+        await sendInvoiceAction(invoiceId, recipientEmail ? { recipientEmail } : undefined);
+        showAlert('success', 'Invoice sent successfully.');
+        await invoices.mutate();
+    }, [invoices, showAlert]);
+
+    const handleMarkPaid = useCallback(async (invoiceId: string, paymentReference?: string, notes?: string) => {
+        await markPaidAction(invoiceId, { paymentReference, notes });
+        showAlert('success', 'Payment recorded.');
+        await invoices.mutate();
+    }, [invoices, showAlert]);
+
+    const handleDownloadPdf = useCallback(async (invoice: InvoiceDto) => {
+        try {
+            // Use the proxy route so auth is handled automatically
+            const res = await fetch(`/api/proxy/invoices/detail/${invoice.id}/pdf`);
+            if (!res.ok) throw new Error('Failed to download PDF');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${invoice.invoiceNumber}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch {
+            showAlert('error', 'Failed to download PDF. Please try again.');
+        }
+    }, [showAlert]);
+
+    const handleCancel = useCallback(async (invoice: InvoiceDto) => {
+        try {
+            await cancelInvoiceAction(invoice.id);
+            showAlert('info', `Invoice ${invoice.invoiceNumber} cancelled.`);
+            await invoices.mutate();
+        } catch {
+            showAlert('error', 'Failed to cancel invoice.');
+        }
+    }, [invoices, showAlert]);
+
+    const handleUnpay = useCallback(async (invoice: InvoiceDto) => {
+        try {
+            await unpayInvoiceAction(invoice.id);
+            showAlert('info', `Payment for ${invoice.invoiceNumber} has been reversed.`);
+            await invoices.mutate();
+        } catch {
+            showAlert('error', 'Failed to reverse payment.');
+        }
+    }, [invoices, showAlert]);
+
+    const handleToggleInstitutionStatus = async () => {
+        if (!selectedInstitutionId || !selectedOption) return;
+        try {
+            setTogglingStatus(true);
+            if (selectedOption.isActive) {
+                await deactivateInstitution(selectedInstitutionId);
+                showAlert('warning', `${selectedOption.name} has been disabled.`);
+            } else {
+                await activateInstitution(selectedInstitutionId);
+                showAlert('success', `${selectedOption.name} has been re-enabled.`);
+            }
+            await mutateInstitutions();
+        } catch {
+            showAlert('error', 'Failed to update institution status.');
+        } finally {
+            setTogglingStatus(false);
+        }
+    };
+
+    // ── Render ────────────────────────────────────────────────────
 
     if (status === 'loading') {
         return (
@@ -107,71 +243,157 @@ export default function BillingExperience() {
     }
 
     return (
-        <Stack spacing={3} sx={{ p: 3 }}>
-            <Box>
-                <Typography variant="h4" fontWeight={700} gutterBottom>
-                    Billing & Subscriptions
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Choose an institution to inspect its invoices, view history, and adjust plan-level pricing.
-                </Typography>
-            </Box>
+        <>
+            <Stack spacing={3} sx={{ p: 3 }}>
+                <Box>
+                    <Typography variant="h4" fontWeight={700} gutterBottom>
+                        Billing & Invoicing
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                        Generate invoices, track payments, manage institution billing status, and enforce payment policies.
+                    </Typography>
+                </Box>
 
-            <Stack spacing={1}>
-                <Typography variant="subtitle2" color="text.secondary">
-                    Institution
-                </Typography>
-                {institutionsError ? (
-                    <Alert severity="error">
-                        We could not load the institution directory. Please refresh the page.
-                    </Alert>
-                ) : (
-                    <TextField
-                        select
-                        value={selectedInstitutionId ?? ''}
-                        onChange={(event) => setSelectedInstitutionId(event.target.value)}
-                        disabled={institutionsLoading || institutionOptions.length === 0}
-                        helperText={institutionOptions.length === 0 ? 'No institutions available yet.' : undefined}
-                    >
-                        {institutionOptions.map((option) => (
-                            <MenuItem key={option.id} value={option.id}>
-                                {option.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                )}
+                {/* Overdue banner */}
+                <OverdueInvoicesBanner />
+
+                {/* Institution selector + controls */}
+                <Stack spacing={2}>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'flex-end' }}>
+                        <Box sx={{ flex: 1 }}>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                Institution
+                            </Typography>
+                            {institutionsError ? (
+                                <Alert severity="error">
+                                    We could not load the institution directory. Please refresh the page.
+                                </Alert>
+                            ) : (
+                                <TextField
+                                    select
+                                    fullWidth
+                                    value={selectedInstitutionId ?? ''}
+                                    onChange={(event) => setSelectedInstitutionId(event.target.value)}
+                                    disabled={institutionsLoading || institutionOptions.length === 0}
+                                    helperText={institutionOptions.length === 0 ? 'No institutions available yet.' : undefined}
+                                >
+                                    {institutionOptions.map((option) => (
+                                        <MenuItem key={option.id} value={option.id}>
+                                            {option.name}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            )}
+                        </Box>
+
+                        {selectedOption && (
+                            <Stack direction="row" spacing={1} alignItems="center" sx={{ pb: institutionOptions.length === 0 ? 0 : '23px' }}>
+                                <Chip
+                                    label={selectedOption.isActive ? 'Active' : 'Disabled'}
+                                    color={selectedOption.isActive ? 'success' : 'error'}
+                                    variant="filled"
+                                    size="small"
+                                    sx={{ fontWeight: 600 }}
+                                />
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color={selectedOption.isActive ? 'error' : 'success'}
+                                    startIcon={togglingStatus
+                                        ? <CircularProgress size={16} color="inherit" />
+                                        : selectedOption.isActive ? <BlockIcon /> : <CheckCircleIcon />
+                                    }
+                                    disabled={togglingStatus}
+                                    onClick={handleToggleInstitutionStatus}
+                                >
+                                    {selectedOption.isActive ? 'Disable' : 'Enable'}
+                                </Button>
+                            </Stack>
+                        )}
+                    </Stack>
+
+                    {/* Invoice generation buttons */}
+                    {selectedInstitutionId && (
+                        <Stack direction="row" spacing={1}>
+                            <Button
+                                variant="contained"
+                                startIcon={generating ? <CircularProgress size={18} color="inherit" /> : <ReceiptIcon />}
+                                onClick={handleGenerate}
+                                disabled={generating}
+                            >
+                                Generate Invoice
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                startIcon={generatingAll ? <CircularProgress size={18} color="inherit" /> : <ReceiptLongIcon />}
+                                onClick={handleGenerateAll}
+                                disabled={generatingAll}
+                            >
+                                Generate All Invoices
+                            </Button>
+                        </Stack>
+                    )}
+                </Stack>
+
+                <BillingOverviewCard
+                    summary={summary.data}
+                    billingDashboard={billingDashboard.data}
+                    loading={summary.isLoading || summary.isValidating || billingDashboard.isLoading}
+                    institutionName={selectedOption?.name}
+                />
+
+                <BillingRatesPanel
+                    institutionName={selectedOption?.name}
+                    creatorEnabled={summary.data?.creatorEnabled ?? false}
+                    loading={summary.isLoading || summary.isValidating}
+                    disabled={!selectedInstitutionId}
+                    onToggleCreator={handleToggleCreator}
+                />
+
+                <BillingProjectionPanel
+                    projection={projection.data}
+                    billingDashboard={billingDashboard.data}
+                    loading={projection.isLoading || projection.isValidating}
+                    error={projection.error as Error | undefined}
+                    onRefresh={() => projection.mutate()}
+                />
+
+                <BillingSummaryTable
+                    institutionName={selectedOption?.name}
+                    invoices={invoices.data}
+                    loading={invoices.isLoading || invoices.isValidating}
+                    error={invoices.error as Error | undefined}
+                    onRefresh={() => invoices.mutate()}
+                    onSend={(inv) => setSendDialogInvoice(inv)}
+                    onMarkPaid={(inv) => setPayDialogInvoice(inv)}
+                    onDownloadPdf={handleDownloadPdf}
+                    onCancel={handleCancel}
+                    onUnpay={handleUnpay}
+                    onViewDetail={(inv) => setDetailInvoice(inv)}
+                />
             </Stack>
 
-            <BillingOverviewCard
-                summary={summary.data}
-                loading={summary.isLoading || summary.isValidating}
-                institutionName={selectedInstitutionName}
+            {/* Dialogs */}
+            <SendInvoiceDialog
+                open={!!sendDialogInvoice}
+                invoice={sendDialogInvoice}
+                defaultEmail={selectedOption?.adminEmail ?? undefined}
+                onClose={() => setSendDialogInvoice(null)}
+                onSend={handleSend}
             />
 
-            <BillingRatesPanel
-                institutionName={selectedInstitutionName}
-                rate={rates.data}
-                loading={rates.isLoading || rates.isValidating}
-                error={rates.error as Error | undefined}
-                disabled={!selectedInstitutionId}
-                onSave={handleSaveRates}
+            <MarkPaidDialog
+                open={!!payDialogInvoice}
+                invoice={payDialogInvoice}
+                onClose={() => setPayDialogInvoice(null)}
+                onConfirm={handleMarkPaid}
             />
 
-            <BillingProjectionPanel
-                projection={projection.data}
-                summary={summary.data}
-                loading={projection.isLoading || projection.isValidating}
-                error={projection.error as Error | undefined}
-                onRefresh={() => projection.mutate()}
+            <InvoiceDetailPanel
+                open={!!detailInvoice}
+                invoice={detailInvoice}
+                onClose={() => setDetailInvoice(null)}
             />
-
-            <BillingSummaryTable
-                institutionName={selectedInstitutionName}
-                history={history.data}
-                loading={history.isLoading || history.isValidating}
-                error={history.error as Error | undefined}
-                onRefresh={() => history.mutate()}
-            />
-        </Stack>
+        </>
     );
 }
