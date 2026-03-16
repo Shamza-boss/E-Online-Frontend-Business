@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
     Box,
     Button,
@@ -21,6 +21,7 @@ import {
     Tooltip,
     Typography,
     CircularProgress,
+    Alert,
 } from '@mui/material';
 import Chip from '@mui/material/Chip';
 import { alpha, useTheme, type Theme } from '@mui/material/styles';
@@ -58,10 +59,6 @@ interface RoleGuidanceCard {
     role: UserRole;
     summary: string;
     actions: string[];
-}
-
-interface SettingsExperienceProps {
-    // No props needed - will fetch data with SWR
 }
 
 type RoleKey = UserRole | 'default';
