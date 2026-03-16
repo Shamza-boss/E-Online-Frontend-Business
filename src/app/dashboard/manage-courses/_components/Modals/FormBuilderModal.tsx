@@ -37,7 +37,7 @@ import {
 } from '../../../../_lib/interfaces/types';
 import Splitter from '@devbookhq/splitter';
 import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
-import QuestionEditorPanel from '../FormBuilder/QuestionEditorPanel';
+import QuestionEditorPanel, { BufferedTextField } from '../FormBuilder/QuestionEditorPanel';
 import QuestionPreviewPanel from '../FormBuilder/QuestionPreviewPanel';
 import { GutterStyles } from '@/app/_lib/components/shared-theme/customizations/SplitterComponent';
 import {
@@ -80,6 +80,7 @@ const QUESTION_TYPES = [
 const FORM_STORAGE_KEY = 'form_builder_homework_draft_v1';
 const LEGACY_FORM_STORAGE_KEY = 'form_builder_modal_state_v3';
 const BUILDER_STEPS = ['Module details', 'Create questions', 'Review and publish'] as const;
+const HOMEWORK_DRAFT_IDLE_MS = 1000;
 
 const getTomorrowDate = (): string => {
   const tomorrow = new Date();
@@ -127,6 +128,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   }>({ open: false, type: null });
   const draftSaveTimeoutRef = useRef<number | null>(null);
   const latestDraftPayloadRef = useRef<object | null>(null);
+  const lastDraftSnapshotRef = useRef<string | null>(null);
 
   const clearDraftStorage = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -207,6 +209,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
       expiryDate.trim() === '' &&
       questions.length === 0;
     if (isEmpty) {
+      lastDraftSnapshotRef.current = null;
       clearDraftStorage();
       return;
     }
@@ -224,6 +227,12 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     };
     latestDraftPayloadRef.current = payload;
 
+    const snapshot = JSON.stringify(payload);
+    if (snapshot === lastDraftSnapshotRef.current) {
+      return;
+    }
+    lastDraftSnapshotRef.current = snapshot;
+
     draftSaveTimeoutRef.current = window.setTimeout(() => {
       void setHomeworkDraft({
         key: FORM_STORAGE_KEY,
@@ -231,21 +240,12 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
         currentQuestionIndex: payload.currentQuestionIndex,
         updatedAt: Date.now(),
       });
-    }, 250);
+    }, HOMEWORK_DRAFT_IDLE_MS);
 
     return () => {
       if (draftSaveTimeoutRef.current) {
         window.clearTimeout(draftSaveTimeoutRef.current);
         draftSaveTimeoutRef.current = null;
-        const latestPayload = latestDraftPayloadRef.current as typeof payload | null;
-        if (latestPayload) {
-          void setHomeworkDraft({
-            key: FORM_STORAGE_KEY,
-            homework: latestPayload.homework,
-            currentQuestionIndex: latestPayload.currentQuestionIndex,
-            updatedAt: Date.now(),
-          });
-        }
       }
     };
   }, [
@@ -259,6 +259,30 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     currentQuestionIndex,
     clearDraftStorage,
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window === 'undefined') return;
+      if (!draftSaveTimeoutRef.current) return;
+
+      window.clearTimeout(draftSaveTimeoutRef.current);
+      draftSaveTimeoutRef.current = null;
+
+      const latestPayload = latestDraftPayloadRef.current as {
+        homework: HomeworkPayload;
+        currentQuestionIndex: number;
+      } | null;
+
+      if (!latestPayload) return;
+
+      void setHomeworkDraft({
+        key: FORM_STORAGE_KEY,
+        homework: latestPayload.homework,
+        currentQuestionIndex: latestPayload.currentQuestionIndex,
+        updatedAt: Date.now(),
+      });
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -1089,11 +1113,12 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                   gap: 2,
                 }}
               >
-                <TextField
+                <BufferedTextField
                   label="Title"
                   fullWidth
                   value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
+                  onCommit={setFormTitle}
+                  debounceMs={HOMEWORK_DRAFT_IDLE_MS}
                 />
                 <DatePicker
                   label="Due Date"
@@ -1110,13 +1135,14 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                   }}
                 />
               </Box>
-              <TextField
+              <BufferedTextField
                 label="Description"
                 fullWidth
                 multiline
                 minRows={3}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onCommit={setDescription}
+                debounceMs={HOMEWORK_DRAFT_IDLE_MS}
               />
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}

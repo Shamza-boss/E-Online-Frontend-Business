@@ -53,7 +53,7 @@ type BufferedTextFieldProps = Omit<
 const BufferedTextField: React.FC<BufferedTextFieldProps> = ({
   value,
   onCommit,
-  debounceMs = 250,
+  debounceMs = 1000,
   onBlur,
   ...rest
 }) => {
@@ -165,6 +165,7 @@ interface QuestionRichTextFieldProps {
   onChange: (value: string) => void;
   minHeight?: number;
   showToolbar?: boolean;
+  debounceMs?: number;
 }
 
 const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
@@ -174,11 +175,18 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
   onChange,
   minHeight = 180,
   showToolbar = true,
+  debounceMs = 1000,
 }) => {
   const fieldId = useId();
   const editorRef = useRef<RichTextEditorRef>(null);
   const extensions = useExtensions({ placeholder });
   const normalizedValue = value ?? '';
+  const timeoutRef = useRef<number | null>(null);
+  const latestOnChangeRef = useRef(onChange);
+
+  useEffect(() => {
+    latestOnChangeRef.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     const editor = editorRef.current?.editor;
@@ -196,13 +204,29 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
     }
   }, [normalizedValue]);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
+
   const handleUpdate = () => {
     const editor = editorRef.current?.editor;
     if (!editor) return;
 
     const html = editor.isEmpty ? '' : editor.getHTML();
     if (html !== normalizedValue) {
-      onChange(html);
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = window.setTimeout(() => {
+        timeoutRef.current = null;
+        latestOnChangeRef.current(html);
+      }, debounceMs);
     }
   };
 
@@ -1199,3 +1223,4 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
 };
 
 export default QuestionEditorPanel;
+export { BufferedTextField };
