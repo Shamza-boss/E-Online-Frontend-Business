@@ -234,35 +234,35 @@ export default function UserManagementDataGrid({
         };
         
         return [
-          <Tooltip key="edit-tooltip" title={getEditTooltip()} arrow>
-            <span>
-              <GridActionsCellItem
-                icon={<EditIcon />}
+          <GridActionsCellItem
+                key="edit-action"
+                icon={
+                  <Tooltip title={getEditTooltip()} arrow>
+                    <EditIcon />
+                  </Tooltip>
+                }
                 label="Edit"
                 disabled={isEditDisabled}
                 onClick={() => handleEditClick(row)}
                 color="primary"
                 style={{ border: 0, backgroundColor: 'transparent' }}
-              />
-            </span>
-          </Tooltip>,
-          <Tooltip key="delete-tooltip" title={getDeleteTooltip()} arrow>
-            <span>
-              <GridActionsCellItem
+              />,
+          <GridActionsCellItem
+                key="delete-action"
                 icon={
-                  <DeleteOutlineIcon 
-                    sx={{ 
-                      color: isDeleteDisabled ? 'action.disabled' : 'error.main' 
-                    }} 
-                  />
+                  <Tooltip title={getDeleteTooltip()} arrow>
+                    <DeleteOutlineIcon 
+                      sx={{ 
+                        color: isDeleteDisabled ? 'action.disabled' : 'error.main' 
+                      }} 
+                    />
+                  </Tooltip>
                 }
                 label="Delete"
                 disabled={isDeleteDisabled}
                 onClick={() => handlePromptDelete(row)}
                 style={{ border: 0, backgroundColor: 'transparent' }}
-              />
-            </span>
-          </Tooltip>,
+              />,
         ];
       },
     },

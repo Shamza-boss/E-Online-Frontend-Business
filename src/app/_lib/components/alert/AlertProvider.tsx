@@ -382,7 +382,7 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
         sx={{ mt: 1 }}
       >
         {current ? (
-          <Box>
+          <Box sx={{ background: 'transparent' }}>
             <AlertContent alert={current} onClose={handleClose} />
           </Box>
         ) : undefined}

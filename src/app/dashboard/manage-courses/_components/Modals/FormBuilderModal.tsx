@@ -53,6 +53,12 @@ import {
   NEW_QUESTION_DND_MIME,
   IsValidChild,
 } from '../FormBuilder/questionUtils';
+import {
+  getHomeworkDraft,
+  setHomeworkDraft,
+  removeHomeworkDraft,
+  migrateLocalStorageDrafts,
+} from '@/app/_lib/utils/homeworkDraftStore';
 
 interface FormBuilderModalProps {
   open: boolean;
@@ -124,62 +130,66 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
 
   const clearDraftStorage = useCallback(() => {
     if (typeof window === 'undefined') return;
-    localStorage.removeItem(FORM_STORAGE_KEY);
+    void removeHomeworkDraft(FORM_STORAGE_KEY);
     localStorage.removeItem(LEGACY_FORM_STORAGE_KEY);
   }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try {
-      const stored = localStorage.getItem(FORM_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const homework: HomeworkPayload | null = parsed?.homework ?? null;
-        const storedQuestions: Question[] = Array.isArray(homework?.questions)
-          ? homework!.questions
-          : [];
+    let cancelled = false;
 
-        setFormTitle(homework?.title ?? '');
-        setDescription(homework?.description ?? '');
-        setDueDate(homework?.dueDate ?? '');
-        setHasExpiry(Boolean(homework?.hasExpiry));
-        setExpiryDate(homework?.expiryDate ?? '');
-        setQuestions(storedQuestions);
-        if (storedQuestions.length > 0) {
-          const index = Math.min(
-            parsed.currentQuestionIndex ?? 0,
-            storedQuestions.length - 1
-          );
-          setCurrentQuestionIndex(index);
-        }
-        return;
-      }
+    const applyDraft = (homework: HomeworkPayload | null, questionIndex: number) => {
+      if (cancelled) return;
+      const storedQuestions: Question[] = Array.isArray(homework?.questions)
+        ? homework!.questions
+        : [];
 
-      const legacy = localStorage.getItem(LEGACY_FORM_STORAGE_KEY);
-      if (legacy) {
-        const parsed = JSON.parse(legacy);
-        const storedQuestions: Question[] = Array.isArray(parsed.questions)
-          ? parsed.questions
-          : [];
-        setFormTitle(parsed.formTitle ?? '');
-        setDescription(parsed.description ?? '');
-        setDueDate(parsed.dueDate ?? '');
-        setHasExpiry(Boolean(parsed.hasExpiry));
-        setExpiryDate(parsed.expiryDate ?? '');
-        setQuestions(storedQuestions);
-        if (storedQuestions.length > 0) {
-          const index = Math.min(
-            parsed.currentQuestionIndex ?? 0,
-            storedQuestions.length - 1
-          );
-          setCurrentQuestionIndex(index);
-        }
+      setFormTitle(homework?.title ?? '');
+      setDescription(homework?.description ?? '');
+      setDueDate(homework?.dueDate ?? '');
+      setHasExpiry(Boolean(homework?.hasExpiry));
+      setExpiryDate(homework?.expiryDate ?? '');
+      setQuestions(storedQuestions);
+      if (storedQuestions.length > 0) {
+        const index = Math.min(questionIndex, storedQuestions.length - 1);
+        setCurrentQuestionIndex(index);
       }
-    } catch (error) {
-      console.error('Failed to restore form builder draft', error);
-    } finally {
-      setHydrated(true);
-    }
+    };
+
+    void (async () => {
+      try {
+        // Migrate any leftover localStorage entries first
+        await migrateLocalStorageDrafts([FORM_STORAGE_KEY, LEGACY_FORM_STORAGE_KEY]);
+
+        const record = await getHomeworkDraft(FORM_STORAGE_KEY);
+        if (record) {
+          const homework = record.homework as HomeworkPayload | null;
+          applyDraft(homework, record.currentQuestionIndex);
+          return;
+        }
+
+        // Check legacy key in IndexedDB (may have been migrated)
+        const legacy = await getHomeworkDraft(LEGACY_FORM_STORAGE_KEY);
+        if (legacy) {
+          const parsed = legacy.homework as Record<string, unknown>;
+          const legacyHomework: HomeworkPayload = {
+            title: (parsed?.formTitle as string) ?? (parsed?.title as string) ?? '',
+            description: (parsed?.description as string) ?? '',
+            dueDate: (parsed?.dueDate as string) ?? '',
+            hasExpiry: Boolean(parsed?.hasExpiry),
+            expiryDate: (parsed?.expiryDate as string) ?? '',
+            questions: Array.isArray(parsed?.questions) ? parsed.questions as Question[] : [],
+          };
+          applyDraft(legacyHomework, legacy.currentQuestionIndex);
+        }
+      } catch (error) {
+        console.error('Failed to restore form builder draft', error);
+      } finally {
+        if (!cancelled) setHydrated(true);
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -215,19 +225,26 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     latestDraftPayloadRef.current = payload;
 
     draftSaveTimeoutRef.current = window.setTimeout(() => {
-      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(payload));
+      void setHomeworkDraft({
+        key: FORM_STORAGE_KEY,
+        homework: payload.homework,
+        currentQuestionIndex: payload.currentQuestionIndex,
+        updatedAt: Date.now(),
+      });
     }, 250);
 
     return () => {
       if (draftSaveTimeoutRef.current) {
         window.clearTimeout(draftSaveTimeoutRef.current);
         draftSaveTimeoutRef.current = null;
-        const latestPayload = latestDraftPayloadRef.current;
+        const latestPayload = latestDraftPayloadRef.current as typeof payload | null;
         if (latestPayload) {
-          localStorage.setItem(
-            FORM_STORAGE_KEY,
-            JSON.stringify(latestPayload)
-          );
+          void setHomeworkDraft({
+            key: FORM_STORAGE_KEY,
+            homework: latestPayload.homework,
+            currentQuestionIndex: latestPayload.currentQuestionIndex,
+            updatedAt: Date.now(),
+          });
         }
       }
     };

@@ -24,6 +24,13 @@ import type {
 } from '@/app/_lib/utils/pdfNoteLinks';
 import { sanitizeBookmarkColor } from '@/app/_lib/utils/pdfNoteLinks';
 import BookmarkDialog, { BookmarkDialogPayload } from './BookmarkDialog';
+import {
+  getHighlights as getStoredHighlights,
+  setHighlights as setStoredHighlights,
+  removeHighlights as removeStoredHighlights,
+  migrateLocalStorageHighlights,
+  normalizeStorageKey,
+} from '@/app/_lib/utils/pdfHighlightStore';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/build/pdf.worker.mjs`;
 
@@ -194,10 +201,18 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   }, [noteLinkOptions?.enabled, sidebarTab]);
 
   useEffect(() => {
-    const savedHighlights = localStorage.getItem(`pdf-highlights-${fileUrl}`);
-    if (savedHighlights) {
-      setHighlights(JSON.parse(savedHighlights));
-    }
+    let cancelled = false;
+    const storageKey = normalizeStorageKey(fileUrl);
+
+    void (async () => {
+      await migrateLocalStorageHighlights();
+      const saved = await getStoredHighlights(storageKey);
+      if (!cancelled && saved.length > 0) {
+        setHighlights(saved);
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [fileUrl]);
 
   const documentOptions = useMemo(
@@ -371,10 +386,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
 
       setHighlights((prev) => {
         const updated = [...prev, ...newHighlights];
-        localStorage.setItem(
-          `pdf-highlights-${fileUrl}`,
-          JSON.stringify(updated)
-        );
+        void setStoredHighlights(normalizeStorageKey(fileUrl), updated);
         return updated;
       });
 
@@ -383,7 +395,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   };
   const clearHighlights = () => {
     setHighlights([]);
-    localStorage.removeItem(`pdf-highlights-${fileUrl}`);
+    void removeStoredHighlights(normalizeStorageKey(fileUrl));
   };
 
   const renderHighlights = (pageNumber: number) => {
