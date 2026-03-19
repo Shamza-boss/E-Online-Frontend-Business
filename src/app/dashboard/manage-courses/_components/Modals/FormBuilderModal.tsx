@@ -11,7 +11,6 @@ import {
   Typography,
   Button,
   Slide,
-  TextField,
   Paper,
   Box,
   Stack,
@@ -45,14 +44,14 @@ import {
   createLeafQuestion,
   createVideoQuestion,
   createPdfQuestion,
-  createPlaceholderQuestion,
-  createGroupQuestion,
   findQuestionMeta,
   isChoiceType,
   updateQuestionTree,
   NEW_QUESTION_DND_MIME,
   IsValidChild,
+  convertQuestionToContainer,
 } from '../FormBuilder/questionUtils';
+import ConfirmConvertQuestionModal from './ConfirmConvertQuestionModal';
 import {
   getHomeworkDraft,
   setHomeworkDraft,
@@ -126,6 +125,11 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     open: boolean;
     type: 'reset' | 'saveDraft' | 'publish' | 'close' | null;
   }>({ open: false, type: null });
+  const [convertQuestionModalOpen, setConvertQuestionModalOpen] = useState(false);
+  const [convertQuestionPending, setConvertQuestionPending] = useState<{
+    parentId: string;
+    type: Question['type'];
+  } | null>(null);
   const draftSaveTimeoutRef = useRef<number | null>(null);
   const latestDraftPayloadRef = useRef<object | null>(null);
   const lastDraftSnapshotRef = useRef<string | null>(null);
@@ -539,7 +543,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     });
   };
 
-  const addSubquestion = (parentId: string, type: Question['type'] = 'single-select') => {
+  const addSubquestionInternal = (parentId: string, type: Question['type'] = 'single-select') => {
     setQuestions((prev) => {
       const meta = findQuestionMeta(prev, parentId);
       if (!meta) return prev;
@@ -577,6 +581,25 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
 
       return changed ? updated : prev;
     });
+  };
+
+  const addSubquestion = (parentId: string, type: Question['type'] = 'single-select') => {
+    const meta = findQuestionMeta(questions, parentId);
+    if (!meta) return;
+
+    // Check if this is a standalone single/multi choice question that needs conversion
+    if (
+      isChoiceType(meta.question.type) &&
+      (!meta.question.subquestions || meta.question.subquestions.length === 0)
+    ) {
+      // Show confirmation modal
+      setConvertQuestionPending({ parentId, type });
+      setConvertQuestionModalOpen(true);
+      return;
+    }
+
+    // Otherwise, directly add the subquestion
+    addSubquestionInternal(parentId, type);
   };
 
   const removeSubquestion = (parentId: string, subId: string) => {
@@ -638,12 +661,63 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   };
 
   const addQuestion = () => {
-    const newQuestion = createGroupQuestion();
+    const newQuestion = createLeafQuestion();
     setQuestions((prev) => {
       const updated = [...prev, newQuestion];
       setCurrentQuestionIndex(updated.length - 1);
       return updated;
     });
+  };
+
+  const handleConfirmConvert = () => {
+    if (!convertQuestionPending) return;
+
+    const { parentId, type } = convertQuestionPending;
+    
+    setQuestions((prev) => {
+      const { updated: convertedQuestions, changed: converted } = updateQuestionTree(
+        prev,
+        parentId,
+        (q) => convertQuestionToContainer(q)
+      );
+
+      if (!converted) return prev;
+
+      // Now add the subquestion after conversion
+      const { updated: finalQuestions } = updateQuestionTree(
+        convertedQuestions,
+        parentId,
+        (q) => {
+          const existing = q.subquestions ?? [];
+          let newSub: Question;
+          
+          if (type === 'single-select' || type === 'multi-select') {
+            newSub = { ...createLeafQuestion(), type };
+          } else if (type === 'video') {
+            newSub = createVideoQuestion();
+          } else if (type === 'pdf') {
+            newSub = createPdfQuestion();
+          } else {
+            return q;
+          }
+
+          return {
+            ...q,
+            subquestions: [...existing, newSub],
+          };
+        }
+      );
+
+      return finalQuestions;
+    });
+
+    setConvertQuestionModalOpen(false);
+    setConvertQuestionPending(null);
+  };
+
+  const handleCancelConvert = () => {
+    setConvertQuestionModalOpen(false);
+    setConvertQuestionPending(null);
   };
 
   const handleContainerDragOver = (event: React.DragEvent) => {
@@ -654,17 +728,6 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   };
 
   const handleContainerDrop = (event: React.DragEvent) => {
-    // Dropping on the main container should NOT create a new top-level question
-    // unless the list is empty. If the list is not empty, it should probably
-    // add to the currently active question (if we had a concept of active question).
-    // But the user says: "Question 1 takes all question types from the sub panel which are nested."
-    // This implies we should add to the LAST question if it exists?
-    // Or maybe we should just add a new top-level question if dropped here?
-    // The user said: "dragging a question from the QuestionEditor panel should not add a new Question (1,2...) but should add a new nested Question for the active question"
-    
-    // So if we have questions, we should find the active one and add to it.
-    // If we have no questions, we create a new Group question and add the dropped item to it.
-
     const type = event.dataTransfer.getData(NEW_QUESTION_DND_MIME) as Question['type'];
     if (!type) return;
 
@@ -672,54 +735,20 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     event.stopPropagation();
 
     setQuestions((prev) => {
-      if (prev.length === 0) {
-        // Create Question 1 (Group) and add the dropped item as 1.1
-        const group = createGroupQuestion();
-        let child: Question;
-        if (type === 'video') child = createVideoQuestion();
-        else if (type === 'pdf') child = createPdfQuestion();
-        else child = { ...createLeafQuestion(), type };
-        
-        group.subquestions = [child];
-        return [group];
+      let newQuestion: Question;
+      if (type === 'single-select' || type === 'multi-select') {
+        newQuestion = { ...createLeafQuestion(), type };
+      } else if (type === 'video') {
+        newQuestion = createVideoQuestion();
+      } else if (type === 'pdf') {
+        newQuestion = createPdfQuestion();
       } else {
-        // Add to the currently active question (currentQuestionIndex)
-        const activeIndex = Math.min(currentQuestionIndex, prev.length - 1);
-        const activeId = prev[activeIndex].id;
-        
-        // We need to use addSubquestion logic but we are inside setQuestions
-        // Let's reuse the update logic
-        const meta = findQuestionMeta(prev, activeId);
-        if (!meta) return prev;
-
-        if (!IsValidChild(meta.question.type, type)) {
-           // If the active question is a Group, it accepts Video/PDF/Choice.
-           // If it's a Video, it accepts Choice.
-           // If the user drags Video onto a Video question, it should fail (or be ignored).
-           return prev;
-        }
-
-        let newSub: Question;
-        if (type === 'single-select' || type === 'multi-select') {
-          newSub = { ...createLeafQuestion(), type };
-        } else if (type === 'video') {
-          newSub = createVideoQuestion();
-        } else if (type === 'pdf') {
-          newSub = createPdfQuestion();
-        } else {
-          return prev;
-        }
-
-        const { updated, changed } = updateQuestionTree(prev, activeId, (q) => {
-          const existing = q.subquestions ?? [];
-          return {
-            ...q,
-            subquestions: [...existing, newSub],
-          };
-        });
-        
-        return changed ? updated : prev;
+        return prev;
       }
+
+      const updated = [...prev, newQuestion];
+      setCurrentQuestionIndex(updated.length - 1);
+      return updated;
     });
   };
 
@@ -1390,6 +1419,17 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
         )}
       </DialogActions>
     </Dialog>
+
+    <ConfirmConvertQuestionModal
+      open={convertQuestionModalOpen}
+      question={
+        convertQuestionPending
+          ? findQuestionMeta(questions, convertQuestionPending.parentId)?.question ?? null
+          : null
+      }
+      onConfirm={handleConfirmConvert}
+      onCancel={handleCancelConvert}
+    />
   </>
   );
 };

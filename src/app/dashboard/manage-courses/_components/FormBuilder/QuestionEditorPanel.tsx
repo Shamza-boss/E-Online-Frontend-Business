@@ -148,12 +148,18 @@ const BufferedTextField: React.FC<BufferedTextFieldProps> = ({
 const isSectionType = (type: Question['type']) =>
   type === 'video' || type === 'pdf' || type === 'group';
 
+const isContainerType = (type: Question['type']) =>
+  isSectionType(type) || type === 'single-select' || type === 'multi-select';
+
 const allowedTypeHint = (parentType: Question['type']) => {
   if (parentType === 'video' || parentType === 'pdf') {
     return 'Single Choice or Multiple Choice';
   }
   if (parentType === 'group') {
     return 'Video Section, PDF Section, Single Choice, or Multiple Choice';
+  }
+  if (parentType === 'single-select' || parentType === 'multi-select') {
+    return 'Single Choice or Multiple Choice';
   }
   return '';
 };
@@ -231,7 +237,7 @@ const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
   };
 
   return (
-    <Box sx={{ width: '100%', mt: 2 }} {...ANTI_ASSIST_ATTRS}>
+    <Box sx={{ width: '100%', mt: 2, mb: 2 }} {...ANTI_ASSIST_ATTRS}>
       <Typography
         variant="caption"
         color="text.secondary"
@@ -350,13 +356,17 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
   }, [isComponentPaletteDrag, paletteDropTarget, paletteContainerTargetId]);
 
   const canReceivePaletteDrop = (parent: Question, _parentDepth: number) => {
-    if (!isSectionType(parent.type)) return false;
+    const parentHasSubquestions = parent.subquestions && parent.subquestions.length > 0;
+    if (!isSectionType(parent.type) && !parentHasSubquestions) return false;
+    if (!isSectionType(parent.type) && !isChoiceType(parent.type)) return false;
     if (!paletteDragType) return false;
     return IsValidChild(parent.type, paletteDragType);
   };
 
   const canReceivePaletteDropType = (parent: Question, type: Question['type']) => {
-    if (!isSectionType(parent.type)) return false;
+    const parentHasSubquestions = parent.subquestions && parent.subquestions.length > 0;
+    if (!isSectionType(parent.type) && !parentHasSubquestions) return false;
+    if (!isSectionType(parent.type) && !isChoiceType(parent.type)) return false;
     return IsValidChild(parent.type, type);
   };
 
@@ -1167,7 +1177,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
                 ))}
               </Select>
             </FormControl>
-            {!isSection && (
+            {!isSection && !hasSubquestions && (
               <BufferedTextField
                 label="Weight"
                 type="number"
@@ -1194,6 +1204,14 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
             Add Question to Section
           </Button>
         )}
+        {!isSection && isChoiceType(question.type) && (
+          <Button
+            variant="outlined"
+            onClick={() => onAddSubquestion(question.id)}
+          >
+            Add Sub-questions
+          </Button>
+        )}
         <Box flexGrow={1} />
         <IconButton onClick={() => onRemoveQuestion(question.id)}>
           <DeleteIcon />
@@ -1216,6 +1234,21 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
               Add Another Question to {isGroup ? 'Question' : 'Section'}
             </Button>
           )}
+        </Box>
+      )}
+
+      {!isSection && isChoiceType(question.type) && hasSubquestions && (
+        <Box sx={{ ml: 0.5, borderLeft: '2px solid', borderColor: 'divider', pl: 1, mt: 2 }}>
+          {renderSubquestionList(question, 0, childPrefixRoot)}
+          {(question.subquestions ?? []).length > 0 &&
+            renderContainerDropHint(question, 'append')}
+          <Button
+            sx={{ mt: 1 }}
+            size="small"
+            onClick={() => onAddSubquestion(question.id)}
+          >
+            Add Another Sub-question
+          </Button>
         </Box>
       )}
     </Paper>

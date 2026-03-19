@@ -371,12 +371,6 @@ const normalizeRootQuestion = (
   }
 
   if (isChoiceType(sanitizedType)) {
-    if (question.subquestions && question.subquestions.length > 0) {
-      errors.push(
-        `${path}: Standalone choice questions cannot contain subquestions.`
-      );
-    }
-
     return normalizeChoiceNode(
       {
         ...question,
@@ -384,7 +378,7 @@ const normalizeRootQuestion = (
         questionText: (question.questionText ?? '').trim(),
         video: undefined,
         pdf: undefined,
-        subquestions: [],
+        subquestions: question.subquestions ?? [],
       },
       path,
       errors
@@ -536,3 +530,45 @@ export const createPlaceholderQuestion = (): Question => ({
   correctAnswer: undefined,
   correctAnswers: undefined,
 });
+
+/**
+ * Converts a standalone single/multi choice question into a container by moving
+ * its options into a new subquestion and clearing the parent's options.
+ *
+ * @param question The standalone single/multi choice question to convert
+ * @returns The converted question with options moved to a subquestion
+ */
+export const convertQuestionToContainer = (question: Question): Question => {
+  if (!isChoiceType(question.type)) {
+    return question;
+  }
+
+  // Preserve current choice question as the first child under a new group container.
+  const subQuestion: Question = {
+    id: uuidv4(),
+    questionText: '',
+    type: question.type,
+    options: question.options ?? [],
+    required: question.required ?? false,
+    weight: question.weight ?? 1,
+    subquestions: [],
+    video: undefined,
+    pdf: undefined,
+    correctAnswer: question.correctAnswer,
+    correctAnswers: question.correctAnswers,
+  };
+
+  // Convert parent into a group so choice types remain atomic.
+  return {
+    ...question,
+    type: 'group',
+    required: false,
+    weight: 0,
+    options: undefined,
+    correctAnswer: undefined,
+    correctAnswers: undefined,
+    video: undefined,
+    pdf: undefined,
+    subquestions: [subQuestion],
+  };
+};
