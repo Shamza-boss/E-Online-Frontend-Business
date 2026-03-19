@@ -25,10 +25,10 @@ import {
   DialogActions,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import Alert from '@mui/material/Alert';
 import CloseIcon from '@mui/icons-material/Close';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { TransitionProps } from '@mui/material/transitions';
+import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import {
   Homework,
   HomeworkPayload,
@@ -112,7 +112,6 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const [expiryDate, setExpiryDate] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [activeHomeworkId, setActiveHomeworkId] = useState<string | null>(null);
   const [prefillSource, setPrefillSource] = useState<string | null>(null);
@@ -133,6 +132,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
   const draftSaveTimeoutRef = useRef<number | null>(null);
   const latestDraftPayloadRef = useRef<object | null>(null);
   const lastDraftSnapshotRef = useRef<string | null>(null);
+  const { showAlert } = useAlert();
 
   const clearDraftStorage = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -312,7 +312,6 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           : [];
         setQuestions(clonedQuestions);
         setCurrentQuestionIndex(0);
-        setValidationErrors([]);
         setPrefillSource(sourceKey);
       }
     } else if (prefillSource !== 'create') {
@@ -350,7 +349,6 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     setExpiryDate('');
     setQuestions([]);
     setCurrentQuestionIndex(0);
-    setValidationErrors([]);
     setActiveHomeworkId(null);
     setPrefillSource(null);
     clearDraftStorage();
@@ -763,11 +761,24 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     );
 
     if (errors.length > 0) {
-      setValidationErrors(errors);
+      const remainingErrors = errors.length - 1;
+      const issueLabel = remainingErrors === 1 ? 'issue' : 'issues';
+      const message =
+        errors.length === 1
+          ? errors[0]
+          : `${errors[0]} (+${remainingErrors} more validation ${issueLabel})`;
+
+      showAlert({
+        type: 'error',
+        title: isDraft ? 'Cannot save draft yet' : 'Cannot publish yet',
+        message,
+        details: errors,
+        persistent: true,
+        duration: 0,
+      });
       return;
     }
 
-    setValidationErrors([]);
     const submissionHomeworkId =
       activeHomeworkId ?? initialHomework?.id ?? initialHomework?.homeworkId;
 
@@ -1034,16 +1045,6 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
           overflow: 'hidden',
         }}
       >
-        {validationErrors.length > 0 && (
-          <Alert severity="error">
-            <Box component="ul" sx={{ pl: 2, m: 0 }}>
-              {validationErrors.map((error, idx) => (
-                <li key={idx}>{error}</li>
-              ))}
-            </Box>
-          </Alert>
-        )}
-
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {onReviewStep ? (
             <Paper
@@ -1296,7 +1297,12 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                       </Paper>
                     </Box>
                   ))}
-                  <Button variant="contained" onClick={addQuestion} sx={{ mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={addQuestion}
+                    sx={{ mt: 2 }}
+                  >
                     Add Question
                   </Button>
                 </Box>

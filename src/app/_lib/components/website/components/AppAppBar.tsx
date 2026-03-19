@@ -16,6 +16,7 @@ import AOLaunchpadLogo from './EducationOnlineIcon';
 import ColorModeIconDropdown from '../../shared-theme/ColorModelIconDropdown';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import useAuthActions from '../../../hooks/useAuthActions';
 import { useWarp } from '../../shared-theme/WarpTransition';
 
@@ -38,6 +39,25 @@ export default function AppAppBar() {
   const { data: session } = useSession();
   const { handleSignOut } = useAuthActions();
   const { warpTo } = useWarp();
+  const pathname = usePathname();
+  const [activeHash, setActiveHash] = React.useState('');
+
+  React.useEffect(() => {
+    const handleHashChange = () => setActiveHash(globalThis.location.hash);
+    setActiveHash(globalThis.location.hash);
+    globalThis.addEventListener('hashchange', handleHashChange);
+    return () => globalThis.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const isActive = (href: string) => {
+    if (href.startsWith('/#')) return pathname === '/' && activeHash === href.slice(1);
+    return pathname === href;
+  };
+
+  const navSx = (href: string) => ({
+    borderBottom: isActive(href) ? '2px solid' : '2px solid transparent',
+    borderRadius: '4px 4px 0 0',
+  });
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -65,37 +85,27 @@ export default function AppAppBar() {
             </Link>
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
               <Link href="/#features">
-                <Button variant="text" color="info" size="small">
+                <Button variant="text" color={isActive('/#features') ? 'primary' : 'info'} size="small" sx={navSx('/#features')}>
                   Features
                 </Button>
               </Link>
               <Link href="/#tech-stack">
-                <Button variant="text" color="info" size="small">
+                <Button variant="text" color={isActive('/#tech-stack') ? 'primary' : 'info'} size="small" sx={navSx('/#tech-stack')}>
                   Tech Stack
                 </Button>
               </Link>
               <Link href="/#highlights">
-                <Button variant="text" color="info" size="small">
+                <Button variant="text" color={isActive('/#highlights') ? 'primary' : 'info'} size="small" sx={navSx('/#highlights')}>
                   Highlights
                 </Button>
               </Link>
               <Link href="/#faq">
-                <Button
-                  variant="text"
-                  color="info"
-                  size="small"
-                  sx={{ minWidth: 0 }}
-                >
+                <Button variant="text" color={isActive('/#faq') ? 'primary' : 'info'} size="small" sx={{ minWidth: 0, ...navSx('/#faq') }}>
                   FAQ
                 </Button>
               </Link>
               <Link href="/about">
-                <Button
-                  variant="text"
-                  color="info"
-                  size="small"
-                  sx={{ minWidth: 0 }}
-                >
+                <Button variant="text" color={isActive('/about') ? 'primary' : 'info'} size="small" sx={{ minWidth: 0, ...navSx('/about') }}>
                   About
                 </Button>
               </Link>
@@ -164,19 +174,19 @@ export default function AppAppBar() {
                   </IconButton>
                 </Box>
                 <Link href="/#features">
-                  <MenuItem>Features</MenuItem>
+                  <MenuItem selected={isActive('/#features')}>Features</MenuItem>
                 </Link>
                 <Link href="/#tech-stack">
-                  <MenuItem>Tech Stack</MenuItem>
+                  <MenuItem selected={isActive('/#tech-stack')}>Tech Stack</MenuItem>
                 </Link>
                 <Link href="/#highlights">
-                  <MenuItem>Highlights</MenuItem>
+                  <MenuItem selected={isActive('/#highlights')}>Highlights</MenuItem>
                 </Link>
                 <Link href="/#faq">
-                  <MenuItem>FAQ</MenuItem>
+                  <MenuItem selected={isActive('/#faq')}>FAQ</MenuItem>
                 </Link>
                 <Link href="/about">
-                  <MenuItem>About</MenuItem>
+                  <MenuItem selected={isActive('/about')}>About</MenuItem>
                 </Link>
                 <Divider sx={{ my: 3 }} />
                 {!session ? (

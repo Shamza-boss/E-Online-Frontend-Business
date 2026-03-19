@@ -7,9 +7,6 @@ import { alpha, Theme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Alert from '@mui/material/Alert';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
 import AppNavbar from './AppNavBar';
 import Header from './Header';
 import SideMenu from './SideMenu';
@@ -34,14 +31,10 @@ type AppThemeProps = React.ComponentProps<typeof AppTheme>;
 
 interface DashboardComponentProps extends Omit<AppThemeProps, 'children'> {
   children: React.ReactNode;
-  noticeMessage?: string | null;
-  onDismissNotice?: () => void;
 }
 
 export default function DashboardComponent({
   children,
-  noticeMessage,
-  onDismissNotice,
   ...appThemeProps
 }: DashboardComponentProps) {
   return (
@@ -81,30 +74,6 @@ export default function DashboardComponent({
                 overflow: 'hidden',
               }}
             >
-              {noticeMessage ? (
-                <Alert
-                  severity="info"
-                  action={
-                    onDismissNotice ? (
-                      <IconButton
-                        aria-label="close already signed in notice"
-                        color="inherit"
-                        size="small"
-                        onClick={onDismissNotice}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    ) : undefined
-                  }
-                  sx={{
-                    borderRadius: 1.5,
-                    boxShadow: 1,
-                    mb: 0.5,
-                  }}
-                >
-                  {noticeMessage}
-                </Alert>
-              ) : null}
               <Header />
               <Box
                 sx={{

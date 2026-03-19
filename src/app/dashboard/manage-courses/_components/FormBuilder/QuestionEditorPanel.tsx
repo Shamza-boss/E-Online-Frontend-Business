@@ -22,6 +22,7 @@ import { Question } from '../../../../_lib/interfaces/types';
 import { VideoUploadField } from '@/app/_lib/components/video/VideoUploadField';
 import { PdfUploadField } from '@/app/_lib/components/pdf/PdfUploadField';
 import { isChoiceType, IsValidChild, NEW_QUESTION_DND_MIME } from './questionUtils';
+import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 import { RichTextEditor, RichTextEditorRef } from 'mui-tiptap';
 import useExtensions from '@/app/_lib/components/TipTapEditor/useExtensions';
 import EditorMenuControls from '@/app/_lib/components/TipTapEditor/EditorMenuControls';
@@ -340,11 +341,38 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
   const [paletteContainerTargetId, setPaletteContainerTargetId] = useState<
     string | null
   >(null);
+  const [pendingDelete, setPendingDelete] = useState<
+    | { kind: 'question'; questionId: string }
+    | { kind: 'subquestion'; parentId: string; subId: string }
+    | null
+  >(null);
 
   const paletteMime = paletteMimeType ?? 'application/x-eonline-question-type';
   const isComponentPaletteDrag = Boolean(paletteDragType);
   const numberingLabel = displayNumber ?? `${questionIndex + 1}`;
   const childPrefixRoot = childNumberPrefix ?? numberingLabel;
+
+  const requestQuestionDelete = (questionId: string) => {
+    setPendingDelete({ kind: 'question', questionId });
+  };
+
+  const requestSubquestionDelete = (parentId: string, subId: string) => {
+    setPendingDelete({ kind: 'subquestion', parentId, subId });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!pendingDelete) return;
+
+    if (pendingDelete.kind === 'question') {
+      onRemoveQuestion(pendingDelete.questionId);
+    } else {
+      onRemoveSubquestion(pendingDelete.parentId, pendingDelete.subId);
+    }
+
+    setPendingDelete(null);
+  };
+
+  const handleCancelDelete = () => setPendingDelete(null);
 
   useEffect(() => {
     if (!isComponentPaletteDrag && paletteDropTarget) {
@@ -523,13 +551,9 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           },
         }}
       >
-        {isActive ? (
-          <Typography variant="caption" color="primary.dark">
-            Drop here
-          </Typography>
-        ):(<Typography variant="caption" color="primary.dark">
-            Drop here
-          </Typography>)}
+        <Typography variant="caption" color="primary.dark">
+          Drop here
+        </Typography>
       </Box>
     );
   };
@@ -852,7 +876,11 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
         <Typography variant="subtitle1" color="text.secondary">
           Drop Question Type Here
         </Typography>
-        <Button onClick={() => onRemoveQuestion(question.id)} sx={{ mt: 2 }}>
+        <Button
+          color="error"
+          onClick={() => requestQuestionDelete(question.id)}
+          sx={{ mt: 2 }}
+        >
           Cancel
         </Button>
       </Paper>
@@ -1029,7 +1057,10 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
 
         <Stack direction="row" spacing={1} mt={2} alignItems="center">
           <Box flexGrow={1} />
-          <IconButton onClick={() => onRemoveSubquestion(parentId, sub.id)}>
+          <IconButton
+            color="error"
+            onClick={() => requestSubquestionDelete(parentId, sub.id)}
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Stack>
@@ -1198,7 +1229,8 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       <Stack direction="row" spacing={1} mt={2} alignItems="center">
         {isSection && (
           <Button
-            variant="outlined"
+            variant="contained"
+            color="primary"
             onClick={() => onAddSubquestion(question.id)}
           >
             Add Question to Section
@@ -1206,14 +1238,18 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
         )}
         {!isSection && isChoiceType(question.type) && (
           <Button
-            variant="outlined"
+            variant="contained"
+            color="primary"
             onClick={() => onAddSubquestion(question.id)}
           >
             Add Sub-questions
           </Button>
         )}
         <Box flexGrow={1} />
-        <IconButton onClick={() => onRemoveQuestion(question.id)}>
+        <IconButton
+          color="error"
+          onClick={() => requestQuestionDelete(question.id)}
+        >
           <DeleteIcon />
         </IconButton>
       </Stack>
@@ -1227,6 +1263,8 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
             renderContainerDropHint(question, 'append')}
           {!isGroup && (
             <Button
+              variant="contained"
+              color="primary"
               sx={{ mt: 1 }}
               size="small"
               onClick={() => onAddSubquestion(question.id)}
@@ -1243,6 +1281,8 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           {(question.subquestions ?? []).length > 0 &&
             renderContainerDropHint(question, 'append')}
           <Button
+            variant="contained"
+            color="primary"
             sx={{ mt: 1 }}
             size="small"
             onClick={() => onAddSubquestion(question.id)}
@@ -1251,6 +1291,24 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           </Button>
         </Box>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title={
+          pendingDelete?.kind === 'subquestion'
+            ? 'Delete sub-question?'
+            : 'Delete question?'
+        }
+        description={
+          pendingDelete?.kind === 'subquestion'
+            ? 'Are you sure you want to delete this sub-question? This action cannot be undone.'
+            : 'Are you sure you want to delete this question? This action cannot be undone.'
+        }
+        confirmText="Delete"
+        confirmButtonProps={{ variant: 'contained', color: 'error' }}
+      />
     </Paper>
   );
 };

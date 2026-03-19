@@ -9,7 +9,7 @@
  * - Date picker localization
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -18,6 +18,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { Route } from 'next';
 import DashboardComponent from './_components/Dashboard';
 import { AUTH_NOTICE_QUERY_KEY } from '@/app/_lib/utils/alreadySignedInNotice';
+import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 
 // MathJax configuration for LaTeX-style math rendering
 const MATHJAX_CONFIG = {
@@ -56,27 +57,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [authNotice, setAuthNotice] = useState<string | null>(null);
+  const { showAlert } = useAlert();
   const noticeParam = searchParams.get(AUTH_NOTICE_QUERY_KEY);
   const searchParamString = searchParams.toString();
 
   useEffect(() => {
     if (!noticeParam) return;
-    setAuthNotice(noticeParam);
+    showAlert({ type: 'info', message: noticeParam });
     const params = new URLSearchParams(searchParamString);
     params.delete(AUTH_NOTICE_QUERY_KEY);
     const query = params.toString();
     const target = (query ? `${pathname}?${query}` : pathname || '/dashboard') as Route;
     router.replace(target, { scroll: false });
-  }, [noticeParam, pathname, router, searchParamString]);
-
-  const handleDismissNotice = useCallback(() => setAuthNotice(null), []);
+  }, [noticeParam, pathname, router, searchParamString, showAlert]);
 
   return (
-    <DashboardComponent
-      noticeMessage={authNotice}
-      onDismissNotice={handleDismissNotice}
-    >
+    <DashboardComponent>
       <MathJaxContext version={3} config={MATHJAX_CONFIG}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Box sx={layoutStyles.container}>

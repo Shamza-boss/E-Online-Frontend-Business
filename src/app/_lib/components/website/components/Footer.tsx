@@ -1,16 +1,8 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
-import IconButton from '@mui/material/IconButton';
-import InputLabel from '@mui/material/InputLabel';
 import Link from '@mui/material/Link';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import FacebookIcon from '@mui/icons-material/GitHub';
-import LinkedInIcon from '@mui/icons-material/LinkedIn';
-import TwitterIcon from '@mui/icons-material/X';
 import AOLaunchpadLogoIcon from './EducationOnlineIcon';
 
 function Copyright() {
@@ -56,43 +48,6 @@ export default function Footer() {
         >
           <Box sx={{ width: { xs: '100%', sm: '60%' } }}>
             <AOLaunchpadLogoIcon />
-            <Typography
-              variant="body2"
-              gutterBottom
-              sx={{ fontWeight: 600, mt: 2 }}
-            >
-              Get product updates
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-              Subscribe for platform updates and L&D insights. No spam.
-            </Typography>
-            <InputLabel htmlFor="email-newsletter">Email</InputLabel>
-            <Stack direction="row" spacing={1} useFlexGap>
-              <TextField
-                id="email-newsletter"
-                hiddenLabel
-                size="small"
-                variant="outlined"
-                fullWidth
-                aria-label="Enter your email address"
-                placeholder="Your email address"
-                slotProps={{
-                  htmlInput: {
-                    autoComplete: 'off',
-                    'aria-label': 'Enter your email address',
-                  },
-                }}
-                sx={{ width: '250px' }}
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                sx={{ flexShrink: 0 }}
-              >
-                Subscribe
-              </Button>
-            </Stack>
           </Box>
         </Box>
         <Box
@@ -181,40 +136,6 @@ export default function Footer() {
           </Link>
           <Copyright />
         </div>
-        <Stack
-          direction="row"
-          spacing={1}
-          useFlexGap
-          sx={{ justifyContent: 'left', color: 'text.secondary' }}
-        >
-          <IconButton
-            color="inherit"
-            size="small"
-            href="https://github.com/mui"
-            aria-label="GitHub"
-            sx={{ alignSelf: 'center' }}
-          >
-            <FacebookIcon />
-          </IconButton>
-          <IconButton
-            color="inherit"
-            size="small"
-            href="https://x.com/MaterialUI"
-            aria-label="X"
-            sx={{ alignSelf: 'center' }}
-          >
-            <TwitterIcon />
-          </IconButton>
-          <IconButton
-            color="inherit"
-            size="small"
-            href="https://www.linkedin.com/company/mui/"
-            aria-label="LinkedIn"
-            sx={{ alignSelf: 'center' }}
-          >
-            <LinkedInIcon />
-          </IconButton>
-        </Stack>
       </Box>
     </Container>
   );

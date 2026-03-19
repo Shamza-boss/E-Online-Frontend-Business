@@ -34,6 +34,7 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -54,6 +55,8 @@ export interface AlertOptions {
   duration?: number;
   /** Error/tracking code for debugging */
   code?: string;
+  /** Optional expandable details for long-form content */
+  details?: string | string[];
   /** Action button config */
   action?: {
     label: string;
@@ -154,7 +157,7 @@ function AlertContent({ alert, onClose }: AlertContentProps) {
   }, [alert.code]);
 
   const title = alert.title || DEFAULT_TITLES[alert.type];
-  const hasDetails = !!alert.code;
+  const hasDetails = Boolean(alert.code || alert.details);
 
   return (
     <Alert
@@ -172,13 +175,22 @@ function AlertContent({ alert, onClose }: AlertContentProps) {
       }}
       action={
         hasDetails ? (
-          <IconButton
-            size="small"
-            onClick={() => setExpanded(!expanded)}
-            sx={{ ml: 1 }}
-          >
-            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+            <IconButton
+              size="small"
+              onClick={() => setExpanded(!expanded)}
+              aria-label={expanded ? 'Collapse details' : 'Expand details'}
+            >
+              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={onClose}
+              aria-label="Dismiss alert"
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
         ) : undefined
       }
     >
@@ -214,6 +226,28 @@ function AlertContent({ alert, onClose }: AlertContentProps) {
             borderColor: 'divider',
           }}
         >
+          {Array.isArray(alert.details) ? (
+            <Box component="ul" sx={{ pl: 2, m: 0, mb: alert.code ? 1 : 0 }}>
+              {alert.details.map((detail) => (
+                <Typography
+                  key={detail}
+                  component="li"
+                  variant="caption"
+                  sx={{ lineHeight: 1.5 }}
+                >
+                  {detail}
+                </Typography>
+              ))}
+            </Box>
+          ) : alert.details ? (
+            <Typography
+              variant="caption"
+              sx={{ display: 'block', whiteSpace: 'pre-wrap', mb: alert.code ? 1 : 0 }}
+            >
+              {alert.details}
+            </Typography>
+          ) : null}
+
           {alert.code && (
             <Box
               sx={{
@@ -245,13 +279,15 @@ function AlertContent({ alert, onClose }: AlertContentProps) {
               </IconButton>
             </Box>
           )}
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block', mt: 1 }}
-          >
-            Use this reference when contacting support.
-          </Typography>
+          {alert.code && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'block', mt: 1 }}
+            >
+              Use this reference when contacting support.
+            </Typography>
+          )}
         </Box>
       </Collapse>
     </Alert>
