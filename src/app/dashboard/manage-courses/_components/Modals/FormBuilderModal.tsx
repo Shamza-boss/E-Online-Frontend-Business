@@ -486,7 +486,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     handleQuestionFieldChange(
       questionId,
       'weight',
-      Number.isFinite(numeric) ? Math.max(numeric, 0) : 0
+      Number.isFinite(numeric) && numeric > 0 ? numeric : 1
     );
   };
 

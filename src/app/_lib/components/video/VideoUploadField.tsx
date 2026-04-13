@@ -248,7 +248,7 @@ export const VideoUploadField: React.FC<Props> = ({
       <Alert
         severity="info"
         icon={<InfoOutlinedIcon fontSize="small" />}
-        sx={{ mt: 1 }}
+        sx={{ mt: 1, mb: 2 }}
       >
         Video uploads are unavailable because your institution's subscription does not include the Creator add-on.
         Contact an administrator to enable video creation and playback.

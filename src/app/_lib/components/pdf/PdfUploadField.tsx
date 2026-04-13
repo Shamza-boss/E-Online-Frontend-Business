@@ -106,7 +106,7 @@ export const PdfUploadField: React.FC<PdfUploadFieldProps> = ({
   };
 
   return (
-    <Box sx={{ mt: 1 }}>
+    <Box sx={{ mt: 1, mb: 2 }}>
       <input
         ref={fileInputRef}
         type="file"

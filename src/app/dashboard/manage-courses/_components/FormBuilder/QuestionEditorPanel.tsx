@@ -341,6 +341,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
   const [paletteContainerTargetId, setPaletteContainerTargetId] = useState<
     string | null
   >(null);
+  const dragPreviewRef = useRef<HTMLElement | null>(null);
   const [pendingDelete, setPendingDelete] = useState<
     | { kind: 'question'; questionId: string }
     | { kind: 'subquestion'; parentId: string; subId: string }
@@ -358,6 +359,42 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
 
   const requestSubquestionDelete = (parentId: string, subId: string) => {
     setPendingDelete({ kind: 'subquestion', parentId, subId });
+  };
+
+  const cleanupDragPreview = () => {
+    if (dragPreviewRef.current) {
+      dragPreviewRef.current.remove();
+    }
+    dragPreviewRef.current = null;
+  };
+
+  const setSolidDragPreview = (event: React.DragEvent<HTMLElement>) => {
+    cleanupDragPreview();
+    const sourceEl = event.currentTarget;
+    const rect = sourceEl.getBoundingClientRect();
+    const computed = globalThis.getComputedStyle(sourceEl);
+    const clone = sourceEl.cloneNode(true) as HTMLElement;
+
+    clone.style.position = 'fixed';
+    clone.style.top = '-10000px';
+    clone.style.left = '-10000px';
+    clone.style.width = `${rect.width}px`;
+    clone.style.maxWidth = `${rect.width}px`;
+    clone.style.pointerEvents = 'none';
+    clone.style.opacity = '1';
+    clone.style.transform = 'none';
+    clone.style.margin = '0';
+    clone.style.background = computed.backgroundColor || '#fff';
+    clone.style.border = '2px solid #1976d2';
+    clone.style.borderRadius = computed.borderRadius;
+    clone.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.25)';
+
+    globalThis.document.body.appendChild(clone);
+    dragPreviewRef.current = clone;
+
+    const offsetX = Math.min(24, Math.max(0, event.clientX - rect.left));
+    const offsetY = Math.min(24, Math.max(0, event.clientY - rect.top));
+    event.dataTransfer.setDragImage(clone, offsetX, offsetY);
   };
 
   const handleConfirmDelete = () => {
@@ -564,6 +601,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     subId: string
   ) => {
     event.stopPropagation();
+    setSolidDragPreview(event as React.DragEvent<HTMLElement>);
     event.dataTransfer.setData(
       SUBQUESTION_DND_MIME,
       JSON.stringify({ parentId, index })
@@ -619,6 +657,7 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
   };
 
   const handleSubDragEnd = () => {
+    cleanupDragPreview();
     setSubDragState({
       dragging: null,
       parentId: null,
@@ -626,6 +665,16 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       over: null,
       slot: null,
     });
+  };
+
+  const handleQuestionDragStart = (event: React.DragEvent<HTMLElement>) => {
+    setSolidDragPreview(event);
+    onDragHandleStart?.(event);
+  };
+
+  const handleQuestionDragEnd = () => {
+    cleanupDragPreview();
+    onDragHandleEnd?.();
   };
 
   const handleSubSlotDragOver = (
@@ -945,6 +994,10 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     const isDragging = subDragState.dragging === sub.id;
     const isVideoSub = sub.type === 'video';
     const isPdfSub = sub.type === 'pdf';
+    let subBorderColor: string = 'divider';
+    if (isDragTarget || isDragging) {
+      subBorderColor = 'primary.main';
+    }
 
     return (
       <Paper
@@ -962,9 +1015,11 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           mb: 1,
           mt: 1,
           p: 1.5,
-          border: '1px dashed',
-          borderColor: isDragTarget ? 'primary.main' : 'divider',
-          opacity: isDragging ? 0.6 : 1,
+          border: '1px solid',
+          borderColor: subBorderColor,
+          backgroundColor: isDragging ? 'background.paper' : undefined,
+          boxShadow: isDragging ? 6 : 0,
+          opacity: isDragging ? 0.92 : 1,
         }}
       >
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
@@ -1042,6 +1097,10 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
             margin="normal"
             value={sub.weight}
             onCommit={(next) => onWeightChange(sub.id, next)}
+            onKeyDown={(e) => {
+              if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+            }}
+            inputProps={{ min: 1 }}
           />
         </Stack>
 
@@ -1119,10 +1178,16 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
   return (
     <Paper
       draggable={Boolean(onDragHandleStart)}
-      onDragStart={(event: React.DragEvent<HTMLElement>) =>
-        onDragHandleStart?.(event)
-      }
-      onDragEnd={() => onDragHandleEnd?.()} key={question.id} sx={{ p: 2, mb: 0 }}>
+      onDragStart={handleQuestionDragStart}
+      onDragEnd={handleQuestionDragEnd} key={question.id} sx={{
+        p: 2,
+        mb: 0,
+        border: isDragging ? '1px solid' : undefined,
+        borderColor: isDragging ? 'primary.main' : undefined,
+        backgroundColor: isDragging ? 'background.paper' : undefined,
+        boxShadow: isDragging ? 6 : 0,
+        //opacity: isDragging ? 0.92 : 1,
+      }}>
       <Stack direction="row" spacing={1} sx={{
         alignItems: 'center',
         justifyContent: 'center',
@@ -1216,6 +1281,10 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
                 margin="normal"
                 value={question.weight}
                 onCommit={(next) => onWeightChange(question.id, next)}
+                onKeyDown={(e) => {
+                  if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+                }}
+                inputProps={{ min: 1 }}
               />
             )}
           </Stack>
