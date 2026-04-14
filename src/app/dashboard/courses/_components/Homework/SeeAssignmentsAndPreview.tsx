@@ -4,17 +4,12 @@ import {
   Tab,
   Toolbar,
   Typography,
-  Button,
   Chip,
-  IconButton,
-  Tooltip,
   Alert,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import EDataGrid from '../../../_components/EDataGrid';
 import { GridColDef } from '@mui/x-data-grid';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import {
   HomeworkAssignmentDto,
   AssignmentDetailsDto,
@@ -81,6 +76,8 @@ export default function SeeAssignmentsAndPreview({
   }, [allAssignments, classId]);
 
   const [activeTab, setActiveTab] = useState(0);
+
+
 
   const getStatusAndTab = (
     row: any
@@ -175,60 +172,19 @@ export default function SeeAssignmentsAndPreview({
 
   return (
     <>
-        <Toolbar sx={{ gap: 1 }}>
-          {selectedAssignment ? (
-            <Tooltip title="Back to list">
-              <IconButton
-                size="small"
-                onClick={handleBack}
-                sx={{
-                  backgroundColor: (theme) =>
-                    alpha(
-                      theme.palette.primary.main,
-                      theme.palette.mode === 'dark' ? 0.16 : 0.1
-                    ),
-                  color: 'primary.main',
-                  border: (theme) =>
-                    `1px solid ${alpha(theme.palette.primary.main, 0.35)}`,
-                  borderRadius: 1.25,
-                  p: 0.75,
-                  '&:hover': {
-                    backgroundColor: (theme) =>
-                      alpha(
-                        theme.palette.primary.main,
-                        theme.palette.mode === 'dark' ? 0.28 : 0.2
-                      ),
-                  },
-                }}
-              >
-                <ArrowBackRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          ) : null}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" noWrap>
-              {selectedAssignment
-                ? selectedAssignment.homework.title
-                : 'Your modules'}
-            </Typography>
-            {selectedAssignment && (
-              <Typography variant="caption" color="text.secondary">
-                Due{' '}
-                {format(
-                  new Date(Date.parse(selectedAssignment.homework.dueDate)),
-                  'MM/dd/yyyy'
-                )}
-              </Typography>
-            )}
-          </Box>
-          {selectedAssignment && (
-            <Chip
-              color="success"
-              variant="outlined"
-              size="small"
-              label={selectedStatus}
-            />
-          )}
+        <Toolbar
+          sx={{
+            gap: 1,
+            flexWrap: 'wrap',
+            minHeight: { xs: 'auto !important' },
+            py: 0.75,
+          }}
+        >
+          <Typography variant="h6" noWrap sx={{ minWidth: 0 }}>
+            Your modules
+          </Typography>
+
+          <Box sx={{ flex: 1 }} />
         </Toolbar>
 
       {!isStudent ? (
@@ -321,7 +277,7 @@ export default function SeeAssignmentsAndPreview({
 
           <Box
             sx={{
-              p: 2,
+              p: 1,
               flex: 1,
               minHeight: 0,
               overflow: 'hidden',
@@ -335,6 +291,7 @@ export default function SeeAssignmentsAndPreview({
               <HomeworkView
                 homework={selectedAssignment.homework}
                 onSubmit={handleHomeworkSubmit}
+                onBack={handleBack}
               />
             )}
             {activeTab === 1 && selectedStatus !== 'pending' && (
