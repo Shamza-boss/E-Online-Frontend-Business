@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Chip,
   FormControl,
   IconButton,
   InputLabel,
@@ -163,6 +164,42 @@ const allowedTypeHint = (parentType: Question['type']) => {
     return 'Single Choice or Multiple Choice';
   }
   return '';
+};
+
+const getTypeVisual = (type: Question['type']) => {
+  if (type === 'pdf') {
+    return {
+      label: 'PDF Section',
+      borderColor: 'warning.main',
+      headerBg: 'warning.50',
+      chipColor: 'warning' as const,
+    };
+  }
+
+  if (type === 'video') {
+    return {
+      label: 'Video Section',
+      borderColor: 'info.main',
+      headerBg: 'info.50',
+      chipColor: 'info' as const,
+    };
+  }
+
+  if (type === 'group') {
+    return {
+      label: 'Grouped Question',
+      borderColor: 'secondary.main',
+      headerBg: 'secondary.50',
+      chipColor: 'secondary' as const,
+    };
+  }
+
+  return {
+    label: 'Question',
+    borderColor: 'primary.main',
+    headerBg: 'primary.50',
+    chipColor: 'primary' as const,
+  };
 };
 
 interface QuestionRichTextFieldProps {
@@ -994,9 +1031,19 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     const isDragging = subDragState.dragging === sub.id;
     const isVideoSub = sub.type === 'video';
     const isPdfSub = sub.type === 'pdf';
-    let subBorderColor: string = 'divider';
-    if (isDragTarget || isDragging) {
-      subBorderColor = 'primary.main';
+    const isMediaSub = isVideoSub || isPdfSub;
+    const subVisual = getTypeVisual(sub.type);
+    const subBorderColor =
+      isDragTarget || isDragging ? 'primary.main' : subVisual.borderColor;
+    let subQuestionLabel = 'Nested Question Text';
+    let subQuestionPlaceholder = 'Enter the nested question prompt...';
+
+    if (isMediaSub) {
+      subQuestionLabel = 'Section Prompt';
+      subQuestionPlaceholder = 'Enter section heading and instructions...';
+    } else if (depth === 1) {
+      subQuestionLabel = 'Subquestion Text';
+      subQuestionPlaceholder = 'Enter the supporting question prompt...';
     }
 
     return (
@@ -1017,39 +1064,41 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
           p: 1.5,
           border: '1px solid',
           borderColor: subBorderColor,
+          borderLeft: '4px solid',
+          borderLeftColor: subBorderColor,
+          borderRadius: 1.5,
           backgroundColor: isDragging ? 'background.paper' : undefined,
           boxShadow: isDragging ? 6 : 0,
           opacity: isDragging ? 0.92 : 1,
         }}
       >
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          sx={{
+            mb: 1,
+            px: 1,
+            py: 0.75,
+            borderRadius: 1,
+            bgcolor: subVisual.headerBg,
+          }}
+        >
           <DragIndicatorIcon fontSize="small" color="disabled" />
-          <Typography variant="subtitle2">Question {numbering}</Typography>
+          <Typography variant="subtitle2" fontWeight={700}>
+            Editing Question {numbering}
+          </Typography>
+          <Chip size="small" label={subVisual.label} color={subVisual.chipColor} />
         </Stack>
         
-        {isVideoSub || isPdfSub ? (
-          <BufferedTextField
-            label="Section Title"
-            fullWidth
-            margin="normal"
-            value={sub.questionText ?? ''}
-            inputProps={ANTI_ASSIST_ATTRS as any}
-            onCommit={(next) => onFieldChange(sub.id, 'questionText', next)}
-          />
-        ) : (
-          <QuestionRichTextField
-            label={depth === 1 ? 'Subquestion Text' : 'Nested Question Text'}
-            value={sub.questionText ?? ''}
-            placeholder={
-              depth === 1
-                ? 'Enter the supporting question prompt...'
-                : 'Enter the nested question prompt...'
-            }
-            minHeight={depth > 1 ? 150 : 180}
-            showToolbar={depth <= 1}
-            onChange={(value) => onFieldChange(sub.id, 'questionText', value)}
-          />
-        )}
+        <QuestionRichTextField
+          label={subQuestionLabel}
+          value={sub.questionText ?? ''}
+          placeholder={subQuestionPlaceholder}
+          minHeight={depth > 1 ? 150 : 180}
+          showToolbar={depth <= 1}
+          onChange={(value) => onFieldChange(sub.id, 'questionText', value)}
+        />
 
         {isVideoSub && (
           <VideoUploadField
@@ -1174,6 +1223,11 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
   const hasSubquestions =
     question.subquestions && question.subquestions.length > 0;
   const showTypeControls = (!isSection || !hasSubquestions) && !isGroup;
+  const questionVisual = getTypeVisual(question.type);
+  let questionTitle = 'Question';
+  if (isSection && !isGroup) {
+    questionTitle = 'Section';
+  }
 
   return (
     <Paper
@@ -1182,24 +1236,39 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       onDragEnd={handleQuestionDragEnd} key={question.id} sx={{
         p: 2,
         mb: 0,
-        border: isDragging ? '1px solid' : undefined,
-        borderColor: isDragging ? 'primary.main' : undefined,
+        border: '1px solid',
+        borderColor: isDragging ? 'primary.main' : questionVisual.borderColor,
+        borderLeft: '6px solid',
+        borderLeftColor: isDragging ? 'primary.main' : questionVisual.borderColor,
+        borderRadius: 2,
         backgroundColor: isDragging ? 'background.paper' : undefined,
         boxShadow: isDragging ? 6 : 0,
         //opacity: isDragging ? 0.92 : 1,
       }}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: isDragging ? 'grabbing' : 'grab',
-        color: isDragging ? 'text.primary' : 'text.disabled',
-        mr: 0.5,
-        '&:active': { cursor: 'grabbing' },
-      }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        sx={{
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          justifyContent: 'space-between',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          color: 'text.primary',
+          mr: 0.5,
+          mb: 1,
+          px: 1,
+          py: 0.75,
+          borderRadius: 1,
+          bgcolor: questionVisual.headerBg,
+          border: '1px solid',
+          borderColor: 'divider',
+          '&:active': { cursor: 'grabbing' },
+        }}
+      >
         <DragIndicatorIcon fontSize="small" />
-        <Typography variant="subtitle1" fontWeight={600}>
-          {`${isSection ? (isGroup ? 'Question' : 'Section') : 'Question'} ${numberingLabel}`}
+        <Typography variant="subtitle1" fontWeight={700}>
+          {`Editing ${questionTitle} ${numberingLabel}`}
         </Typography>
+        <Chip size="small" color={questionVisual.chipColor} label={questionVisual.label} />
         {isSection && hasSubquestions && (
           <Typography variant="caption" color="text.secondary">
             Total Weight: {computeTotalWeight(question)}
@@ -1209,27 +1278,18 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
       </Stack>
       {isSection ? (
         <>
-          {isGroup ? (
-            <QuestionRichTextField
-              label="Question Text"
-              value={question.questionText ?? ''}
-              placeholder="Enter the question prompt..."
-              onChange={(value) =>
-                onFieldChange(question.id, 'questionText', value)
-              }
-            />
-          ) : (
-            <BufferedTextField
-              label="Section Title"
-              fullWidth
-              margin="normal"
-              value={question.questionText ?? ''}
-              inputProps={ANTI_ASSIST_ATTRS as any}
-              onCommit={(next) =>
-                onFieldChange(question.id, 'questionText', next)
-              }
-            />
-          )}
+          <QuestionRichTextField
+            label={isGroup ? 'Question Text' : 'Section Prompt'}
+            value={question.questionText ?? ''}
+            placeholder={
+              isGroup
+                ? 'Enter the question prompt...'
+                : 'Enter section heading and instructions...'
+            }
+            onChange={(value) =>
+              onFieldChange(question.id, 'questionText', value)
+            }
+          />
           {isVideo && (
             <VideoUploadField
               value={question.video}

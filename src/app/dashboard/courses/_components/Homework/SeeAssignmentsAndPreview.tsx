@@ -2,17 +2,19 @@ import {
   Box,
   Tabs,
   Tab,
-  AppBar,
   Toolbar,
   Typography,
   Button,
   Chip,
+  IconButton,
+  Tooltip,
   Alert,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import EDataGrid from '../../../_components/EDataGrid';
 import { GridColDef } from '@mui/x-data-grid';
-import { Close } from '@mui/icons-material';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import {
   HomeworkAssignmentDto,
   AssignmentDetailsDto,
@@ -173,16 +175,59 @@ export default function SeeAssignmentsAndPreview({
 
   return (
     <>
-        <Toolbar>
-          <Typography sx={{ flex: 1 }} variant="h6">
-            {selectedAssignment
-              ? selectedAssignment.homework.title
-              : 'Your modules'}
-          </Typography>
+        <Toolbar sx={{ gap: 1 }}>
+          {selectedAssignment ? (
+            <Tooltip title="Back to list">
+              <IconButton
+                size="small"
+                onClick={handleBack}
+                sx={{
+                  backgroundColor: (theme) =>
+                    alpha(
+                      theme.palette.primary.main,
+                      theme.palette.mode === 'dark' ? 0.16 : 0.1
+                    ),
+                  color: 'primary.main',
+                  border: (theme) =>
+                    `1px solid ${alpha(theme.palette.primary.main, 0.35)}`,
+                  borderRadius: 1.25,
+                  p: 0.75,
+                  '&:hover': {
+                    backgroundColor: (theme) =>
+                      alpha(
+                        theme.palette.primary.main,
+                        theme.palette.mode === 'dark' ? 0.28 : 0.2
+                      ),
+                  },
+                }}
+              >
+                <ArrowBackRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="h6" noWrap>
+              {selectedAssignment
+                ? selectedAssignment.homework.title
+                : 'Your modules'}
+            </Typography>
+            {selectedAssignment && (
+              <Typography variant="caption" color="text.secondary">
+                Due{' '}
+                {format(
+                  new Date(Date.parse(selectedAssignment.homework.dueDate)),
+                  'MM/dd/yyyy'
+                )}
+              </Typography>
+            )}
+          </Box>
           {selectedAssignment && (
-            <Button color="inherit" onClick={handleBack} startIcon={<Close />}>
-              Back
-            </Button>
+            <Chip
+              color="success"
+              variant="outlined"
+              size="small"
+              label={selectedStatus}
+            />
           )}
         </Toolbar>
 
@@ -256,12 +301,12 @@ export default function SeeAssignmentsAndPreview({
           />
         </Box>
       ) : (
-        <Box>
+        <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
             variant="fullWidth"
-            sx={{ borderBottom: 1, borderColor: 'divider' }}
+            sx={{ borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}
           >
             <Tab
               label="Complete Assignment"
@@ -279,11 +324,11 @@ export default function SeeAssignmentsAndPreview({
               p: 2,
               flex: 1,
               minHeight: 0,
-              overflow: 'auto',
+              overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'stretch', // don't center horizontally
-              justifyContent: 'flex-start', // ✅ ensures top-alignment vertically
+              alignItems: 'stretch',
+              justifyContent: 'flex-start',
             }}
           >
             {activeTab === 0 && selectedStatus === 'pending' && (

@@ -936,6 +936,28 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     />
   );
 
+  const renderEditorSummary = (index: number, total: number): React.ReactNode => (
+    <Box>
+      <Typography variant="subtitle1" fontWeight={700}>
+        Teacher Editor - Active Question {index + 1} of {total}
+      </Typography>
+      <Typography variant="caption" color="text.secondary">
+        You are editing this question right now.
+      </Typography>
+    </Box>
+  );
+
+  const renderStudentSummary = (index: number, total: number): React.ReactNode => (
+    <Box>
+      <Typography variant="subtitle1" fontWeight={700} color="success.dark">
+        Student Preview - Question {index + 1} of {total}
+      </Typography>
+      <Typography variant="caption" color="text.secondary">
+        Live student-facing rendering for the active editor question.
+      </Typography>
+    </Box>
+  );
+
   const emptyPreview = (
     <QuestionPreviewPanel
       question={undefined}
@@ -1334,6 +1356,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                           }
                           emptyState={emptyEditor}
                           paginationLabel="Question"
+                          summaryLabel={renderEditorSummary}
                           topSpacing={0}
                         />
                       </Box>
@@ -1347,7 +1370,16 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                         pl: { xs: 0, md: 2 },
                       }}
                     >
-                      <Paper sx={{ p: 2, flex: 1 }}>
+                      <Paper
+                        sx={{
+                          p: 2,
+                          flex: 1,
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'success.light',
+                          bgcolor: 'success.50',
+                        }}
+                      >
                         <PaginatedQuestionLayout
                           questions={questions}
                           currentIndex={currentQuestionIndex}
@@ -1357,11 +1389,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                           }
                           emptyState={emptyPreview}
                           paginationLabel="Question"
-                          summaryLabel={(index, total) => (
-                            <Typography variant="subtitle1" fontWeight={600}>
-                              Student preview — Question {index + 1} of {total}
-                            </Typography>
-                          )}
+                          summaryLabel={renderStudentSummary}
                           topSpacing={0}
                         />
                       </Paper>

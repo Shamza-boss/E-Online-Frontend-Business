@@ -2,8 +2,6 @@
 
 import React, { useMemo, useState } from 'react';
 import {
-  AppBar,
-  Toolbar,
   Typography,
   Button,
   Paper,
@@ -17,7 +15,9 @@ import {
   FormControlLabel,
   Radio,
   Checkbox,
+  ButtonBase,
 } from '@mui/material';
+import { alpha, styled } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import {
@@ -25,14 +25,116 @@ import {
   SubmittedHomework,
   Question,
 } from '../../../../_lib/interfaces/types';
-import { format } from 'date-fns';
-import QuestionTreeRenderer from '@/app/_lib/components/question/QuestionTreeRenderer';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
-import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
 import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
 import { extractPlainText } from '@/app/_lib/utils/textUtils';
+
+const PageSurface = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  borderRadius: theme.spacing(1.5),
+  border: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+  flex: 1,
+  width: '100%',
+  minHeight: 0,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+}));
+
+const NodeCard = styled(Paper, {
+  shouldForwardProp: (prop) => prop !== 'depth',
+})<{ depth: number }>(({ theme, depth }) => ({
+  marginTop: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+  marginInlineStart: depth > 1 ? theme.spacing((depth - 1) * 2) : 0,
+  borderRadius: theme.spacing(1.5),
+  border: `1px solid ${alpha(theme.palette.divider, 0.95)}`,
+  borderLeft: `4px solid ${alpha(theme.palette.text.secondary, theme.palette.mode === 'dark' ? 0.6 : 0.3)}`,
+  backgroundColor: theme.palette.background.paper,
+  padding: theme.spacing(2),
+}));
+
+const StickyFooter = styled(Paper)(({ theme }) => ({
+  borderRadius: theme.spacing(1.5),
+  border: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+  backgroundColor: alpha(
+    theme.palette.background.paper,
+    theme.palette.mode === 'dark' ? 0.96 : 0.98
+  ),
+  flexShrink: 0,
+  width: '100%',
+  padding: theme.spacing(1.25),
+}));
+
+const ViewShell = styled(Box)(({ theme }) => ({
+  height: '100%',
+  width: '100%',
+  minHeight: 0,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  backgroundColor: theme.palette.background.default,
+  overflow: 'hidden',
+}));
+
+const BodyShell = styled(Box)(({ theme }) => ({
+  flex: 1,
+  width: '100%',
+  minHeight: 0,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(1),
+  overflow: 'hidden',
+}));
+
+const DotStepper = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  gap: theme.spacing(0.5),
+  overflowX: 'auto',
+  overflowY: 'hidden',
+  whiteSpace: 'nowrap',
+  paddingBottom: theme.spacing(0.25),
+  alignItems: 'center',
+}));
+
+const StepPill = styled(ButtonBase, {
+  shouldForwardProp: (prop) => prop !== 'completed' && prop !== 'active',
+})<{ completed: boolean; active: boolean }>(({ theme, completed, active }) => {
+  const completeOpacity = theme.palette.mode === 'dark' ? 0.24 : 0.12;
+  const activeOpacity = theme.palette.mode === 'dark' ? 0.28 : 0.15;
+
+  let borderColor = alpha(theme.palette.divider, 0.95);
+  let backgroundColor = theme.palette.background.paper;
+  let textColor = theme.palette.text.secondary;
+
+  if (completed) {
+    borderColor = alpha(theme.palette.success.main, 0.55);
+    backgroundColor = alpha(theme.palette.success.main, completeOpacity);
+    textColor = theme.palette.success.main;
+  }
+
+  if (active) {
+    borderColor = alpha(theme.palette.primary.main, 0.6);
+    backgroundColor = alpha(theme.palette.primary.main, activeOpacity);
+    textColor = theme.palette.primary.main;
+  }
+
+  return {
+    height: 30,
+    minWidth: 42,
+    borderRadius: 999,
+    paddingInline: theme.spacing(1),
+    border: `1px solid ${borderColor}`,
+    backgroundColor,
+    color: textColor,
+    fontWeight: 600,
+    fontSize: 12,
+  };
+});
 
 const formatFileSize = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return null;
@@ -73,6 +175,29 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
     }
   };
 
+  const handleMultiSelectToggle = (
+    questionId: string,
+    option: string,
+    checked: boolean
+  ) => {
+    if (readOnly) return;
+
+    const previousAnswers = Array.isArray(answers[questionId])
+      ? (answers[questionId] as string[])
+      : [];
+    const updatedAnswers = checked
+      ? [...previousAnswers, option]
+      : previousAnswers.filter((item) => item !== option);
+
+    handleChange(questionId, updatedAnswers);
+  };
+
+  const createMultiSelectHandler = (questionId: string, option: string) => {
+    return (event: React.ChangeEvent<HTMLInputElement>) => {
+      handleMultiSelectToggle(questionId, option, event.target.checked);
+    };
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!readOnly) {
@@ -102,6 +227,25 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
   };
 
   const closePdfPreview = () => setPdfPreview(null);
+
+  const isAnsweredValue = (value: unknown): boolean => {
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'string') return value.trim().length > 0;
+    return value !== undefined && value !== null;
+  };
+
+  const isNodeCompleted = (node: Question): boolean => {
+    if (node.subquestions && node.subquestions.length > 0) {
+      return node.subquestions.every(isNodeCompleted);
+    }
+    return isAnsweredValue(answers[node.id]);
+  };
+
+  const totalQuestions = sortedQuestions.length;
+  const safeIndex =
+    totalQuestions > 0
+      ? Math.min(Math.max(currentQuestionIndex, 0), totalQuestions - 1)
+      : 0;
 
   const renderPdfAttachment = (
     title: string,
@@ -162,13 +306,12 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
     numbering: string,
     depth: number = 1
   ): React.ReactNode => {
-    const indent = depth > 1 ? (depth - 1) * 2 : 0;
     const textVariant = depth === 1 ? 'h6' : 'subtitle1';
 
     if (node.subquestions && node.subquestions.length > 0) {
       const sectionWeight = computeTotalWeight(node);
       return (
-        <Box key={node.id} sx={{ my: 2, ml: indent }}>
+        <NodeCard key={node.id} depth={depth}>
           <Box
             sx={{
               display: 'flex',
@@ -217,14 +360,14 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
           {node.subquestions.map((sub, idx) =>
             renderQuestionNode(sub, `${numbering}.${idx + 1}`, depth + 1)
           )}
-        </Box>
+        </NodeCard>
       );
     }
 
     const options = node.options ?? [];
 
     return (
-      <Box key={node.id} sx={{ my: 2, ml: indent }}>
+      <NodeCard key={node.id} depth={depth}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Box
             sx={{
@@ -259,7 +402,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
                   {options.length > 0 ? (
                     options.map((option, idx) => (
                       <FormControlLabel
-                        key={idx}
+                        key={`${node.id}-single-${option}-${idx}`}
                         value={option}
                         control={<Radio disabled={readOnly} />}
                         label={option || `Option ${idx + 1}`}
@@ -279,7 +422,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
                 <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                   {options.map((option, idx) => (
                     <FormControlLabel
-                      key={idx}
+                      key={`${node.id}-multi-${option}-${idx}`}
                       control={
                         <Checkbox
                           disabled={readOnly}
@@ -288,20 +431,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
                               ? (answers[node.id] as string[]).includes(option)
                               : false
                           }
-                          onChange={(e) => {
-                            if (readOnly) return;
-                            const previousAnswers = Array.isArray(
-                              answers[node.id]
-                            )
-                              ? (answers[node.id] as string[])
-                              : [];
-                            const updatedAnswers = e.target.checked
-                              ? [...previousAnswers, option]
-                              : previousAnswers.filter(
-                                  (item: string) => item !== option
-                                );
-                            handleChange(node.id, updatedAnswers);
-                          }}
+                          onChange={createMultiSelectHandler(node.id, option)}
                         />
                       }
                       label={option || `Option ${idx + 1}`}
@@ -340,56 +470,112 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
             );
           })()}
         </Box>
-      </Box>
+      </NodeCard>
     );
   };
 
   return (
     <React.Fragment>
-      <AppBar sx={{ position: 'relative' }}>
-        <Toolbar>
-          <Typography sx={{ flex: '1 1 auto' }} variant="h6">
-            Due on{' '}
-            {format(new Date(Date.parse(homework.dueDate)), 'MM/ dd / yyyy')}
+      <ViewShell>
+        <BodyShell>
+        <PageSurface>
+          <Typography variant="subtitle1" gutterBottom>
+            {homework.description}
           </Typography>
-          {!readOnly && (
-            <Button autoFocus color="inherit" onClick={handleSubmit}>
-              Submit Answers
-            </Button>
-          )}
-        </Toolbar>
-      </AppBar>
-      <Paper sx={{ p: 2, m: 2 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          {homework.description}
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <PaginatedQuestionLayout
-            questions={sortedQuestions}
-            currentIndex={currentQuestionIndex}
-            onIndexChange={setCurrentQuestionIndex}
-            renderQuestion={(question, numbering) =>
-              renderQuestionNode(question, numbering)
-            }
-            summaryLabel={(index, total) => (
-              <Typography variant="subtitle1">
-                Viewing Question {index + 1} of {total}
-              </Typography>
-            )}
-            emptyState={
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              width: '100%',
+              minHeight: 0,
+            }}
+          >
+            {totalQuestions > 0 ? (
+              <React.Fragment>
+                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+                  Viewing Question {safeIndex + 1} of {totalQuestions}
+                </Typography>
+                <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: 'auto', pr: 0.5 }}>
+                  {renderQuestionNode(
+                    sortedQuestions[safeIndex],
+                    String(safeIndex + 1)
+                  )}
+                </Box>
+              </React.Fragment>
+            ) : (
               <Typography variant="body2" color="text.secondary">
                 No questions to display.
               </Typography>
-            }
-          />
-        </form>
-      </Paper>
+            )}
+          </form>
+        </PageSurface>
+        <StickyFooter>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'stretch', md: 'center' }}
+            justifyContent="space-between"
+          >
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <DotStepper>
+                {sortedQuestions.map((question, index) => (
+                  <StepPill
+                    key={question.id}
+                    onClick={() => setCurrentQuestionIndex(index)}
+                    completed={isNodeCompleted(question)}
+                    active={index === safeIndex}
+                  >
+                    {`Q${index + 1}`}
+                  </StepPill>
+                ))}
+              </DotStepper>
+            </Box>
+
+            <Stack direction="row" spacing={1} justifyContent="flex-end">
+              <Button
+                variant="outlined"
+                color="primary"
+                disabled={safeIndex <= 0 || totalQuestions === 0}
+                onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={safeIndex >= totalQuestions - 1 || totalQuestions === 0}
+                onClick={() =>
+                  setCurrentQuestionIndex((prev) =>
+                    Math.min(totalQuestions - 1, prev + 1)
+                  )
+                }
+              >
+                Next
+              </Button>
+              {!readOnly && (
+                <Button
+                  autoFocus
+                  color="success"
+                  variant="contained"
+                  onClick={(e) => handleSubmit(e as any)}
+                  sx={{ minWidth: 150, fontWeight: 700 }}
+                >
+                  Submit Answers
+                </Button>
+              )}
+            </Stack>
+          </Stack>
+        </StickyFooter>
+      </BodyShell>
+      </ViewShell>
       <Dialog
         open={Boolean(pdfPreview)}
         onClose={closePdfPreview}
         fullWidth
         maxWidth="lg"
-        PaperProps={{ sx: { height: { xs: '90vh', md: '80vh' } } }}
+        slotProps={{ paper: { sx: { height: { xs: '90vh', md: '80vh' } } } }}
       >
         <DialogTitle sx={{ pr: 6 }}>
           {pdfPreview?.title || 'PDF Document'}
