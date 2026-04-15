@@ -64,14 +64,14 @@ const getToneStyle = (theme: Theme, tone: PreviewTone): ToneStyle => {
 
 const EmptyPreviewPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: Number(theme.shape.borderRadius) * 2,
   backgroundColor: alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.12 : 0.04),
 }));
 
 const IntroPaper = styled(Paper)(({ theme }) => ({
   marginBottom: theme.spacing(2),
   padding: theme.spacing(1.5),
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: Number(theme.shape.borderRadius) * 2,
   backgroundColor: alpha(
     theme.palette.success.main,
     theme.palette.mode === 'dark' ? 0.2 : 0.08
@@ -90,7 +90,7 @@ const NodePaper = styled(Paper, {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(2),
     marginInlineStart: theme.spacing(indentLevel),
-    borderRadius: theme.shape.borderRadius * 2,
+    borderRadius: Number(theme.shape.borderRadius) * 2,
     borderColor: toneStyle.borderColor,
     borderLeft: `6px solid ${toneStyle.borderColor}`,
     backgroundColor: toneStyle.backgroundColor,
@@ -146,7 +146,7 @@ const QuestionNumber = styled(Typography, {
 const PdfContainer = styled(Paper)(({ theme }) => ({
   marginTop: theme.spacing(2),
   padding: theme.spacing(1.5),
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: Number(theme.shape.borderRadius) * 2,
 }));
 
 const PdfFrame = styled(Box)(({ theme }) => ({
