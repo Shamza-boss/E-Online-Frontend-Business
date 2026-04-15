@@ -9,6 +9,7 @@ import {
   RadioGroup,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { Question } from '../../interfaces/types';
 import QuestionTextDisplay from '../TipTapEditor/QuestionTextDisplay';
 import { VideoPlayer } from '../video/VideoPlayer';
@@ -71,7 +72,7 @@ const defaultPdfFallback = (
   return (
     <Box
       sx={{
-        height: 360,
+        height: 800,
         borderRadius: 1,
         overflow: 'hidden',
         border: 1,
@@ -100,7 +101,7 @@ const QuestionTreeRenderer: React.FC<QuestionTreeRendererProps> = ({
   computeSectionTotals,
   getGradeBorder,
 }) => {
-  const indentStep = mode === 'graded' ? 5 : 2;
+  const indentStep = 2;
 
   const resolveGradeColor = (award: number, weight: number) => {
     if (!getGradeBorder) return 'divider';
@@ -114,7 +115,7 @@ const QuestionTreeRenderer: React.FC<QuestionTreeRendererProps> = ({
   ): React.ReactNode => {
     const isSection = Array.isArray(node.subquestions) && node.subquestions.length > 0;
     const indent = depth > 1 ? (depth - 1) * indentStep : 0;
-    const textVariant = mode === 'graded' ? 'h6' : depth === 1 ? 'h6' : 'subtitle1';
+    const textVariant = depth === 1 ? 'h6' : 'subtitle1';
     const weightValue = Number.isFinite(node.weight) ? Number(node.weight) : 0;
 
     const sectionWeight =
@@ -138,7 +139,7 @@ const QuestionTreeRenderer: React.FC<QuestionTreeRendererProps> = ({
       >
         <Typography
           variant={textVariant}
-          sx={{ fontWeight: mode === 'graded' || depth === 1 ? 600 : undefined }}
+          sx={{ fontWeight: depth === 1 ? 600 : undefined }}
         >
           {numbering}.
         </Typography>
@@ -147,7 +148,7 @@ const QuestionTreeRenderer: React.FC<QuestionTreeRendererProps> = ({
           fallback={isSection ? 'Untitled section' : 'Untitled question'}
           variant={textVariant}
           component="span"
-          fontWeight={mode === 'graded' || depth === 1 ? 600 : undefined}
+          fontWeight={depth === 1 ? 600 : undefined}
           sx={{ flex: 1, minWidth: 0 }}
           showExcalidrawModalTrigger={mode !== 'builder-preview'}
         />
@@ -335,97 +336,96 @@ const QuestionTreeRenderer: React.FC<QuestionTreeRendererProps> = ({
         ) ?? []
       : null;
 
+    /* ── grade-coloured accent for NodeCard-style cards ── */
+    const nodeGradeColor =
+      mode === 'graded'
+        ? isSection && sectionTotals
+          ? resolveGradeColor(sectionTotals.awarded, sectionTotals.estimated)
+          : resolveGradeColor(grading[node.id]?.grade ?? 0, weightValue)
+        : undefined;
+
+    if (mode === 'graded') {
+      return (
+        <Box
+          key={node.id}
+          sx={(theme) => ({
+            my: 2,
+            marginInlineStart:
+              depth > 1 ? theme.spacing((depth - 1) * indentStep) : 0,
+            borderRadius: theme.spacing(1.5),
+            border: `1px solid ${alpha(theme.palette.divider, 0.95)}`,
+            borderLeft: `4px solid ${
+              nodeGradeColor && nodeGradeColor !== 'divider'
+                ? nodeGradeColor
+                : alpha(
+                    theme.palette.text.secondary,
+                    theme.palette.mode === 'dark' ? 0.6 : 0.3
+                  )
+            }`,
+            bgcolor: 'background.paper',
+            p: 2,
+          })}
+        >
+          {header}
+
+          <Box sx={{ mt: isSection ? 2 : 1 }}>{bodyContent}</Box>
+
+          {!isSection && (
+            <Box
+              sx={{
+                mt: 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 'bold', color: nodeGradeColor }}
+              >
+                {grading[node.id]?.grade ?? 0} / {weightValue}
+              </Typography>
+              {grading[node.id]?.comment && (
+                <Typography variant="body2" color="text.secondary">
+                  — {grading[node.id]?.comment}
+                </Typography>
+              )}
+            </Box>
+          )}
+
+          {children}
+
+          {isSection && sectionTotals && (
+            <Box sx={{ mt: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 'bold', color: nodeGradeColor }}
+              >
+                Section Total: {sectionTotals.awarded} /{' '}
+                {sectionTotals.estimated}
+              </Typography>
+              {sectionGradeInfo?.comment && (
+                <Typography
+                  variant="body2"
+                  sx={{ mt: 0.5 }}
+                  color="text.secondary"
+                >
+                  Section Comment: {sectionGradeInfo.comment}
+                </Typography>
+              )}
+            </Box>
+          )}
+        </Box>
+      );
+    }
+
     return (
       <Box key={node.id} sx={{ my: 2, ml: indent }}>
         {header}
 
-        <Box sx={{ mt: isSection ? 2 : 1 }}>
-          {mode === 'graded' && !isSection ? (
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Box sx={{ flex: 3 }}>{bodyContent}</Box>
-              <Box
-                sx={{
-                  flex: 1,
-                  p: 1,
-                  border: 2,
-                  borderColor: resolveGradeColor(
-                    grading[node.id]?.grade ?? 0,
-                    weightValue
-                  ),
-                  borderRadius: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                  {grading[node.id]?.grade ?? 0} / {weightValue}
-                </Typography>
-                {grading[node.id]?.comment && (
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mt: 1,
-                      textAlign: 'center',
-                      color:
-                        (grading[node.id]?.grade ?? 0) < weightValue
-                          ? resolveGradeColor(
-                              grading[node.id]?.grade ?? 0,
-                              weightValue
-                            )
-                          : 'inherit',
-                    }}
-                  >
-                    {grading[node.id]?.comment}
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-          ) : (
-            bodyContent
-          )}
-        </Box>
+        <Box sx={{ mt: isSection ? 2 : 1 }}>{bodyContent}</Box>
 
         {children}
-
-        {mode === 'graded' && isSection && sectionTotals && (
-          <Box sx={{ mt: 1, ml: 6 }}>
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 'bold',
-                color:
-                  sectionTotals.awarded < sectionTotals.estimated
-                    ? resolveGradeColor(
-                        sectionTotals.awarded,
-                        sectionTotals.estimated
-                      )
-                    : 'inherit',
-              }}
-            >
-              Section Total: {sectionTotals.awarded} / {sectionTotals.estimated}
-            </Typography>
-            {sectionGradeInfo?.comment && (
-              <Typography
-                variant="body2"
-                sx={{
-                  mt: 0.5,
-                  color:
-                    (sectionTotals?.awarded ?? 0) <
-                    (sectionTotals?.estimated ?? 0)
-                      ? resolveGradeColor(
-                          sectionTotals?.awarded ?? 0,
-                          sectionTotals?.estimated ?? 0
-                        )
-                      : 'inherit',
-                }}
-              >
-                Section Comment: {sectionGradeInfo.comment}
-              </Typography>
-            )}
-          </Box>
-        )}
       </Box>
     );
   };

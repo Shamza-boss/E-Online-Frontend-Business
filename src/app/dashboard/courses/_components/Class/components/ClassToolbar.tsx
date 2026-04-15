@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, IconButton, Tooltip, Button } from '@mui/material';
+import { Stack, Button } from '@mui/material';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 
@@ -18,11 +18,13 @@ export const ClassToolbar: React.FC<ClassToolbarProps> = ({
 }) => {
     return (
         <Stack spacing={1} direction="row" alignItems="center">
-            <Tooltip title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
-                <IconButton onClick={onToggleFullscreen}>
-                    {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-                </IconButton>
-            </Tooltip>
+            <Button
+                variant="outlined"
+                startIcon={isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                onClick={onToggleFullscreen}
+            >
+                Toggle Fullscreen
+            </Button>
 
             <Button variant="contained" onClick={onToggleNotes}>
                 {notesOpen ? 'Hide' : 'Show'} notes

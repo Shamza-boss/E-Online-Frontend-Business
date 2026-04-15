@@ -106,18 +106,19 @@ export const TabsContent: React.FC<TabsContentProps> = ({
         <TabContext value={tabValue}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <TabList onChange={(_e, value) => onTabChange(value)}>
-                    <Tab label="Modules" value="1" />
-                    <Tab label="Resources" value="2" />
+                    <Tab label="Training Resource" value="1" />
+                    <Tab label="Assessments" value="2" />
                 </TabList>
             </Box>
-            {renderPanel('1', <AssignmentsPanel classId={classId} canEdit={canEdit} />)}
             {renderPanel(
-                '2',
+                '1',
                 <ResourcesPanel
                     fileUrl={fileUrl}
                     pdfState={pdfState}
                     noteLinkOptions={noteLinkOptions}
                 />
+            )}
+            {renderPanel('2', <AssignmentsPanel classId={classId} canEdit={canEdit} />
             )}
         </TabContext>
     );

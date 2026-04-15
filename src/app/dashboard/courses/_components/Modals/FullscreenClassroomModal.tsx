@@ -6,16 +6,12 @@ import {
   Dialog,
   AppBar,
   Toolbar,
-  IconButton,
   Typography,
   Box,
   Slide,
-  Tooltip,
   useMediaQuery,
   useTheme,
-  FormControlLabel,
-  Switch,
-  alpha,
+  Button,
 } from '@mui/material';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import { NextPage } from 'next';
@@ -23,7 +19,6 @@ import Splitter from '@devbookhq/splitter';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import Tab from '@mui/material/Tab';
-import { useCallback, useEffect, useState } from 'react';
 import SeeAssignmentsAndPreview from '../Homework/SeeAssignmentsAndPreview';
 import React from 'react';
 import { TransitionProps } from '@mui/material/transitions';
@@ -59,6 +54,10 @@ interface FullScreenClassroomModalProps {
   | React.MutableRefObject<EditorHandle | null>;
   onEditorContentChange?: (html: string) => void;
   onPdfLinkClick?: (link: PdfNoteLinkSummary) => void;
+  notesOpen: boolean;
+  onToggleNotes: () => void;
+  splitSizes: number[];
+  onSplitResizeFinished: (gutterIdx: number, sizes: number[]) => void;
 }
 
 const Transition = React.forwardRef(function Transition(
@@ -84,30 +83,17 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
   editorRef,
   onEditorContentChange,
   onPdfLinkClick,
+  notesOpen,
+  onToggleNotes,
+  splitSizes,
+  onSplitResizeFinished,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [showTextbook, setShowTextbook] = useState(false);
-  const [value, setValue] = useState(currentTab);
-  const [splitSizes, setSplitSizes] = useState<number[] | undefined>();
 
-  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-    setValue(newValue);
+  const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     onTabChange?.(newValue);
   };
-
-  useEffect(() => {
-    setValue(currentTab);
-  }, [currentTab]);
-
-  const handleSplitResizeFinished = useCallback(
-    (_gutterIdx: number, sizes: number[]) => {
-      setSplitSizes(sizes);
-    },
-    []
-  );
-
-  const derivedSplitSizes = splitSizes ?? (value === '2' ? [30, 70] : [50, 50]);
 
   return (
     <Dialog
@@ -115,52 +101,21 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
       open={open}
       onClose={handleClose}
       slots={{ transition: Transition }}
-      keepMounted
       title="Course Fullscreen Mode"
     >
-      <AppBar
-        position="static"
-        sx={{
-          color: 'text.primary',
-          boxShadow: 1,
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
+      <AppBar position="static">
         <Toolbar>
-          <Tooltip title={'Exit fullscreen mode'}>
-            <IconButton
-              edge="start"
-              color="inherit"
-              onClick={handleClose}
-              aria-label="close"
-            >
-              <FullscreenExitIcon />
-            </IconButton>
-          </Tooltip>
-          <Typography variant="h6" sx={{ ml: 2 }}>
-            Fullscreen View
-          </Typography>
-          {isMobile && (
-            <Box sx={{ m: 1, mx: 2 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={showTextbook}
-                    onChange={() => setShowTextbook((prev) => !prev)}
-                    color="secondary"
-                  />
-                }
-                label={
-                  showTextbook
-                    ? 'Show Textbook'
-                    : value === '1'
-                      ? 'Show Notes'
-                      : 'Show Assignments'
-                }
-              />
-            </Box>
-          )}
+          <Button
+            variant="outlined"
+            startIcon={<FullscreenExitIcon />}
+            onClick={handleClose}
+          >
+            Exit Fullscreen
+          </Button>
+          <Box sx={{ flex: 1 }} />
+          <Button variant="contained" onClick={onToggleNotes}>
+            {notesOpen ? 'Hide' : 'Show'} Notes
+          </Button>
         </Toolbar>
       </AppBar>
       <Box
@@ -170,12 +125,12 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
           flexDirection: 'column',
           padding: 1,
           minHeight: 0,
-          backgroundColor: alpha(theme.palette.background.default, 1),
+          bgcolor: 'background.default',
         }}
       >
         {isMobile ? (
-          // Mobile layout - toggle between textbook and content based on switch
-          showTextbook ? (
+          // Mobile layout - toggle between notes and tabs
+          notesOpen ? (
             <OutlinedWrapper
               sx={{
                 flex: 1,
@@ -205,17 +160,29 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 overflow: 'hidden',
               }}
             >
-              <TabContext value={value}>
+              <TabContext value={currentTab}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <TabList
                     onChange={handleChange}
-                    aria-label="lab API tabs example"
+                    aria-label="course tabs"
                   >
-                    <Tab label="Modules" value="1" />
-                    <Tab label="Resources" value="2" />
+                    <Tab label="Training Resource" value="1" />
+                    <Tab label="Assessments" value="2" />
                   </TabList>
                 </Box>
-                <ConditionalTabPanel value={value} index="1">
+                <ConditionalTabPanel value={currentTab} index="1">
+                  <PDFViewer
+                    fileUrl={fileUrl}
+                    initialPage={pdfState.currentPage}
+                    initialZoom={pdfState.zoom}
+                    showOutline={pdfState.outline}
+                    onPageChange={pdfState.onPageChange}
+                    onZoomChange={pdfState.onZoomChange}
+                    onOutlineChange={pdfState.onOutlineChange}
+                    noteLinkOptions={noteLinkOptions}
+                  />
+                </ConditionalTabPanel>
+                <ConditionalTabPanel value={currentTab} index="2">
                   <Box
                     sx={{
                       flex: 1,
@@ -231,28 +198,16 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                     />
                   </Box>
                 </ConditionalTabPanel>
-                <ConditionalTabPanel value={value} index="2">
-                  <PDFViewer
-                    fileUrl={fileUrl}
-                    initialPage={pdfState.currentPage}
-                    initialZoom={pdfState.zoom}
-                    showOutline={pdfState.outline}
-                    onPageChange={pdfState.onPageChange}
-                    onZoomChange={pdfState.onZoomChange}
-                    onOutlineChange={pdfState.onOutlineChange}
-                    noteLinkOptions={noteLinkOptions}
-                  />
-                </ConditionalTabPanel>
               </TabContext>
             </OutlinedWrapper>
           )
-        ) : (
-          // Desktop layout - always show PDF in split view, but optimize space based on tab
+        ) : notesOpen ? (
+          // Desktop layout with notes - Splitter with notes + tabs
           <Splitter
             gutterClassName="custom-gutter-horizontal"
             draggerClassName="custom-dragger-horizontal"
-            initialSizes={derivedSplitSizes}
-            onResizeFinished={handleSplitResizeFinished}
+            initialSizes={splitSizes}
+            onResizeFinished={onSplitResizeFinished}
           >
             <OutlinedWrapper
               sx={{
@@ -283,30 +238,14 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                 overflow: 'hidden',
               }}
             >
-              <TabContext value={value}>
+              <TabContext value={currentTab}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <TabList onChange={handleChange} aria-label="course tabs">
-                    <Tab label="Modules" value="1" />
-                    <Tab label="Resources" value="2" />
+                    <Tab label="Training Resource" value="1" />
+                    <Tab label="Assessments" value="2" />
                   </TabList>
                 </Box>
-                <ConditionalTabPanel value={value} index="1">
-                  <Box
-                    sx={{
-                      flex: 1,
-                      overflow: 'auto',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      minHeight: 0,
-                    }}
-                  >
-                    <SeeAssignmentsAndPreview
-                      classId={classId}
-                      canEdit={canEdit ?? false}
-                    />
-                  </Box>
-                </ConditionalTabPanel>
-                <ConditionalTabPanel value={value} index="2">
+                <ConditionalTabPanel value={currentTab} index="1">
                   <PDFViewer
                     fileUrl={fileUrl}
                     initialPage={pdfState.currentPage}
@@ -318,9 +257,74 @@ const FullScreenClassroomModal: NextPage<FullScreenClassroomModalProps> = ({
                     noteLinkOptions={noteLinkOptions}
                   />
                 </ConditionalTabPanel>
+                <ConditionalTabPanel value={currentTab} index="2">
+                  <Box
+                    sx={{
+                      flex: 1,
+                      overflow: 'auto',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      minHeight: 0,
+                    }}
+                  >
+                    <SeeAssignmentsAndPreview
+                      classId={classId}
+                      canEdit={canEdit}
+                    />
+                  </Box>
+                </ConditionalTabPanel>
               </TabContext>
             </OutlinedWrapper>
           </Splitter>
+        ) : (
+          // Desktop layout without notes - just tabs
+          <OutlinedWrapper
+            sx={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              minHeight: 0,
+              overflow: 'hidden',
+            }}
+          >
+            <TabContext value={currentTab}>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <TabList onChange={handleChange} aria-label="course tabs">
+                  <Tab label="Training Resource" value="1" />
+                  <Tab label="Assessments" value="2" />
+                </TabList>
+              </Box>
+              <ConditionalTabPanel value={currentTab} index="1">
+                <PDFViewer
+                  fileUrl={fileUrl}
+                  initialPage={pdfState.currentPage}
+                  initialZoom={pdfState.zoom}
+                  showOutline={pdfState.outline}
+                  onPageChange={pdfState.onPageChange}
+                  onZoomChange={pdfState.onZoomChange}
+                  onOutlineChange={pdfState.onOutlineChange}
+                  noteLinkOptions={noteLinkOptions}
+                />
+              </ConditionalTabPanel>
+              <ConditionalTabPanel value={currentTab} index="2">
+                <Box
+                  sx={{
+                    flex: 1,
+                    overflow: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 0,
+                  }}
+                >
+                  <SeeAssignmentsAndPreview
+                    classId={classId}
+                    canEdit={canEdit}
+                  />
+                </Box>
+              </ConditionalTabPanel>
+            </TabContext>
+          </OutlinedWrapper>
         )}
       </Box>
     </Dialog>

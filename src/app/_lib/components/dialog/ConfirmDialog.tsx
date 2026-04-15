@@ -87,8 +87,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <Button
           onClick={onCancel}
           disabled={disableCancel ?? cancelDisabledProp}
-          color={cancelColorProp}
-          variant={cancelVariantProp}
+          color={cancelColorProp ?? 'inherit'}
+          variant={cancelVariantProp ?? 'contained'}
           {...restCancelButtonProps}
         >
           {cancelText}
@@ -96,7 +96,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <Button
           onClick={onConfirm}
           color={confirmColorProp ?? 'error'}
-          variant={confirmVariantProp}
+          variant={confirmVariantProp ?? 'contained'}
           disabled={disableConfirm ?? confirmDisabledProp}
           {...restConfirmButtonProps}
         >

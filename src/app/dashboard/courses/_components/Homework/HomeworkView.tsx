@@ -26,6 +26,10 @@ import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
+import QuizRoundedIcon from '@mui/icons-material/QuizRounded';
+import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
+import TimerOffRoundedIcon from '@mui/icons-material/TimerOffRounded';
 import {
   Homework,
   SubmittedHomework,
@@ -37,6 +41,7 @@ import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionText
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
 import { extractPlainText } from '@/app/_lib/utils/textUtils';
+import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 
 /* ── Layout ── */
 /* ── Public type for toolbar render-prop ── */
@@ -191,6 +196,8 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
     url: string;
     key?: string | null;
   } | null>(null);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showBackWarning, setShowBackWarning] = useState(false);
 
   const sortedQuestions = useMemo(
     () => sortQuestionTreeByDisplayOrder(homework.questions),
@@ -235,8 +242,27 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!readOnly) {
-      onSubmit({ homework, answers });
+      setShowSubmitConfirm(true);
     }
+  };
+
+  const confirmSubmit = () => {
+    setShowSubmitConfirm(false);
+    onSubmit({ homework, answers });
+  };
+
+  const handleBackClick = () => {
+    const hasStarted = Object.keys(answers).length > 0 || currentPage !== COVER_PAGE;
+    if (hasStarted) {
+      setShowBackWarning(true);
+    } else {
+      onBack?.();
+    }
+  };
+
+  const confirmBack = () => {
+    setShowBackWarning(false);
+    onBack?.();
   };
 
   const computeTotalWeight = (node: Question): number => {
@@ -505,54 +531,185 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
       : null;
 
     return (
-      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5, py: 1 }}>
-        <Stack spacing={3} sx={{ maxWidth: 680 }}>
-          {homework.description && (
-            <Typography variant="body1" color="text.secondary">
-              {homework.description}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          py: { xs: 2, md: 4 },
+          px: { xs: 1, sm: 2 },
+        }}
+      >
+        <Stack
+          spacing={4}
+          sx={{ width: '100%', maxWidth: 860 }}
+        >
+          {/* ── Hero header ── */}
+          <Box
+            sx={(theme) => ({
+              background:
+                theme.palette.mode === 'dark'
+                  ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.35)} 0%, ${alpha(theme.palette.background.paper, 0.9)} 100%)`
+                  : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.light, 0.04)} 100%)`,
+              borderRadius: 3,
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+              px: { xs: 2.5, sm: 4 },
+              py: { xs: 3, sm: 4 },
+            })}
+          >
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' },
+                lineHeight: 1.2,
+                mb: homework.description ? 1.5 : 0,
+              }}
+            >
+              {homework.title}
             </Typography>
-          )}
-
-          <Divider />
-
-          <Stack spacing={1.5}>
-            <DetailRow label="Due date" value={dueDate} />
-            {expiryDate && <DetailRow label="Expires" value={expiryDate} />}
-            <DetailRow label="Questions" value={String(totalQuestions)} />
-            <DetailRow label="Total marks" value={String(totalWeight)} />
-            {homework.completions !== undefined && homework.totalStudents !== undefined && (
-              <DetailRow
-                label="Completions"
-                value={`${homework.completions} / ${homework.totalStudents}`}
-              />
+            {homework.description && (
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{
+                  fontSize: { xs: '0.95rem', sm: '1.05rem' },
+                  lineHeight: 1.7,
+                  maxWidth: 640,
+                }}
+              >
+                {homework.description}
+              </Typography>
             )}
-          </Stack>
-
-          <Divider />
-
-          {/* Question breakdown */}
-          <Box>
-            <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-              Question breakdown
-            </Typography>
-            <Stack spacing={0.75}>
-              {sortedQuestions.map((q, i) => {
-                const label = extractPlainText(q.questionText) || `Question ${i + 1}`;
-                const weight = computeTotalWeight(q);
-                return (
-                  <Stack key={q.id} direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0 }}>
-                      {i + 1}. {label}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ ml: 2, flexShrink: 0 }}>
-                      {weight} {weight === 1 ? 'mark' : 'marks'}
-                    </Typography>
-                  </Stack>
-                );
-              })}
-            </Stack>
           </Box>
 
+          {/* ── Stat cards ── */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: `repeat(${expiryDate ? 4 : 3}, 1fr)`,
+              },
+              gap: { xs: 1.5, sm: 2 },
+            }}
+          >
+            <StatCard
+              icon={<CalendarTodayRoundedIcon />}
+              label="Due Date"
+              value={dueDate}
+              color="primary"
+            />
+            {expiryDate && (
+              <StatCard
+                icon={<TimerOffRoundedIcon />}
+                label="Expires"
+                value={expiryDate}
+                color="warning"
+              />
+            )}
+            <StatCard
+              icon={<QuizRoundedIcon />}
+              label="Questions"
+              value={String(totalQuestions)}
+              color="info"
+            />
+            <StatCard
+              icon={<EmojiEventsRoundedIcon />}
+              label="Total Marks"
+              value={String(totalWeight)}
+              color="success"
+            />
+          </Box>
+
+          {/* ── Question breakdown ── */}
+          {sortedQuestions.length > 0 && (
+            <Box
+              sx={(theme) => ({
+                borderRadius: 2.5,
+                border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+                overflow: 'hidden',
+              })}
+            >
+              <Box
+                sx={(theme) => ({
+                  px: { xs: 2, sm: 3 },
+                  py: 1.5,
+                  backgroundColor: alpha(
+                    theme.palette.text.primary,
+                    theme.palette.mode === 'dark' ? 0.06 : 0.03,
+                  ),
+                  borderBottom: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+                })}
+              >
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Question Breakdown
+                </Typography>
+              </Box>
+              <Stack divider={<Divider />}>
+                {sortedQuestions.map((q, i) => {
+                  const label = extractPlainText(q.questionText) || `Question ${i + 1}`;
+                  const weight = computeTotalWeight(q);
+                  return (
+                    <Stack
+                      key={q.id}
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      sx={{
+                        px: { xs: 2, sm: 3 },
+                        py: 1.25,
+                        '&:hover': {
+                          backgroundColor: (theme) =>
+                            alpha(theme.palette.action.hover, 0.04),
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        noWrap
+                        sx={{
+                          flex: 1,
+                          minWidth: 0,
+                          fontSize: { xs: '0.85rem', sm: '0.9rem' },
+                        }}
+                      >
+                        <Box
+                          component="span"
+                          sx={{ fontWeight: 700, mr: 0.75, color: 'text.secondary' }}
+                        >
+                          {i + 1}.
+                        </Box>
+                        {label}
+                      </Typography>
+                      <Box
+                        sx={(theme) => ({
+                          ml: 2,
+                          flexShrink: 0,
+                          px: 1.25,
+                          py: 0.25,
+                          borderRadius: 1,
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          backgroundColor: alpha(theme.palette.success.main, 0.1),
+                          color: theme.palette.success.main,
+                        })}
+                      >
+                        {weight} {weight === 1 ? 'mark' : 'marks'}
+                      </Box>
+                    </Stack>
+                  );
+                })}
+              </Stack>
+            </Box>
+          )}
+
+          {/* ── Begin button ── */}
           {!readOnly && totalQuestions > 0 && (
             <Button
               variant="contained"
@@ -560,7 +717,14 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
               size="large"
               startIcon={<PlayArrowRoundedIcon />}
               onClick={startExam}
-              sx={{ alignSelf: 'flex-start', fontWeight: 700, px: 4 }}
+              sx={{
+                alignSelf: { xs: 'stretch', sm: 'flex-start' },
+                fontWeight: 700,
+                px: 5,
+                py: 1.5,
+                fontSize: '1rem',
+                borderRadius: 2,
+              }}
             >
               Begin Assessment
             </Button>
@@ -578,13 +742,13 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
           {onBack && (
             <Button
               size="small"
-              onClick={onBack}
+              onClick={handleBackClick}
               startIcon={<ArrowBackRoundedIcon fontSize="small" />}
               variant="contained"
               color="warning"
               sx={{ alignSelf: 'flex-start', fontWeight: 700, px: 4, mb: 2 }}
             >
-              Back to modules
+              Back to assessments
             </Button>
           )}
           {isCoverPage ? (
@@ -680,7 +844,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
         onClose={closePdfPreview}
         fullWidth
         maxWidth="lg"
-        slotProps={{ paper: { sx: { height: { xs: '90vh', md: '80vh' } } } }}
+        slotProps={{ paper: { sx: { height: { xs: '95vh', md: '90vh' }, maxHeight: { xs: '95vh', md: '90vh' } } } }}
       >
         <DialogTitle sx={{ pr: 6 }}>
           {pdfPreview?.title || 'PDF Document'}
@@ -694,30 +858,126 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
         </DialogTitle>
         <DialogContent
           dividers
-          sx={{ p: 0, height: '100%', display: 'flex', flexDirection: 'column' }}
+          sx={{ p: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         >
           {pdfPreview?.url && (
-            <Box sx={{ flex: 1, minHeight: 0 }}>
+            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <PDFViewer fileUrl={pdfPreview.url} initialPage={1} />
             </Box>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ── Submit confirmation dialog ── */}
+      <ConfirmDialog
+        open={showSubmitConfirm}
+        title="Submit Assessment"
+        description={
+          <>
+            You have answered <strong>{answeredCount}</strong> of{' '}
+            <strong>{totalQuestions}</strong> questions.
+            {totalQuestions - answeredCount > 0 && (
+              <>
+                {' '}
+                <strong>
+                  {totalQuestions - answeredCount} question{totalQuestions - answeredCount !== 1 ? 's' : ''}
+                </strong>{' '}
+                remaining unanswered.
+              </>
+            )}
+            <br />
+            <br />
+            <strong>This action cannot be undone.</strong> Once submitted, you will not be
+            able to make changes to your answers.
+          </>
+        }
+        confirmText="Submit"
+        cancelText="Continue Working"
+        onConfirm={confirmSubmit}
+        onCancel={() => setShowSubmitConfirm(false)}
+      />
+
+      {/* ── Back / leave warning dialog ── */}
+      <ConfirmDialog
+        open={showBackWarning}
+        title="Leave Assessment?"
+        description={
+          <>
+            You will lose all your changes if you leave. Your assessment will be
+            submitted with <strong>no questions completed</strong>.
+          </>
+        }
+        confirmText="Leave"
+        cancelText="Stay"
+        onConfirm={confirmBack}
+        onCancel={() => setShowBackWarning(false)}
+      />
     </React.Fragment>
   );
 };
 
-/* ── Small helper for cover page detail rows ── */
-function DetailRow({ label, value }: Readonly<{ label: string; value: string }>) {
+/* ── Stat card for cover page ── */
+function StatCard({
+  icon,
+  label,
+  value,
+  color,
+}: Readonly<{
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  color: 'primary' | 'info' | 'success' | 'warning';
+}>) {
   return (
-    <Stack direction="row" spacing={2} alignItems="baseline">
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 110 }}>
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={600}>
-        {value}
-      </Typography>
-    </Stack>
+    <Paper
+      variant="outlined"
+      sx={(theme) => ({
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        px: { xs: 2, sm: 2.5 },
+        py: { xs: 1.75, sm: 2 },
+        borderRadius: 2.5,
+        borderColor: alpha(theme.palette[color].main, 0.25),
+        backgroundColor: alpha(
+          theme.palette[color].main,
+          theme.palette.mode === 'dark' ? 0.08 : 0.04,
+        ),
+      })}
+    >
+      <Box
+        sx={(theme) => ({
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 42,
+          height: 42,
+          borderRadius: '50%',
+          backgroundColor: alpha(theme.palette[color].main, 0.15),
+          color: theme.palette[color].main,
+          flexShrink: 0,
+          '& .MuiSvgIcon-root': { fontSize: 22 },
+        })}
+      >
+        {icon}
+      </Box>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.7rem' }}
+        >
+          {label}
+        </Typography>
+        <Typography
+          variant="body1"
+          sx={{ fontWeight: 700, lineHeight: 1.3, fontSize: { xs: '0.95rem', sm: '1rem' } }}
+          noWrap
+        >
+          {value}
+        </Typography>
+      </Box>
+    </Paper>
   );
 }
 

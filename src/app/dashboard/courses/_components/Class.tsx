@@ -103,7 +103,7 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
   }, [isNotesOpen, toggleNotes]);
 
   const ensurePdfVisible = useCallback(() => {
-    setTabValue('2');
+    setTabValue('1');
     if (isMobile && isNotesOpen) {
       toggleNotes();
     }
@@ -291,6 +291,10 @@ export const ClassComponent: React.FC<Props> = ({ classId, textbookUrl }) => {
         editorRef={fullscreenEditorRef}
         onEditorContentChange={handleEditorContentChange}
         onPdfLinkClick={handleNotebookPdfLinkClick}
+        notesOpen={isNotesOpen}
+        onToggleNotes={toggleNotes}
+        splitSizes={splitSizes}
+        onSplitResizeFinished={onSplitResizeFinished}
       />
 
       <Box

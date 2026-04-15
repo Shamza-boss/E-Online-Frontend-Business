@@ -308,4 +308,19 @@ export const navigationCustomizations: Components<Theme> = {
       }),
     },
   },
+  MuiAppBar: {
+    styleOverrides: {
+      root: ({ theme }) => ({
+        backgroundColor: theme.palette.background.paper,
+        backgroundImage: 'none',
+        color: theme.palette.text.primary,
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        boxShadow: 'none',
+        ...theme.applyStyles('dark', {
+          backgroundColor: theme.palette.background.paper,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+        }),
+      }),
+    },
+  },
 };

@@ -2,10 +2,9 @@ import {
   Box,
   Tabs,
   Tab,
-  Toolbar,
-  Typography,
   Chip,
   Alert,
+  Button,
 } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import EDataGrid from '../../../_components/EDataGrid';
@@ -22,7 +21,6 @@ import {
   submitHomework,
 } from '../../../../_lib/actions';
 import HomeworkView from './HomeworkView';
-import HomeworkReview from './HomeworkReview';
 import GradedHomeworkComponent from '../../../../_lib/components/homework/GradedHomeworkComponent';
 import useSWR, { mutate } from 'swr';
 import { format } from 'date-fns';
@@ -30,6 +28,7 @@ import { useSession } from 'next-auth/react';
 import { getStatusChipConfig } from '@/app/_lib/common/functions';
 import { GradeCell, PercentageCell } from '@/app/_lib/homework';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
+import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 
 export default function SeeAssignmentsAndPreview({
   canEdit,
@@ -50,7 +49,7 @@ export default function SeeAssignmentsAndPreview({
   const isStudent = userRole === UserRole.Trainee;
 
   // Only fetch assignments if user is a student
-  // Teachers and admins cannot be enrolled in modules
+  // Teachers and admins cannot be enrolled in assessments
   const { data: allAssignments, isLoading } = useSWR<HomeworkAssignmentDto[]>(
     isStudent && userId ? ['student-assignments', userId] : null,
     () => getStudentAssignments(userId!),
@@ -76,24 +75,42 @@ export default function SeeAssignmentsAndPreview({
   }, [allAssignments, classId]);
 
   const [activeTab, setActiveTab] = useState(0);
+  const [pendingRowParams, setPendingRowParams] = useState<any>(null);
 
 
 
   const getStatusAndTab = (
     row: any
   ): { status: 'graded' | 'submitted' | 'pending'; tab: number } => {
-    if (row.isGraded) return { status: 'graded', tab: 2 };
+    if (row.isGraded) return { status: 'graded', tab: 1 };
     if (row.isSubmitted) return { status: 'submitted', tab: 1 };
     return { status: 'pending', tab: 0 };
   };
 
   const handleRowClick = async (params: any) => {
+    const { status } = getStatusAndTab(params.row);
+    if (status === 'pending') {
+      setPendingRowParams(params);
+      return;
+    }
+    await openAssignment(params);
+  };
+
+  const openAssignment = async (params: any) => {
     const { status, tab } = getStatusAndTab(params.row);
     setSelectedStatus(status);
     const assignmentId = params.row.assignmentId || params.row.id;
     const assignment = await getAssignmentById(assignmentId);
     setSelectedAssignment({ ...assignment, status });
     setActiveTab(tab);
+  };
+
+  const confirmModuleOpen = async () => {
+    const params = pendingRowParams;
+    setPendingRowParams(null);
+    if (params) {
+      await openAssignment(params);
+    }
   };
 
   const handleBack = () => {
@@ -123,6 +140,12 @@ export default function SeeAssignmentsAndPreview({
       field: 'homeworkTitle',
       headerName: 'Title',
       flex: 1,
+      minWidth: 200,
+    },
+    {
+      field: 'homeworkDescription',
+      headerName: 'Description',
+      flex: 1.5,
       minWidth: 200,
     },
     {
@@ -168,25 +191,34 @@ export default function SeeAssignmentsAndPreview({
         return <Chip size="small" label={label} color={color} sx={{ ml: 1 }} />;
       },
     },
+    {
+      field: 'actions',
+      headerName: 'Action',
+      flex: 0.8,
+      minWidth: 150,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const isPending = !params.row.isSubmitted && !params.row.isGraded;
+        return (
+          <Button
+            size="small"
+            variant="outlined"
+            color={isPending ? 'primary' : 'success'}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowClick(params);
+            }}
+          >
+            {isPending ? 'Start Assessment' : 'View Result'}
+          </Button>
+        );
+      },
+    },
   ];
 
   return (
     <>
-        <Toolbar
-          sx={{
-            gap: 1,
-            flexWrap: 'wrap',
-            minHeight: { xs: 'auto !important' },
-            py: 0.75,
-          }}
-        >
-          <Typography variant="h6" noWrap sx={{ minWidth: 0 }}>
-            Your modules
-          </Typography>
-
-          <Box sx={{ flex: 1 }} />
-        </Toolbar>
-
       {!isStudent ? (
         <Box
           sx={{
@@ -218,7 +250,7 @@ export default function SeeAssignmentsAndPreview({
                   }}
                 >
                   <Alert severity="info" sx={{ mb: 0 }}>
-                    Only students can view enrolled modules
+                    Only students can view enrolled assessments
                   </Alert>
                 </Box>
               ),
@@ -237,7 +269,7 @@ export default function SeeAssignmentsAndPreview({
         >
           <EDataGrid
             rows={data || []}
-            sx={{ flex: 1, width: '100%', height: '100%' }}
+            sx={{ flex: 1, width: '100%', height: '100%', '& .MuiDataGrid-row': { cursor: 'pointer' } }}
             columns={columns}
             getRowId={(r) => r.assignmentId || r.id}
             disableRowSelectionOnClick={canEdit}
@@ -269,10 +301,9 @@ export default function SeeAssignmentsAndPreview({
               disabled={selectedStatus !== 'pending'}
             />
             <Tab
-              label="Review Submission"
+              label="Graded Result"
               disabled={selectedStatus === 'pending'}
             />
-            <Tab label="Graded Result" disabled={selectedStatus !== 'graded'} />
           </Tabs>
 
           <Box
@@ -294,15 +325,7 @@ export default function SeeAssignmentsAndPreview({
                 onBack={handleBack}
               />
             )}
-            {activeTab === 1 && selectedStatus !== 'pending' && (
-              <HomeworkReview
-                submittedHomework={{
-                  homework: selectedAssignment.homework,
-                  answers: selectedAssignment.answers,
-                }}
-              />
-            )}
-            {activeTab === 2 && selectedStatus === 'graded' && (
+            {activeTab === 1 && (selectedStatus === 'graded' || selectedStatus === 'submitted') && (
               <GradedHomeworkComponent
                 gradedHomework={{
                   homework: selectedAssignment.homework,
@@ -310,11 +333,28 @@ export default function SeeAssignmentsAndPreview({
                   grading: selectedAssignment.grading || {},
                   overallComment: selectedAssignment.overallComment,
                 }}
+                onBack={handleBack}
               />
             )}
           </Box>
         </Box>
       )}
+
+      {/* ── Assessment open warning dialog ── */}
+      <ConfirmDialog
+        open={!!pendingRowParams}
+        title="Open Assessment?"
+        description={
+          <>
+            Once you open this assessment, you will be <strong>required to complete it</strong>.
+          </>
+        }
+        confirmText="Open Assessment"
+        cancelText="Cancel"
+        onConfirm={confirmModuleOpen}
+        onCancel={() => setPendingRowParams(null)}
+        confirmButtonProps={{ color: 'warning' }}
+      />
     </>
   );
 }

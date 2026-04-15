@@ -195,7 +195,13 @@ export interface CreateUploadDto {
 export interface Question {
   id: string;
   questionText: string;
-  type: 'video' | 'pdf' | 'single-select' | 'multi-select' | 'placeholder' | 'group';
+  type:
+    | 'video'
+    | 'pdf'
+    | 'single-select'
+    | 'multi-select'
+    | 'placeholder'
+    | 'group';
   displayOrder?: string;
   options?: string[];
   required: boolean;
@@ -257,6 +263,7 @@ export interface HomeworkAssignmentDto {
   assignmentId: string;
   homeworkId: string;
   homeworkTitle: string;
+  homeworkDescription?: string;
   dueDate: string; // ISO string format
   isSubmitted: boolean;
   submittedAt: string | null;

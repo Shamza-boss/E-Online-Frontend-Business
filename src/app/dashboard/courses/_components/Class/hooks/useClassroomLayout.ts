@@ -86,13 +86,8 @@ export const useClassroomLayout = (options: UseClassroomLayoutOptions = {}) => {
   const openNotes = useCallback(() => setNotesOpen(true), []);
 
   const toggleFullscreen = useCallback(() => {
-    setIsFullscreen((prev) => {
-      if (!prev && !isNotesOpen) {
-        openNotes();
-      }
-      return !prev;
-    });
-  }, [isNotesOpen, openNotes]);
+    setIsFullscreen((prev) => !prev);
+  }, []);
 
   const exitFullscreen = useCallback(() => setIsFullscreen(false), []);
 

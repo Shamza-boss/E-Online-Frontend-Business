@@ -100,6 +100,7 @@ export default function AppTheme({
       shadows,
       components: {
         ...surfacesCustomizations,
+        MuiAppBar: navigationCustomizations.MuiAppBar,
         MuiTextField: {
           defaultProps: {
             size: 'small',

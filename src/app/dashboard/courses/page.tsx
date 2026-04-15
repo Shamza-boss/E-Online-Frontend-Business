@@ -10,7 +10,7 @@ export default function ClassroomPage() {
       <Stack spacing={2}>
         <Suspense fallback={<StudentClassCardSkeleton count={12} />}>
           <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 'max-content' }}>
-            Select a course below to complete modules, or capture notes in relation to provided resources.
+            Select a course below to complete assessments, or capture notes in relation to provided training resources.
           </Typography>
           <ClassroomClasses />
         </Suspense>
