@@ -3,4 +3,5 @@ export interface ClassToolbarProps {
   onToggleFullscreen: () => void;
   notesOpen: boolean;
   onToggleNotes: () => void;
+  examMode?: boolean;
 }

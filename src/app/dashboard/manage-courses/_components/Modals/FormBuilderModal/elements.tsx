@@ -81,8 +81,8 @@ export const PreviewPaper = styled(Paper)(({ theme }) => ({
     padding: theme.spacing(2),
     flex: 1,
     borderRadius: Number(theme.shape.borderRadius) * 2,
-    border: `1px solid ${theme.palette.success.light}`,
-    backgroundColor: (theme.palette.success as any)['50'] ?? theme.palette.success.light,
+    border: `1px solid ${theme.palette.divider}`,
+    backgroundColor: theme.palette.background.paper,
 }));
 
 export const BuilderContentBox = styled(Box)(({ theme }) => ({

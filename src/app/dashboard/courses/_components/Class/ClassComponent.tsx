@@ -50,6 +50,16 @@ export const ClassComponent: React.FC<ClassComponentProps> = ({ classId, textboo
         onSplitResizeFinished,
     } = useClassroomLayout({ pdfPersistKey });
     const { data: note, isLoading, saveNote } = useClassroomNote(classId);
+    const [examMode, setExamMode] = useState(false);
+
+    const handleExamModeChange = useCallback((isExamMode: boolean) => {
+        setExamMode(isExamMode);
+        // When entering exam mode, close notes and switch to assessments tab
+        if (isExamMode) {
+            if (isNotesOpen) toggleNotes();
+            setTabValue('2');
+        }
+    }, [isNotesOpen, toggleNotes, setTabValue]);
 
     const handleSave = async (html: string) => {
         await saveNote({ content: html });
@@ -65,6 +75,8 @@ export const ClassComponent: React.FC<ClassComponentProps> = ({ classId, textboo
             fileUrl={textbookUrl}
             pdfState={pdfState}
             noteLinkOptions={noteLinkOptions}
+            examMode={examMode}
+            onExamModeChange={handleExamModeChange}
         />
     );
 
@@ -221,6 +233,8 @@ export const ClassComponent: React.FC<ClassComponentProps> = ({ classId, textboo
                 onToggleNotes={toggleNotes}
                 splitSizes={splitSizes}
                 onSplitResizeFinished={onSplitResizeFinished}
+                examMode={examMode}
+                onExamModeChange={handleExamModeChange}
             />
 
             <ClassShell>
@@ -232,6 +246,7 @@ export const ClassComponent: React.FC<ClassComponentProps> = ({ classId, textboo
                         onToggleFullscreen={toggleFullscreen}
                         notesOpen={isNotesOpen}
                         onToggleNotes={toggleNotes}
+                        examMode={examMode}
                     />
                 </ToolbarRow>
                 <ContentArea>

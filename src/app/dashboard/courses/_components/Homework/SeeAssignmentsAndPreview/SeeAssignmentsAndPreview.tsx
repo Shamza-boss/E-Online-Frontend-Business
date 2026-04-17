@@ -1,22 +1,28 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Tabs,
     Tab,
     Alert,
+    Button,
+    Dialog,
+    Stack,
+    Typography,
 } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import EDataGrid from '../../../../_components/EDataGrid';
 import {
     HomeworkAssignmentDto,
     AssignmentDetailsDto,
     SubmittedHomework,
 } from '../../../../../_lib/interfaces/types';
-import { getStudentAssignments } from '../../../../../_lib/actions';
+import { getStudentAssignments, resetAssignment } from '../../../../../_lib/actions';
 import HomeworkView from '../HomeworkView';
 import GradedHomeworkComponent from '../../../../../_lib/components/homework/GradedHomeworkComponent';
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 import { useSession } from 'next-auth/react';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
+import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import type { SeeAssignmentsAndPreviewProps } from './interfaces';
 import { buildColumns } from './constants';
 import {
@@ -35,13 +41,18 @@ import {
 export default function SeeAssignmentsAndPreview({
     canEdit,
     classId,
+    onExamModeChange,
 }: SeeAssignmentsAndPreviewProps) {
     const { data: session } = useSession();
+    const { showAlert } = useAlert();
     const [selectedAssignment, setSelectedAssignment] =
         useState<AssignmentDetailsDto | null>(null);
     const [selectedStatus, setSelectedStatus] = useState<
         'graded' | 'submitted' | 'pending'
     >('pending');
+    const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+    const [resetting, setResetting] = useState(false);
+    const [examFullscreen, setExamFullscreen] = useState(false);
 
     const userId = session?.user.id;
     const userRole = session?.user?.role ? Number(session.user.role) : null;
@@ -72,6 +83,53 @@ export default function SeeAssignmentsAndPreview({
     const [activeTab, setActiveTab] = useState(0);
     const [pendingRowParams, setPendingRowParams] = useState<any>(null);
 
+    // Determine if current assignment is an exam
+    const isExamMode = Boolean(selectedAssignment?.homework?.isExam);
+
+    // Notify parent about exam mode changes
+    useEffect(() => {
+        onExamModeChange?.(isExamMode && selectedStatus === 'pending');
+    }, [isExamMode, selectedStatus, onExamModeChange]);
+
+    // Exam scheduled check
+    const examScheduledAt = selectedAssignment?.homework?.scheduledAt;
+    const isExamScheduledInFuture = useMemo(() => {
+        if (!isExamMode || !examScheduledAt) return false;
+        return new Date(examScheduledAt).getTime() > Date.now();
+    }, [isExamMode, examScheduledAt]);
+
+    // Countdown timer for scheduled exams
+    const [countdown, setCountdown] = useState('');
+    useEffect(() => {
+        if (!isExamScheduledInFuture || !examScheduledAt) {
+            setCountdown('');
+            return;
+        }
+        const update = () => {
+            const diff = new Date(examScheduledAt).getTime() - Date.now();
+            if (diff <= 0) {
+                setCountdown('');
+                return;
+            }
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            setCountdown(`${h}h ${m}m ${s}s`);
+        };
+        update();
+        const interval = setInterval(update, 1000);
+        return () => clearInterval(interval);
+    }, [isExamScheduledInFuture, examScheduledAt]);
+
+    // Open exam in fullscreen when it's an exam and pending
+    useEffect(() => {
+        if (isExamMode && selectedStatus === 'pending' && selectedAssignment && !isExamScheduledInFuture) {
+            setExamFullscreen(true);
+        } else {
+            setExamFullscreen(false);
+        }
+    }, [isExamMode, selectedStatus, selectedAssignment, isExamScheduledInFuture]);
+
     const onRowClick = async (params: any) => {
         await handleRowClickUtil(
             params,
@@ -94,9 +152,11 @@ export default function SeeAssignmentsAndPreview({
 
     const handleBack = () => {
         setSelectedAssignment(null);
+        setExamFullscreen(false);
     };
 
     const handleHomeworkSubmit = async (submitted: SubmittedHomework) => {
+        setExamFullscreen(false);
         await submitHomeworkAndRefresh(
             submitted,
             selectedAssignment,
@@ -109,7 +169,112 @@ export default function SeeAssignmentsAndPreview({
         setActiveTab(newValue);
     };
 
+    const handleResetAssignment = useCallback(async () => {
+        if (!selectedAssignment) return;
+        setResetting(true);
+        try {
+            await resetAssignment(selectedAssignment.assignmentId);
+            showAlert('success', 'Assignment reset successfully. You can try again.');
+            setSelectedAssignment(null);
+            mutate(['student-assignments', userId]);
+        } catch (err: any) {
+            showAlert('error', err?.message || 'Failed to reset assignment.');
+        } finally {
+            setResetting(false);
+            setResetConfirmOpen(false);
+        }
+    }, [selectedAssignment, userId, showAlert]);
+
+    // Check if reset is allowed
+    const canReset =
+        selectedAssignment?.homework?.allowReset &&
+        (selectedStatus === 'submitted' || selectedStatus === 'graded');
+
     const columns = useMemo(() => buildColumns(onRowClick), []);
+
+    const assignmentView = (
+        <>
+            <TabHeaderBox>
+                <Tabs
+                    value={activeTab}
+                    onChange={handleTabChange}
+                    variant="fullWidth"
+                >
+                    <Tab
+                        label="Complete Assignment"
+                        disabled={selectedStatus !== 'pending'}
+                    />
+                    <Tab
+                        label="Graded Result"
+                        disabled={selectedStatus === 'pending'}
+                    />
+                </Tabs>
+            </TabHeaderBox>
+
+            {isExamScheduledInFuture ? (
+                <Stack spacing={2} alignItems="center" justifyContent="center" sx={{ flex: 1, p: 4 }}>
+                    <Alert severity="warning" sx={{ maxWidth: 500 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Exam not yet available
+                        </Typography>
+                        <Typography variant="body2">
+                            This exam is scheduled for{' '}
+                            <strong>{new Date(examScheduledAt!).toLocaleString()}</strong>.
+                        </Typography>
+                        {countdown && (
+                            <Typography variant="h5" fontWeight={700} sx={{ mt: 1 }}>
+                                {countdown}
+                            </Typography>
+                        )}
+                    </Alert>
+                    <Button variant="contained" color="warning" onClick={handleBack}>
+                        Back to assessments
+                    </Button>
+                </Stack>
+            ) : (
+                <TabContentBox>
+                    {activeTab === 0 && selectedStatus === 'pending' && selectedAssignment && (
+                        <HomeworkView
+                            homework={selectedAssignment.homework}
+                            onSubmit={handleHomeworkSubmit}
+                            onBack={handleBack}
+                        />
+                    )}
+                    {activeTab === 1 && (selectedStatus === 'graded' || selectedStatus === 'submitted') && selectedAssignment && (
+                        <>
+                            <GradedHomeworkComponent
+                                gradedHomework={{
+                                    homework: selectedAssignment.homework,
+                                    answers: selectedAssignment.answers,
+                                    grading: selectedAssignment.grading || {},
+                                    overallComment: selectedAssignment.overallComment,
+                                }}
+                                onBack={handleBack}
+                            />
+                            {canReset && (
+                                <Stack direction="row" spacing={2} sx={{ p: 2 }}>
+                                    <Button
+                                        variant="outlined"
+                                        color="warning"
+                                        startIcon={<RestartAltIcon />}
+                                        onClick={() => setResetConfirmOpen(true)}
+                                        disabled={resetting}
+                                    >
+                                        {resetting ? 'Resetting…' : 'Try Again'}
+                                    </Button>
+                                    <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
+                                        Attempt #{selectedAssignment?.homework && 'attemptNumber' in (selectedAssignment as any)
+                                            ? (selectedAssignment as any).attemptNumber ?? 1
+                                            : 1}
+                                    </Typography>
+                                </Stack>
+                            )}
+                        </>
+                    )}
+                </TabContentBox>
+            )}
+        </>
+    );
 
     return (
         <>
@@ -155,45 +320,15 @@ export default function SeeAssignmentsAndPreview({
                         }}
                     />
                 </FlexColumnContainer>
+            ) : examFullscreen ? (
+                <Dialog fullScreen open>
+                    <FlexColumnHiddenContainer>
+                        {assignmentView}
+                    </FlexColumnHiddenContainer>
+                </Dialog>
             ) : (
                 <FlexColumnHiddenContainer>
-                    <TabHeaderBox>
-                        <Tabs
-                            value={activeTab}
-                            onChange={handleTabChange}
-                            variant="fullWidth"
-                        >
-                            <Tab
-                                label="Complete Assignment"
-                                disabled={selectedStatus !== 'pending'}
-                            />
-                            <Tab
-                                label="Graded Result"
-                                disabled={selectedStatus === 'pending'}
-                            />
-                        </Tabs>
-                    </TabHeaderBox>
-
-                    <TabContentBox>
-                        {activeTab === 0 && selectedStatus === 'pending' && (
-                            <HomeworkView
-                                homework={selectedAssignment.homework}
-                                onSubmit={handleHomeworkSubmit}
-                                onBack={handleBack}
-                            />
-                        )}
-                        {activeTab === 1 && (selectedStatus === 'graded' || selectedStatus === 'submitted') && (
-                            <GradedHomeworkComponent
-                                gradedHomework={{
-                                    homework: selectedAssignment.homework,
-                                    answers: selectedAssignment.answers,
-                                    grading: selectedAssignment.grading || {},
-                                    overallComment: selectedAssignment.overallComment,
-                                }}
-                                onBack={handleBack}
-                            />
-                        )}
-                    </TabContentBox>
+                    {assignmentView}
                 </FlexColumnHiddenContainer>
             )}
 
@@ -209,6 +344,22 @@ export default function SeeAssignmentsAndPreview({
                 cancelText="Cancel"
                 onConfirm={onConfirmModuleOpen}
                 onCancel={() => setPendingRowParams(null)}
+                confirmButtonProps={{ color: 'warning' }}
+            />
+
+            <ConfirmDialog
+                open={resetConfirmOpen}
+                title="Reset Assignment?"
+                description={
+                    <>
+                        This will <strong>clear all your answers</strong> and reset the assignment.
+                        You will start fresh with a new attempt. This action cannot be undone.
+                    </>
+                }
+                confirmText="Reset"
+                cancelText="Cancel"
+                onConfirm={handleResetAssignment}
+                onCancel={() => setResetConfirmOpen(false)}
                 confirmButtonProps={{ color: 'warning' }}
             />
         </>

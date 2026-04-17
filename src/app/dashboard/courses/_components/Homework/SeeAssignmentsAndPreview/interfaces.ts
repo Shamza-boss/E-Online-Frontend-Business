@@ -13,6 +13,7 @@ export interface StatusAndTab {
 export interface SeeAssignmentsAndPreviewProps {
   canEdit: boolean;
   classId: string;
+  onExamModeChange?: (isExamMode: boolean) => void;
 }
 
 export interface SelectedAssignmentState {

@@ -10,4 +10,6 @@ export interface TabsContentProps {
   fileUrl: string;
   pdfState: PdfViewState;
   noteLinkOptions?: PdfNoteLinkOptions;
+  examMode?: boolean;
+  onExamModeChange?: (isExamMode: boolean) => void;
 }

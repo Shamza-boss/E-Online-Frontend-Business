@@ -27,6 +27,9 @@ export const inputsCustomizations: Components<Theme> = {
     },
   },
   MuiButton: {
+    defaultProps: {
+      variant: 'outlined',
+    },
     styleOverrides: {
       root: ({ theme }) => ({
         boxShadow: 'none',

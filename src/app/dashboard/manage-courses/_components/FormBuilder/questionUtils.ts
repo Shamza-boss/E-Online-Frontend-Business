@@ -19,9 +19,14 @@ export const ALLOWED_TYPES: readonly Question['type'][] = [
  * - Containers cannot contain other containers (Video inside Video is forbidden).
  * - Atomic questions (single/multi) cannot contain children.
  */
-export const IsValidChild = (parentType: string, childType: string): boolean => {
+export const IsValidChild = (
+  parentType: string,
+  childType: string
+): boolean => {
   if (parentType === 'group') {
-    return ['video', 'pdf', 'single-select', 'multi-select'].includes(childType);
+    return ['video', 'pdf', 'single-select', 'multi-select'].includes(
+      childType
+    );
   }
   if (parentType === 'video' || parentType === 'pdf') {
     return childType === 'single-select' || childType === 'multi-select';
@@ -398,7 +403,12 @@ export const buildValidatedHomework = (
   dueDate: string,
   hasExpiry: boolean,
   expiryDate: string,
-  questions: Question[]
+  questions: Question[],
+  options?: {
+    isExam?: boolean;
+    scheduledAt?: string | null;
+    allowReset?: boolean;
+  }
 ): { homework: HomeworkPayload; errors: string[] } => {
   const errors: string[] = [];
 
@@ -455,6 +465,9 @@ export const buildValidatedHomework = (
     dueDate: sanitizedDueDate,
     hasExpiry,
     expiryDate: hasExpiry ? normalizedExpiry : null,
+    isExam: options?.isExam ?? false,
+    scheduledAt: options?.isExam ? (options?.scheduledAt ?? null) : null,
+    allowReset: options?.allowReset ?? false,
     questions: sanitizedQuestions,
   };
 

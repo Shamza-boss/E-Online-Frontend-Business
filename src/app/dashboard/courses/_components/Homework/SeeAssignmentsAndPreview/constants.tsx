@@ -2,7 +2,7 @@ import { GridColDef } from '@mui/x-data-grid';
 import { format } from 'date-fns';
 import { getStatusChipConfig } from '@/app/_lib/common/functions';
 import { GradeCell, PercentageCell } from '@/app/_lib/homework';
-import { Chip, Button } from '@mui/material';
+import { Chip, Button, Stack } from '@mui/material';
 import React from 'react';
 
 export const buildColumns = (
@@ -13,6 +13,17 @@ export const buildColumns = (
         headerName: 'Title',
         flex: 1,
         minWidth: 200,
+        renderCell: (params) => {
+            const isExam = params.row.isExam;
+            return (
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <span>{params.value}</span>
+                    {isExam && (
+                        <Chip size="small" label="Exam" color="error" variant="outlined" />
+                    )}
+                </Stack>
+            );
+        },
     },
     {
         field: 'homeworkDescription',
@@ -49,6 +60,17 @@ export const buildColumns = (
         },
     },
     { field: 'overallComment', headerName: 'Comments', flex: 1, minWidth: 150 },
+    {
+        field: 'attemptNumber',
+        headerName: 'Attempt',
+        flex: 0.5,
+        minWidth: 80,
+        renderCell: (params) => {
+            const attempt = params.row.attemptNumber ?? 1;
+            if (!params.row.allowReset) return null;
+            return <Chip size="small" label={`#${attempt}`} variant="outlined" />;
+        },
+    },
     {
         field: 'isSubmitted',
         headerName: 'Status',

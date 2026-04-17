@@ -9,6 +9,7 @@ export const ClassToolbar: React.FC<ClassToolbarProps> = ({
     onToggleFullscreen,
     notesOpen,
     onToggleNotes,
+    examMode,
 }) => {
     return (
         <Stack spacing={1} direction="row" alignItems="center">
@@ -20,7 +21,7 @@ export const ClassToolbar: React.FC<ClassToolbarProps> = ({
                 Toggle Fullscreen
             </Button>
 
-            <Button variant="contained" onClick={onToggleNotes}>
+            <Button variant="contained" onClick={onToggleNotes} disabled={examMode}>
                 {notesOpen ? 'Hide' : 'Show'} notes
             </Button>
         </Stack>

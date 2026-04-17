@@ -1,6 +1,6 @@
 /**
  * Client-safe homework actions
- * 
+ *
  * These wrappers use clientFetch instead of serverFetch,
  * making them safe to call from client components via SWR or useEffect.
  */
@@ -22,7 +22,9 @@ export async function getStudentAssignmentsClient(
 export async function getAssignmentByIdClient(
   assignmentId: string
 ): Promise<AssignmentDetailsDto> {
-  return clientFetch(`/homework/assignment/${encodeURIComponent(assignmentId)}`);
+  return clientFetch(
+    `/homework/assignment/${encodeURIComponent(assignmentId)}`
+  );
 }
 
 export async function getHomeworkByClassroomClient(
@@ -43,4 +45,13 @@ export async function gradeHomeworkClient(grading: GradeHomeworkDto) {
     method: 'POST',
     body: grading,
   });
+}
+
+export async function resetAssignmentClient(
+  assignmentId: string
+): Promise<{ message: string }> {
+  return clientFetch(
+    `/homework/assignment/${encodeURIComponent(assignmentId)}/reset`,
+    { method: 'POST' }
+  );
 }

@@ -22,10 +22,22 @@ import {
     DialogContent,
     DialogContentText,
     DialogActions,
+    Divider,
+    Paper,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import CloseIcon from '@mui/icons-material/Close';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
+import QuizRoundedIcon from '@mui/icons-material/QuizRounded';
+import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
+import TimerOffRoundedIcon from '@mui/icons-material/TimerOffRounded';
+import GavelRoundedIcon from '@mui/icons-material/GavelRounded';
+import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
+import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { TransitionProps } from '@mui/material/transitions';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import type {
@@ -100,6 +112,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
     const [dueDate, setDueDate] = useState(getTomorrowDate());
     const [hasExpiry, setHasExpiry] = useState(false);
     const [expiryDate, setExpiryDate] = useState('');
+    const [isExam, setIsExam] = useState(false);
+    const [scheduledAt, setScheduledAt] = useState('');
+    const [allowReset, setAllowReset] = useState(false);
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [hydrated, setHydrated] = useState(false);
@@ -226,6 +241,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                 dueDate,
                 hasExpiry,
                 expiryDate: hasExpiry ? expiryDate : null,
+                isExam,
+                scheduledAt: isExam ? (scheduledAt || null) : null,
+                allowReset,
                 questions,
             } satisfies HomeworkPayload,
             currentQuestionIndex,
@@ -308,6 +326,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                         ? initialHomework.expiryDate
                         : '',
                 );
+                setIsExam(Boolean(initialHomework.isExam));
+                setScheduledAt(initialHomework.scheduledAt ?? '');
+                setAllowReset(Boolean(initialHomework.allowReset));
                 const clonedQuestions: Question[] = initialHomework.questions
                     ? JSON.parse(JSON.stringify(initialHomework.questions))
                     : [];
@@ -348,6 +369,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
         setDueDate(getTomorrowDate());
         setHasExpiry(false);
         setExpiryDate('');
+        setIsExam(false);
+        setScheduledAt('');
+        setAllowReset(false);
         setQuestions([]);
         setCurrentQuestionIndex(0);
         setActiveHomeworkId(null);
@@ -788,6 +812,7 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
             hasExpiry,
             hasExpiry ? expiryDate : '',
             questions,
+            { isExam, scheduledAt: isExam ? (scheduledAt || null) : null, allowReset },
         );
 
         if (errors.length > 0) {
@@ -1099,87 +1124,318 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                     <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                         {onReviewStep ? (
                             <ReviewPaper>
-                                <Box>
+                                {/* ── Hero header ── */}
+                                <Box
+                                    sx={(theme) => ({
+                                        borderRadius: Number(theme.shape.borderRadius) * 3 / 8,
+                                        border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+                                        px: { xs: 2.5, sm: 4 },
+                                        py: { xs: 3, sm: 4 },
+                                        background:
+                                            theme.palette.mode === 'dark'
+                                                ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.35)} 0%, ${alpha(theme.palette.background.paper, 0.9)} 100%)`
+                                                : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.light, 0.04)} 100%)`,
+                                    })}
+                                >
                                     <Typography
-                                        variant="h5"
-                                        fontWeight={600}
-                                        gutterBottom
+                                        variant="h4"
+                                        fontWeight={800}
+                                        sx={{
+                                            letterSpacing: '-0.02em',
+                                            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' },
+                                            lineHeight: 1.2,
+                                            mb: 1.5,
+                                        }}
                                     >
-                                        Review and publish
-                                    </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                    >
-                                        Review your module details before
-                                        publishing to students.
-                                    </Typography>
-                                </Box>
-                                <Box>
-                                    <Typography
-                                        variant="subtitle1"
-                                        fontWeight={600}
-                                        gutterBottom
-                                    >
-                                        Module Title
-                                    </Typography>
-                                    <Typography variant="body1">
                                         {formTitle || 'Untitled module'}
                                     </Typography>
-                                </Box>
-                                <Box>
                                     <Typography
-                                        variant="subtitle1"
-                                        fontWeight={600}
-                                        gutterBottom
+                                        variant="body1"
+                                        color="text.secondary"
+                                        sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' }, lineHeight: 1.7, maxWidth: 640 }}
                                     >
-                                        Description
-                                    </Typography>
-                                    <Typography variant="body1">
-                                        {description ||
-                                            'No description provided'}
+                                        {description || 'No description provided'}
                                     </Typography>
                                 </Box>
-                                <Box>
-                                    <Typography
-                                        variant="subtitle1"
-                                        fontWeight={600}
-                                        gutterBottom
+
+                                {/* ── Stat cards ── */}
+                                <Box
+                                    sx={(theme) => ({
+                                        display: 'grid',
+                                        gap: theme.spacing(1.5),
+                                        gridTemplateColumns: {
+                                            xs: '1fr',
+                                            sm: 'repeat(2, 1fr)',
+                                            md: 'repeat(3, 1fr)',
+                                        },
+                                    })}
+                                >
+                                    {/* Assessment type */}
+                                    <Paper
+                                        variant="outlined"
+                                        sx={(theme) => ({
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            px: { xs: 2, sm: 2.5 },
+                                            py: { xs: 1.75, sm: 2 },
+                                            borderRadius: Number(theme.shape.borderRadius) * 2.5 / 8,
+                                            borderColor: alpha(theme.palette[isExam ? 'warning' : 'primary'].main, 0.25),
+                                            backgroundColor: alpha(
+                                                theme.palette[isExam ? 'warning' : 'primary'].main,
+                                                theme.palette.mode === 'dark' ? 0.08 : 0.04,
+                                            ),
+                                        })}
                                     >
-                                        Due Date
-                                    </Typography>
-                                    <Typography variant="body1">
-                                        {dueDate || 'Not set'}
-                                    </Typography>
-                                </Box>
-                                {hasExpiry && (
-                                    <Box>
-                                        <Typography
-                                            variant="subtitle1"
-                                            fontWeight={600}
-                                            gutterBottom
+                                        <Box
+                                            sx={(theme) => ({
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: 42,
+                                                height: 42,
+                                                borderRadius: '50%',
+                                                backgroundColor: alpha(theme.palette[isExam ? 'warning' : 'primary'].main, 0.15),
+                                                color: theme.palette[isExam ? 'warning' : 'primary'].main,
+                                                flexShrink: 0,
+                                                '& .MuiSvgIcon-root': { fontSize: 22 },
+                                            })}
                                         >
-                                            Expiry Date
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            {expiryDate || 'Not set'}
+                                            <GavelRoundedIcon />
+                                        </Box>
+                                        <Box sx={{ minWidth: 0 }}>
+                                            <Typography variant="caption" color="text.secondary" textTransform="uppercase" fontWeight={600} sx={{ letterSpacing: '0.04em', fontSize: '0.7rem' }}>
+                                                Type
+                                            </Typography>
+                                            <Typography variant="body1" fontWeight={700} noWrap>
+                                                {isExam ? 'Exam' : 'Assignment'}
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+
+                                    {/* Questions */}
+                                    <Paper
+                                        variant="outlined"
+                                        sx={(theme) => ({
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            px: { xs: 2, sm: 2.5 },
+                                            py: { xs: 1.75, sm: 2 },
+                                            borderRadius: Number(theme.shape.borderRadius) * 2.5 / 8,
+                                            borderColor: alpha(theme.palette.info.main, 0.25),
+                                            backgroundColor: alpha(
+                                                theme.palette.info.main,
+                                                theme.palette.mode === 'dark' ? 0.08 : 0.04,
+                                            ),
+                                        })}
+                                    >
+                                        <Box
+                                            sx={(theme) => ({
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: 42,
+                                                height: 42,
+                                                borderRadius: '50%',
+                                                backgroundColor: alpha(theme.palette.info.main, 0.15),
+                                                color: theme.palette.info.main,
+                                                flexShrink: 0,
+                                                '& .MuiSvgIcon-root': { fontSize: 22 },
+                                            })}
+                                        >
+                                            <QuizRoundedIcon />
+                                        </Box>
+                                        <Box sx={{ minWidth: 0 }}>
+                                            <Typography variant="caption" color="text.secondary" textTransform="uppercase" fontWeight={600} sx={{ letterSpacing: '0.04em', fontSize: '0.7rem' }}>
+                                                Questions
+                                            </Typography>
+                                            <Typography variant="body1" fontWeight={700} noWrap>
+                                                {questions.length} question{questions.length !== 1 ? 's' : ''}
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+
+                                    {/* Total marks */}
+                                    <Paper
+                                        variant="outlined"
+                                        sx={(theme) => ({
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            px: { xs: 2, sm: 2.5 },
+                                            py: { xs: 1.75, sm: 2 },
+                                            borderRadius: Number(theme.shape.borderRadius) * 2.5 / 8,
+                                            borderColor: alpha(theme.palette.success.main, 0.25),
+                                            backgroundColor: alpha(
+                                                theme.palette.success.main,
+                                                theme.palette.mode === 'dark' ? 0.08 : 0.04,
+                                            ),
+                                        })}
+                                    >
+                                        <Box
+                                            sx={(theme) => ({
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: 42,
+                                                height: 42,
+                                                borderRadius: '50%',
+                                                backgroundColor: alpha(theme.palette.success.main, 0.15),
+                                                color: theme.palette.success.main,
+                                                flexShrink: 0,
+                                                '& .MuiSvgIcon-root': { fontSize: 22 },
+                                            })}
+                                        >
+                                            <EmojiEventsRoundedIcon />
+                                        </Box>
+                                        <Box sx={{ minWidth: 0 }}>
+                                            <Typography variant="caption" color="text.secondary" textTransform="uppercase" fontWeight={600} sx={{ letterSpacing: '0.04em', fontSize: '0.7rem' }}>
+                                                Total Marks
+                                            </Typography>
+                                            <Typography variant="body1" fontWeight={700} noWrap>
+                                                {questions.reduce((sum, q) => sum + computeTotalWeight(q), 0)}
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Box>
+
+                                {/* ── Schedule & deadlines breakdown ── */}
+                                <Box
+                                    sx={(theme) => ({
+                                        borderRadius: Number(theme.shape.borderRadius) * 2.5 / 8,
+                                        border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+                                        overflow: 'hidden',
+                                    })}
+                                >
+                                    <Box
+                                        sx={(theme) => ({
+                                            px: { xs: 2, sm: 3 },
+                                            py: 1.5,
+                                            backgroundColor: alpha(
+                                                theme.palette.text.primary,
+                                                theme.palette.mode === 'dark' ? 0.06 : 0.03,
+                                            ),
+                                            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+                                        })}
+                                    >
+                                        <Typography variant="subtitle1" fontWeight={700}>
+                                            Schedule &amp; Deadlines
                                         </Typography>
                                     </Box>
-                                )}
-                                <Box>
-                                    <Typography
-                                        variant="subtitle1"
-                                        fontWeight={600}
-                                        gutterBottom
-                                    >
-                                        Questions
-                                    </Typography>
-                                    <Typography variant="body1">
-                                        {questions.length} question
-                                        {questions.length !== 1 ? 's' : ''}{' '}
-                                        created
-                                    </Typography>
+                                    <Stack divider={<Divider />}>
+                                        <Stack direction="row" alignItems="center" spacing={2} sx={{ px: { xs: 2, sm: 3 }, py: 1.5 }}>
+                                            <CalendarTodayRoundedIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                                    Due date
+                                                </Typography>
+                                                <Typography variant="body1" fontWeight={600}>
+                                                    {dueDate || 'Not set'}
+                                                </Typography>
+                                            </Box>
+                                        </Stack>
+                                        {hasExpiry && (
+                                            <Stack direction="row" alignItems="center" spacing={2} sx={{ px: { xs: 2, sm: 3 }, py: 1.5 }}>
+                                                <TimerOffRoundedIcon sx={{ color: 'warning.main', fontSize: 20 }} />
+                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                                        Expires
+                                                    </Typography>
+                                                    <Typography variant="body1" fontWeight={600}>
+                                                        {expiryDate || 'Not set'}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        After this date, students can no longer submit.
+                                                    </Typography>
+                                                </Box>
+                                            </Stack>
+                                        )}
+                                        {isExam && (
+                                            <Stack direction="row" alignItems="center" spacing={2} sx={{ px: { xs: 2, sm: 3 }, py: 1.5 }}>
+                                                <ScheduleRoundedIcon sx={{ color: 'warning.main', fontSize: 20 }} />
+                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                                        Exam opens
+                                                    </Typography>
+                                                    <Typography variant="body1" fontWeight={600}>
+                                                        {scheduledAt
+                                                            ? dayjs(scheduledAt).format('MMMM D, YYYY h:mm A')
+                                                            : 'Immediately on publish'}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {scheduledAt
+                                                            ? 'A countdown will be shown until the exam unlocks.'
+                                                            : 'Available to students as soon as you publish.'}
+                                                    </Typography>
+                                                </Box>
+                                            </Stack>
+                                        )}
+                                    </Stack>
                                 </Box>
+
+                                {/* ── Behaviour settings breakdown ── */}
+                                {(isExam || allowReset) && (
+                                    <Box
+                                        sx={(theme) => ({
+                                            borderRadius: Number(theme.shape.borderRadius) * 2.5 / 8,
+                                            border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+                                            overflow: 'hidden',
+                                        })}
+                                    >
+                                        <Box
+                                            sx={(theme) => ({
+                                                px: { xs: 2, sm: 3 },
+                                                py: 1.5,
+                                                backgroundColor: alpha(
+                                                    theme.palette.text.primary,
+                                                    theme.palette.mode === 'dark' ? 0.06 : 0.03,
+                                                ),
+                                                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+                                            })}
+                                        >
+                                            <Typography variant="subtitle1" fontWeight={700}>
+                                                Behaviour Settings
+                                            </Typography>
+                                        </Box>
+                                        <Stack divider={<Divider />}>
+                                            {isExam && (
+                                                <Stack direction="row" alignItems="center" spacing={2} sx={{ px: { xs: 2, sm: 3 }, py: 1.5 }}>
+                                                    <GavelRoundedIcon sx={{ color: 'warning.main', fontSize: 20 }} />
+                                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                                            Exam mode
+                                                        </Typography>
+                                                        <Typography variant="body1" fontWeight={600}>
+                                                            Enabled
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Fullscreen enforced. Notes, resources, and navigation disabled.
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
+                                            )}
+                                            {allowReset && (
+                                                <Stack direction="row" alignItems="center" spacing={2} sx={{ px: { xs: 2, sm: 3 }, py: 1.5 }}>
+                                                    <ReplayRoundedIcon sx={{ color: 'info.main', fontSize: 20 }} />
+                                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                                            Reset / Re-attempt
+                                                        </Typography>
+                                                        <Typography variant="body1" fontWeight={600}>
+                                                            Allowed
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Students can clear their submission and start fresh. Each attempt is tracked.
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
+                                            )}
+                                        </Stack>
+                                    </Box>
+                                )}
+
+                                {/* ── Actions ── */}
                                 <Stack
                                     direction={{ xs: 'column', sm: 'row' }}
                                     justifyContent="space-between"
@@ -1196,6 +1452,9 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                                         onClick={handlePublishClick}
                                         color="success"
                                         variant="contained"
+                                        size="large"
+                                        startIcon={<PlayArrowRoundedIcon />}
+                                        sx={{ fontWeight: 700, px: 5, py: 1.5, fontSize: '1rem', borderRadius: 2 }}
                                     >
                                         Confirm and publish
                                     </Button>
@@ -1325,6 +1584,94 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                                 )}
                                 <Stack
                                     direction={{ xs: 'column', sm: 'row' }}
+                                    spacing={2}
+                                    alignItems={{
+                                        xs: 'flex-start',
+                                        sm: 'center',
+                                    }}
+                                >
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={isExam}
+                                                onChange={(event) => {
+                                                    const enabled =
+                                                        event.target.checked;
+                                                    setIsExam(enabled);
+                                                    if (!enabled) {
+                                                        setScheduledAt('');
+                                                    }
+                                                }}
+                                            />
+                                        }
+                                        label="Exam mode"
+                                    />
+                                    {!isExam && (
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                        >
+                                            Enable to restrict student access to notes and resources during this assessment.
+                                        </Typography>
+                                    )}
+                                </Stack>
+                                {isExam && (
+                                    <DateTimePicker
+                                        label="Scheduled exam date & time"
+                                        value={
+                                            scheduledAt
+                                                ? dayjs(scheduledAt)
+                                                : null
+                                        }
+                                        onChange={(newValue) =>
+                                            setScheduledAt(
+                                                newValue
+                                                    ? newValue.toISOString()
+                                                    : '',
+                                            )
+                                        }
+                                        minDateTime={dayjs()}
+                                        slotProps={{
+                                            textField: {
+                                                fullWidth: true,
+                                                helperText:
+                                                    'Students cannot access this exam before this date and time. Leave empty for immediate access.',
+                                            },
+                                        }}
+                                    />
+                                )}
+                                <Stack
+                                    direction={{ xs: 'column', sm: 'row' }}
+                                    spacing={2}
+                                    alignItems={{
+                                        xs: 'flex-start',
+                                        sm: 'center',
+                                    }}
+                                >
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={allowReset}
+                                                onChange={(event) =>
+                                                    setAllowReset(
+                                                        event.target.checked,
+                                                    )
+                                                }
+                                            />
+                                        }
+                                        label="Allow reset / re-attempt"
+                                    />
+                                    {!allowReset && (
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                        >
+                                            When enabled, students can reset a submitted assignment and try again.
+                                        </Typography>
+                                    )}
+                                </Stack>
+                                <Stack
+                                    direction={{ xs: 'column', sm: 'row' }}
                                     justifyContent="flex-end"
                                     spacing={2}
                                     mt={{ xs: 1, sm: 3 }}
@@ -1375,7 +1722,8 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
                                         </Typography>
                                     </Box>
                                     <Button
-                                        variant="text"
+                                        variant="outlined"
+                                        color="warning"
                                         onClick={handlePreviousStep}
                                     >
                                         Back to details

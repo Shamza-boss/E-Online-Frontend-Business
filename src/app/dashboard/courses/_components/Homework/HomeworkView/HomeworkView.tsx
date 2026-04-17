@@ -495,6 +495,27 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
                         />
                     </StatCardsGrid>
 
+                    {/* ── Google Calendar link for scheduled exams ── */}
+                    {homework.isExam && homework.scheduledAt && (() => {
+                        const start = new Date(homework.scheduledAt);
+                        const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour default
+                        const fmt = (d: Date) => d.toISOString().replaceAll(/[-:]/g, '').replace(/\.\d{3}/, '');
+                        const calUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(homework.title)}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent(homework.description || '')}`;
+                        return (
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<CalendarTodayRoundedIcon />}
+                                href={calUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
+                            >
+                                Add to Google Calendar
+                            </Button>
+                        );
+                    })()}
+
                     {/* ── Question breakdown ── */}
                     {sortedQuestions.length > 0 && (
                         <BreakdownContainer>

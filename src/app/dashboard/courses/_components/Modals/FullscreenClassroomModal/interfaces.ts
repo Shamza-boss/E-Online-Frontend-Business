@@ -32,4 +32,6 @@ export interface FullScreenClassroomModalProps {
   onToggleNotes: () => void;
   splitSizes: number[];
   onSplitResizeFinished: (gutterIdx: number, sizes: number[]) => void;
+  examMode?: boolean;
+  onExamModeChange?: (isExamMode: boolean) => void;
 }

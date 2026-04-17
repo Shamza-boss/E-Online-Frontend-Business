@@ -61,6 +61,8 @@ const FullScreenClassroomModal: React.FC<FullScreenClassroomModalProps> = ({
     onToggleNotes,
     splitSizes,
     onSplitResizeFinished,
+    examMode,
+    onExamModeChange,
 }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -87,7 +89,7 @@ const FullScreenClassroomModal: React.FC<FullScreenClassroomModalProps> = ({
             <TabContext value={currentTab}>
                 <TabHeaderBox>
                     <TabList onChange={onTabChangeHandler} aria-label="course tabs">
-                        <Tab label="Training Resource" value="1" />
+                        <Tab label="Training Resource" value="1" disabled={examMode} />
                         <Tab label="Assessments" value="2" />
                     </TabList>
                 </TabHeaderBox>
@@ -108,6 +110,7 @@ const FullScreenClassroomModal: React.FC<FullScreenClassroomModalProps> = ({
                         <SeeAssignmentsAndPreview
                             classId={classId}
                             canEdit={canEdit}
+                            onExamModeChange={onExamModeChange}
                         />
                     </FlexColumnBox>
                 </ConditionalTabPanel>
@@ -133,7 +136,7 @@ const FullScreenClassroomModal: React.FC<FullScreenClassroomModalProps> = ({
                         Exit Fullscreen
                     </Button>
                     <ToolbarSpacer />
-                    <Button variant="contained" onClick={onToggleNotes}>
+                    <Button variant="contained" onClick={onToggleNotes} disabled={examMode}>
                         {notesOpen ? 'Hide' : 'Show'} Notes
                     </Button>
                 </Toolbar>

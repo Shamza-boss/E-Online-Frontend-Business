@@ -15,12 +15,14 @@ import { FlexColumnBox, TabHeaderBox } from './elements';
 const AssignmentsPanel = ({
     classId,
     canEdit,
+    onExamModeChange,
 }: {
     classId: string;
     canEdit: boolean;
+    onExamModeChange?: (isExamMode: boolean) => void;
 }) => (
     <FlexColumnBox>
-        <SeeAssignmentsAndPreview classId={classId} canEdit={canEdit} />
+        <SeeAssignmentsAndPreview classId={classId} canEdit={canEdit} onExamModeChange={onExamModeChange} />
     </FlexColumnBox>
 );
 
@@ -56,6 +58,8 @@ export const TabsContent: React.FC<TabsContentProps> = ({
     fileUrl,
     pdfState,
     noteLinkOptions,
+    examMode,
+    onExamModeChange,
 }) => {
     const renderPanel = useCallback(
         (panel: '1' | '2', children: ReactNode) => {
@@ -80,7 +84,7 @@ export const TabsContent: React.FC<TabsContentProps> = ({
         <TabContext value={tabValue}>
             <TabHeaderBox>
                 <TabList onChange={(_e, value) => onTabChange(value)}>
-                    <Tab label="Training Resource" value="1" />
+                    <Tab label="Training Resource" value="1" disabled={examMode} />
                     <Tab label="Assessments" value="2" />
                 </TabList>
             </TabHeaderBox>
@@ -92,7 +96,7 @@ export const TabsContent: React.FC<TabsContentProps> = ({
                     noteLinkOptions={noteLinkOptions}
                 />
             )}
-            {renderPanel('2', <AssignmentsPanel classId={classId} canEdit={canEdit} />)}
+            {renderPanel('2', <AssignmentsPanel classId={classId} canEdit={canEdit} onExamModeChange={onExamModeChange} />)}
         </TabContext>
     );
 };

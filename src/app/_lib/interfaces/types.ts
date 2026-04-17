@@ -236,12 +236,23 @@ export interface Homework {
   studentScore?: number | null;
   studentTotalWeight?: number | null;
   studentPercentage?: number | null;
+  isExam?: boolean;
+  scheduledAt?: string | null; // ISO 8601 DateTimeOffset — when the exam becomes accessible
+  allowReset?: boolean;
   questions: Question[];
 }
 
 export type HomeworkPayload = Pick<
   Homework,
-  'title' | 'description' | 'dueDate' | 'hasExpiry' | 'expiryDate' | 'questions'
+  | 'title'
+  | 'description'
+  | 'dueDate'
+  | 'hasExpiry'
+  | 'expiryDate'
+  | 'isExam'
+  | 'scheduledAt'
+  | 'allowReset'
+  | 'questions'
 >;
 
 export interface HomeworkSummaryDto {
@@ -256,6 +267,9 @@ export interface HomeworkSummaryDto {
   completions: number;
   totalStudents: number;
   classroomId?: string;
+  isExam?: boolean;
+  scheduledAt?: string | null;
+  allowReset?: boolean;
   questions?: Question[];
 }
 
@@ -276,6 +290,9 @@ export interface HomeworkAssignmentDto {
   isGraded: boolean;
   overallComment: string;
   classroomId: string;
+  attemptNumber?: number;
+  isExam?: boolean;
+  allowReset?: boolean;
   gradeSummary?: {
     awarded: number | null;
     totalWeight: number | null;

@@ -155,3 +155,12 @@ export async function getTeacherStudentAssignments(
     `/homework/teacher/${encodeURIComponent(teacherId)}/student/${encodeURIComponent(studentId)}/assignments`
   );
 }
+
+export async function resetAssignment(
+  assignmentId: string
+): Promise<{ message: string }> {
+  return serverFetch(
+    `/homework/assignment/${encodeURIComponent(assignmentId)}/reset`,
+    { method: 'POST' }
+  );
+}
