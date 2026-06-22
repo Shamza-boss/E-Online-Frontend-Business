@@ -170,13 +170,26 @@ export interface FileDto {
   institutionId: string;
   thumbnail?: string | null;
   fileName?: string | null;
-  /** @deprecated prefer fileSizeBytes — kept for backward compatibility */
+  /** @deprecated prefer fileSizeBytes */
   sizeBytes?: number | null;
   fileSizeBytes?: number | null;
   previewImageKey?: string | null;
   previewImageUrl?: string | null;
   uploadedAt?: string | null;
   uploadedByUserId?: string | null;
+}
+
+export interface LinkedClassroomDto {
+  id: string;
+  name: string;
+  academicLevelName?: string | null;
+  academicLevelId?: string | null;
+  subjectName?: string | null;
+}
+
+export interface LibraryFileDto extends FileDto {
+  linkedClassrooms: LinkedClassroomDto[];
+  linkedClassroomCount: number;
 }
 
 export interface VideoUploadResponse {

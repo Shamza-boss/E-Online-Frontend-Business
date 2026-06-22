@@ -1,11 +1,15 @@
 'use client';
 
 import useSWR from 'swr';
-import { FileDto } from '@/app/_lib/interfaces/types';
+import { useCallback, useMemo } from 'react';
+import { FileDto, LibraryFileDto } from '@/app/_lib/interfaces/types';
 import {
   getRepositoryFiles,
+  getRepositoryFilesPaged,
   toggleRepositoryFileVisibility,
+  type LibraryQueryParams,
 } from '@/app/_lib/actions/storage';
+import { PagedResult } from '@/app/_lib/interfaces/pagination';
 
 export const useLibraryFiles = () => {
   const { data, isLoading, isValidating, mutate } = useSWR<FileDto[]>(
@@ -20,6 +24,95 @@ export const useLibraryFiles = () => {
   return {
     files,
     isFetching,
+    mutate,
+  };
+};
+
+export interface UseLibraryFilesPagedParams extends LibraryQueryParams {
+  enabled?: boolean;
+}
+
+export const useLibraryFilesPaged = (params: UseLibraryFilesPagedParams) => {
+  const {
+    enabled = true,
+    pageNumber = 1,
+    pageSize = 20,
+    searchTerm,
+    sortBy,
+    sortDirection,
+    academicLevelId,
+    classroomId,
+    isPublic,
+    unlinkedOnly,
+  } = params;
+
+  const swrKey = useMemo(
+    () =>
+      enabled
+        ? [
+            'repository-files-paged',
+            pageNumber,
+            pageSize,
+            searchTerm ?? '',
+            sortBy ?? 'uploadedAt',
+            sortDirection ?? 'desc',
+            academicLevelId ?? '',
+            classroomId ?? '',
+            isPublic,
+            unlinkedOnly ?? false,
+          ]
+        : null,
+    [
+      enabled,
+      pageNumber,
+      pageSize,
+      searchTerm,
+      sortBy,
+      sortDirection,
+      academicLevelId,
+      classroomId,
+      isPublic,
+      unlinkedOnly,
+    ]
+  );
+
+  const fetcher = useCallback(
+    () =>
+      getRepositoryFilesPaged({
+        pageNumber,
+        pageSize,
+        searchTerm,
+        sortBy,
+        sortDirection,
+        academicLevelId,
+        classroomId,
+        isPublic,
+        unlinkedOnly,
+      }),
+    [
+      pageNumber,
+      pageSize,
+      searchTerm,
+      sortBy,
+      sortDirection,
+      academicLevelId,
+      classroomId,
+      isPublic,
+      unlinkedOnly,
+    ]
+  );
+
+  const { data, isLoading, isValidating, mutate } = useSWR<PagedResult<LibraryFileDto>>(
+    swrKey,
+    fetcher,
+    { keepPreviousData: true }
+  );
+
+  return {
+    result: data,
+    files: data?.items ?? [],
+    totalCount: data?.totalCount ?? 0,
+    isFetching: isLoading || isValidating,
     mutate,
   };
 };

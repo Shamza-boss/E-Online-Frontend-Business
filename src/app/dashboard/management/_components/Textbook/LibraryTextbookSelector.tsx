@@ -5,24 +5,18 @@ import {
   Box,
   InputAdornment,
   List,
-  ListItemButton,
-  ListItemText,
-  Paper,
   Skeleton,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { FileDto } from '@/app/_lib/interfaces/types';
+import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
+import TextbookListRow from '@/app/_lib/components/textbook/TextbookListRow';
 import { useLibraryFiles } from '@/app/dashboard/library/_components/hooks/useLibraryFiles';
-import {
-  extractTextbookName,
-  formatTextbookFileSize,
-  getFileSizeBytes,
-} from '@/app/_lib/utils/textbook';
+import { extractTextbookName } from '@/app/_lib/utils/textbook';
 
 interface LibraryTextbookSelectorProps {
   selectedFileId: string | null;
@@ -68,72 +62,67 @@ export default function LibraryTextbookSelector({
         }}
       />
 
-      <Paper
-        variant="outlined"
+      <OutlinedWrapper
         sx={{
+          display: 'flex',
+          flexDirection: 'column',
           flex: 1,
+          overflow: 'hidden',
+          minHeight: 0,
           maxHeight: 280,
-          overflow: 'auto',
-          borderRadius: 2,
         }}
       >
-        {isFetching ? (
-          <Stack spacing={0} sx={{ p: 1 }}>
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} height={56} sx={{ borderRadius: 1, mb: 0.5 }} />
-            ))}
-          </Stack>
-        ) : filteredFiles.length === 0 ? (
-          <Box
-            sx={{
-              p: 3,
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 1,
-            }}
-          >
-            <MenuBookIcon color="disabled" sx={{ fontSize: 40 }} />
-            <Typography variant="body2" color="text.secondary">
-              {files.length === 0
-                ? 'No textbooks in your library yet — upload one using the Upload new tab, or from the Library page.'
-                : 'No textbooks match your search.'}
-            </Typography>
-          </Box>
-        ) : (
-          <List dense disablePadding>
-            {filteredFiles.map((file) => {
-              const size = getFileSizeBytes(file);
-              const isSelected = selectedFileId === file.id;
-              return (
-                <ListItemButton
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {isFetching ? (
+            <Stack spacing={0} sx={{ p: 1 }}>
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} height={56} sx={{ borderRadius: 1, mb: 0.5 }} />
+              ))}
+            </Stack>
+          ) : filteredFiles.length === 0 ? (
+            <Box
+              sx={{
+                p: 3,
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1,
+                flex: 1,
+                justifyContent: 'center',
+              }}
+            >
+              <MenuBookIcon color="disabled" sx={{ fontSize: 40 }} />
+              <Typography variant="body2" color="text.secondary">
+                {files.length === 0
+                  ? 'No textbooks in your library yet — upload one using the Upload new tab, or from the Library page.'
+                  : 'No textbooks match your search.'}
+              </Typography>
+            </Box>
+          ) : (
+            <List dense disablePadding>
+              {filteredFiles.map((file) => (
+                <TextbookListRow
                   key={file.id}
-                  selected={isSelected}
+                  file={file}
+                  selected={selectedFileId === file.id}
                   disabled={disabled}
+                  showSelectedChip
                   onClick={() => onSelect(file)}
-                  sx={{
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    '&:last-child': { borderBottom: 'none' },
-                  }}
-                >
-                  <PictureAsPdfIcon
-                    sx={{ mr: 1.5, color: '#E53935', flexShrink: 0 }}
-                  />
-                  <ListItemText
-                    primary={extractTextbookName(file)}
-                    secondary={
-                      size != null ? formatTextbookFileSize(size) : 'PDF'
-                    }
-                    primaryTypographyProps={{ noWrap: true }}
-                  />
-                </ListItemButton>
-              );
-            })}
-          </List>
-        )}
-      </Paper>
+                />
+              ))}
+            </List>
+          )}
+        </Box>
+      </OutlinedWrapper>
 
       {!isFetching && files.length > 0 ? (
         <Typography variant="caption" color="text.secondary">

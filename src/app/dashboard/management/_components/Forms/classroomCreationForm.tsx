@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Card,
@@ -25,9 +24,6 @@ import {
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import ReplayIcon from '@mui/icons-material/Replay';
 import { useForm, getFormProps } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { useActionState } from 'react';
@@ -51,9 +47,9 @@ import TextbookSourceTabs, {
 } from '../Textbook/TextbookSourceTabs';
 import {
   fileDtoToTextbookSelection,
-  formatTextbookFileSize,
   type TextbookSelection,
 } from '@/app/_lib/utils/textbook';
+import TextbookPreviewPanel from '@/app/_lib/components/textbook/TextbookPreviewPanel';
 
 const ADD_SUBJECT = '__add_subject';
 const ADD_ACADEMIC = '__add_academic';
@@ -280,8 +276,19 @@ export default function ClassroomCreationForm({
       }
     : existingTextbook;
   const canSubmit = Boolean(effectiveTextbook);
-  const previewSrc =
-    textbookThumbnail ?? effectiveTextbook?.previewImageUrl ?? null;
+  const previewFile: FileDto | null = effectiveTextbook
+    ? {
+        id: selectedLibraryFileId ?? textbookAsset?.key ?? 'textbook',
+        fileKey: effectiveTextbook.key ?? '',
+        url: effectiveTextbook.url ?? '',
+        hash: effectiveTextbook.hash ?? '',
+        isPublic: false,
+        institutionId: '',
+        fileName: effectiveTextbook.fileName,
+        fileSizeBytes: effectiveTextbook.fileSizeBytes,
+        previewImageUrl: effectiveTextbook.previewImageUrl,
+      }
+    : null;
 
   const handleRemoveTextbook = () => {
     removeTextbookAsset();
@@ -338,67 +345,21 @@ export default function ClassroomCreationForm({
                         disabled={!isAdmin}
                       />
                     ) : (
-                      <Stack spacing={1}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Avatar variant="rounded">
-                            <PictureAsPdfIcon />
-                          </Avatar>
-                          <Box>
-                            <Typography fontWeight={600}>
-                              {textbookAsset?.name ?? effectiveTextbook?.fileName ?? 'Current course PDF'}
-                            </Typography>
-                            {(textbookAsset?.size ?? effectiveTextbook?.fileSizeBytes) ? (
-                              <Typography variant="body2" color="text.secondary">
-                                {formatTextbookFileSize(
-                                  Number(textbookAsset?.size ?? effectiveTextbook?.fileSizeBytes)
-                                )}
-                              </Typography>
-                            ) : null}
-                          </Box>
-                          <Chip
-                            color="success"
-                            icon={<CheckCircleOutlineIcon />}
-                            label="Ready"
-                            size="small"
-                            sx={{ ml: 'auto' }}
-                          />
-                        </Stack>
-
-                        {previewSrc ? (
-                          <Box
-                            component="img"
-                            src={previewSrc}
-                            alt="PDF preview"
-                            sx={{
-                              width: '100%',
-                              borderRadius: 2,
-                              boxShadow: 3,
-                              objectFit: 'cover',
-                            }}
-                          />
-                        ) : null}
-
-                        <Stack direction="row" spacing={1}>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={handleReplaceTextbook}
-                            startIcon={<ReplayIcon />}
-                            disabled={!isAdmin}
-                          >
-                            Replace PDF
-                          </Button>
-                          <Button
-                            variant="text"
-                            size="small"
-                            color="error"
-                            onClick={handleRemoveTextbook}
-                            disabled={!isAdmin}
-                          >
-                            Remove
-                          </Button>
-                        </Stack>
-                      </Stack>
+                      <TextbookPreviewPanel
+                        file={previewFile}
+                        title={
+                          textbookAsset?.name ??
+                          effectiveTextbook?.fileName ??
+                          'Current course PDF'
+                        }
+                        fileSizeBytes={
+                          textbookAsset?.size ?? effectiveTextbook?.fileSizeBytes
+                        }
+                        localPreviewUrl={textbookThumbnail}
+                        onReplace={handleReplaceTextbook}
+                        onRemove={handleRemoveTextbook}
+                        disabled={!isAdmin}
+                      />
                     )}
 
                     {uploadStage !== 'idle' && effectiveTextbook ? (

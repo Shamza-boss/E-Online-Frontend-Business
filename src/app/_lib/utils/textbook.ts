@@ -1,4 +1,4 @@
-import { FileDto } from '../interfaces/types';
+import { FileDto, LibraryFileDto } from '../interfaces/types';
 
 export interface TextbookSelection {
   key: string;
@@ -41,4 +41,30 @@ export function formatTextbookFileSize(bytes: number): string {
 export function extractTextbookName(file: FileDto): string {
   if (file.fileName) return file.fileName;
   return file.fileKey.split('_').pop() ?? file.fileKey;
+}
+
+export function formatLinkedCoursesSummary(
+  file: LibraryFileDto
+): string {
+  const linked = file.linkedClassrooms ?? [];
+  if (linked.length === 0) return 'Not linked to a course';
+  if (linked.length === 1) {
+    const c = linked[0];
+    const grade = c.academicLevelName ? `${c.academicLevelName} · ` : '';
+    return `${grade}${c.name}`;
+  }
+  return `${linked.length} courses`;
+}
+
+export function formatLinkedCoursesTooltip(file: LibraryFileDto): string {
+  const linked = file.linkedClassrooms ?? [];
+  if (linked.length === 0) return 'This textbook is not linked to any course yet.';
+  return linked
+    .map((c) => {
+      const parts = [c.name];
+      if (c.academicLevelName) parts.push(c.academicLevelName);
+      if (c.subjectName) parts.push(c.subjectName);
+      return parts.join(' · ');
+    })
+    .join('\n');
 }
