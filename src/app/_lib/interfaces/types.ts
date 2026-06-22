@@ -168,10 +168,15 @@ export interface FileDto {
   hash: string;
   isPublic: boolean;
   institutionId: string;
-  // New fields for metadata and thumbnail
-  thumbnail?: string | null; // Data URL or URL to the thumbnail image
+  thumbnail?: string | null;
   fileName?: string | null;
+  /** @deprecated prefer fileSizeBytes — kept for backward compatibility */
   sizeBytes?: number | null;
+  fileSizeBytes?: number | null;
+  previewImageKey?: string | null;
+  previewImageUrl?: string | null;
+  uploadedAt?: string | null;
+  uploadedByUserId?: string | null;
 }
 
 export interface VideoUploadResponse {

@@ -24,7 +24,6 @@ import {
   Typography,
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -37,6 +36,7 @@ import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import {
   AcademicLevelDto,
   ClassDto,
+  FileDto,
   SubjectDto,
 } from '@/app/_lib/interfaces/types';
 import { classroomSchema } from '@/app/_lib/schemas/management';
@@ -46,6 +46,14 @@ import CreateSubjectModal from '../Modals/CreateSubjectModal';
 import CreateAcademicsModal from '../Modals/CreateAcademicsModal';
 import { useAssetUpload } from '@/app/_lib/hooks/useAssetUpload';
 import { useClassroomLookups } from '../hooks/useClassroomLookups';
+import TextbookSourceTabs, {
+  type TextbookSource,
+} from '../Textbook/TextbookSourceTabs';
+import {
+  fileDtoToTextbookSelection,
+  formatTextbookFileSize,
+  type TextbookSelection,
+} from '@/app/_lib/utils/textbook';
 
 const ADD_SUBJECT = '__add_subject';
 const ADD_ACADEMIC = '__add_academic';
@@ -57,13 +65,6 @@ interface ClassroomCreationFormProps {
   mode?: 'create' | 'edit';
   initialClassroom?: ClassDto | null;
   isAdmin?: boolean;
-}
-
-function formatFileSize(bytes: number): string {
-  if (!bytes) return '0 KB';
-  const mb = bytes / (1024 * 1024);
-  if (mb >= 1) return `${mb.toFixed(1)} MB`;
-  return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
 export default function ClassroomCreationForm({
@@ -130,16 +131,7 @@ export default function ClassroomCreationForm({
   const [selectedSubject, setSelectedSubject] = useState(
     () => `${subjectId.initialValue ?? initialClassroom?.subjectId ?? ''}`
   );
-  const [existingTextbook, setExistingTextbook] = useState<{
-    key: string;
-    hash: string;
-    url: string;
-    fileName?: string;
-    fileSizeBytes?: number;
-    previewImageKey?: string;
-    uploadedAt?: string;
-    uploadedByUserId?: string;
-  } | null>(
+  const [existingTextbook, setExistingTextbook] = useState<TextbookSelection | null>(
     initialClassroom?.textbookKey
       ? {
           key: initialClassroom.textbookKey,
@@ -152,6 +144,10 @@ export default function ClassroomCreationForm({
           uploadedByUserId: initialClassroom.textbookUploadedByUserId ?? undefined,
         }
       : null
+  );
+  const [textbookSource, setTextbookSource] = useState<TextbookSource>('upload');
+  const [selectedLibraryFileId, setSelectedLibraryFileId] = useState<string | null>(
+    null
   );
 
   useEffect(() => {
@@ -212,8 +208,19 @@ export default function ClassroomCreationForm({
   useEffect(() => {
     if (textbookAsset) {
       setExistingTextbook(null);
+      setSelectedLibraryFileId(null);
     }
   }, [textbookAsset]);
+
+  const handleLibrarySelect = React.useCallback(
+    (file: FileDto) => {
+      removeTextbookAsset();
+      setExistingTextbook(fileDtoToTextbookSelection(file));
+      setSelectedLibraryFileId(file.id);
+      showAlert('success', 'Textbook selected from your library.');
+    },
+    [removeTextbookAsset, showAlert]
+  );
 
   const handleUploadClick = () => fileInputRef.current?.click();
 
@@ -273,10 +280,19 @@ export default function ClassroomCreationForm({
       }
     : existingTextbook;
   const canSubmit = Boolean(effectiveTextbook);
+  const previewSrc =
+    textbookThumbnail ?? effectiveTextbook?.previewImageUrl ?? null;
 
   const handleRemoveTextbook = () => {
     removeTextbookAsset();
     setExistingTextbook(null);
+    setSelectedLibraryFileId(null);
+  };
+
+  const handleReplaceTextbook = () => {
+    removeTextbookAsset();
+    setExistingTextbook(null);
+    setSelectedLibraryFileId(null);
   };
 
   return (
@@ -284,9 +300,9 @@ export default function ClassroomCreationForm({
       <DialogContent dividers sx={{ padding: 0 }}>
         <Stack spacing={1} sx={{ width: '100%', p: 1 }}>
           <Alert severity="info">
-            Upload a single PDF textbook, confirm the course owner, and
-            populate subjects or academic levels inline without leaving this
-            screen.
+            Upload a new PDF or choose an existing textbook from your library,
+            confirm the course owner, and populate subjects or academic levels
+            inline without leaving this screen.
           </Alert>
 
           <Box component="form" {...formProps} action={action} noValidate>
@@ -304,44 +320,23 @@ export default function ClassroomCreationForm({
                 >
                   <CardHeader
                     title="Course Textbook"
-                    subheader="Upload a PDF students can preview before every module"
+                    subheader="Upload a new PDF or choose one from your library"
                   />
                   <CardContent
                     sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}
                   >
-                    <input
-                      ref={fileInputRef}
-                      hidden
-                      type="file"
-                      accept="application/pdf"
-                      onChange={handleFileChange}
-                    />
-
                     {!effectiveTextbook ? (
-                      <Box
-                        onClick={handleUploadClick}
-                        role="button"
-                        tabIndex={0}
-                        sx={{
-                          border: '1px dashed',
-                          borderColor: 'divider',
-                          borderRadius: 3,
-                          p: 1,
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 1,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <CloudUploadIcon fontSize="large" color="primary" />
-                        <Typography variant="h6">Click to upload PDF</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Upload a single PDF up to 100MB.
-                        </Typography>
-                      </Box>
+                      <TextbookSourceTabs
+                        source={textbookSource}
+                        onSourceChange={setTextbookSource}
+                        fileInputRef={fileInputRef}
+                        onUploadClick={handleUploadClick}
+                        onFileChange={handleFileChange}
+                        uploadStage={uploadStage}
+                        selectedLibraryFileId={selectedLibraryFileId}
+                        onLibrarySelect={handleLibrarySelect}
+                        disabled={!isAdmin}
+                      />
                     ) : (
                       <Stack spacing={1}>
                         <Stack direction="row" spacing={1} alignItems="center">
@@ -354,7 +349,7 @@ export default function ClassroomCreationForm({
                             </Typography>
                             {(textbookAsset?.size ?? effectiveTextbook?.fileSizeBytes) ? (
                               <Typography variant="body2" color="text.secondary">
-                                {formatFileSize(
+                                {formatTextbookFileSize(
                                   Number(textbookAsset?.size ?? effectiveTextbook?.fileSizeBytes)
                                 )}
                               </Typography>
@@ -369,10 +364,10 @@ export default function ClassroomCreationForm({
                           />
                         </Stack>
 
-                        {textbookThumbnail && (
+                        {previewSrc ? (
                           <Box
                             component="img"
-                            src={textbookThumbnail}
+                            src={previewSrc}
                             alt="PDF preview"
                             sx={{
                               width: '100%',
@@ -381,13 +376,13 @@ export default function ClassroomCreationForm({
                               objectFit: 'cover',
                             }}
                           />
-                        )}
+                        ) : null}
 
                         <Stack direction="row" spacing={1}>
                           <Button
                             variant="outlined"
                             size="small"
-                            onClick={handleUploadClick}
+                            onClick={handleReplaceTextbook}
                             startIcon={<ReplayIcon />}
                             disabled={!isAdmin}
                           >
@@ -406,7 +401,7 @@ export default function ClassroomCreationForm({
                       </Stack>
                     )}
 
-                    {uploadStage !== 'idle' && (
+                    {uploadStage !== 'idle' && effectiveTextbook ? (
                       <Box>
                         <LinearProgress sx={{ borderRadius: 999 }} />
                         <Typography variant="caption" color="text.secondary">
@@ -415,7 +410,7 @@ export default function ClassroomCreationForm({
                             : 'Uploading to secure storage…'}
                         </Typography>
                       </Box>
-                    )}
+                    ) : null}
 
                     <Typography variant="caption" color="text.secondary">
                       This PDF file is pinned to the course and available in the
