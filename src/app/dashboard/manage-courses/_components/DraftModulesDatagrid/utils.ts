@@ -62,6 +62,25 @@ export const handleUnpublishAction = async (
   }
 };
 
+const resolveDeleteErrorMessage = (error: unknown): string => {
+  const message =
+    error instanceof Error ? error.message : String(error ?? '');
+
+  if (message.includes('Only draft modules can be deleted')) {
+    return 'Only draft modules can be deleted.';
+  }
+
+  if (
+    message.includes('Unauthorized') ||
+    message.includes('401') ||
+    message.toLowerCase().includes('unauthorized')
+  ) {
+    return 'Only the course instructor can delete modules for this course.';
+  }
+
+  return "Couldn't delete the module. Please try again in a moment.";
+};
+
 export const handleDeleteAction = async (
   homeworkId: string,
   teacherId: string,
@@ -77,9 +96,6 @@ export const handleDeleteAction = async (
     onAfterChange?.();
   } catch (error: any) {
     console.error('Failed to delete module', error);
-    showAlert(
-      'error',
-      "Couldn't delete the module. Please try again in a moment."
-    );
+    showAlert('error', resolveDeleteErrorMessage(error));
   }
 };

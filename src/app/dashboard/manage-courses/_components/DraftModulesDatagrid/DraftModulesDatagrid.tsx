@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Typography } from '@mui/material';
 import useSWR from 'swr';
 import type { Homework } from '@/app/_lib/interfaces/types';
@@ -11,6 +11,7 @@ import {
     softDeleteHomework,
 } from '@/app/_lib/actions/homework';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
+import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 import EDataGrid from '../../../_components/EDataGrid';
 import type { ModulesPanelProps } from './interfaces';
 import { NoRowsContainer } from './elements';
@@ -33,6 +34,10 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
     onRowClick,
 }) => {
     const { showAlert } = useAlert();
+    const [pendingDelete, setPendingDelete] = useState<{
+        homeworkId: string;
+        title: string;
+    } | null>(null);
     const { data, isLoading, mutate } = useSWR<Homework[]>(
         teacherId && classroomId
             ? ['teacher-drafts', teacherId, classroomId, refreshIndex]
@@ -55,16 +60,45 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
         [mutate, onAfterChange, showAlert, teacherId],
     );
 
-    const handleDelete = useCallback(
-        (homeworkId: string) =>
-            handleDeleteAction(homeworkId, teacherId, softDeleteHomework, showAlert, mutate, onAfterChange),
-        [mutate, onAfterChange, showAlert, teacherId],
+    const handleRequestDelete = useCallback(
+        (homeworkId: string, title: string) => {
+            setPendingDelete({ homeworkId, title });
+        },
+        [],
     );
 
+    const handleCancelDelete = useCallback(() => {
+        setPendingDelete(null);
+    }, []);
+
+    const handleConfirmDelete = useCallback(async () => {
+        if (!pendingDelete) return;
+
+        const { homeworkId } = pendingDelete;
+        setPendingDelete(null);
+
+        await handleDeleteAction(
+            homeworkId,
+            teacherId,
+            softDeleteHomework,
+            showAlert,
+            mutate,
+            onAfterChange,
+        );
+    }, [mutate, onAfterChange, pendingDelete, showAlert, teacherId]);
+
     const columns = useMemo(
-        () => buildColumns(onEdit, handlePublish, handleUnpublish, handleDelete),
-        [handleDelete, handlePublish, handleUnpublish, onEdit],
+        () => buildColumns(onEdit, handlePublish, handleUnpublish, handleRequestDelete),
+        [handlePublish, handleRequestDelete, handleUnpublish, onEdit],
     );
+
+    const deleteDialogTitle = pendingDelete?.title
+        ? `Delete "${pendingDelete.title}"?`
+        : 'Delete module?';
+
+    const deleteDialogDescription = pendingDelete
+        ? `You are about to delete the draft module "${pendingDelete.title}". It will be removed from this course and cannot be recovered.`
+        : undefined;
 
     const NoRowsOverlay = useMemo(
         () =>
@@ -103,29 +137,39 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
     );
 
     return (
-        <EDataGrid
-            rows={rows}
-            columns={columns}
-            getRowId={(row) => row.__gridId}
-            getRowClassName={(params) =>
-                params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
-            }
-            loading={isLoading}
-            onRowClick={handleRowClick}
-            sx={{
-                '& .MuiDataGrid-row': {
-                    cursor: 'pointer',
-                },
-            }}
-            pageSizeOptions={[5, 10, 25]}
-            initialState={{
-                pagination: {
-                    paginationModel: { pageSize: 10, page: 0 },
-                },
-            }}
-            slots={{ noRowsOverlay: NoRowsOverlay }}
-            slotProps={dataGridSlotProps}
-        />
+        <>
+            <EDataGrid
+                rows={rows}
+                columns={columns}
+                getRowId={(row) => row.__gridId}
+                getRowClassName={(params) =>
+                    params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
+                }
+                loading={isLoading}
+                onRowClick={handleRowClick}
+                sx={{
+                    '& .MuiDataGrid-row': {
+                        cursor: 'pointer',
+                    },
+                }}
+                pageSizeOptions={[5, 10, 25]}
+                initialState={{
+                    pagination: {
+                        paginationModel: { pageSize: 10, page: 0 },
+                    },
+                }}
+                slots={{ noRowsOverlay: NoRowsOverlay }}
+                slotProps={dataGridSlotProps}
+            />
+            <ConfirmDialog
+                open={Boolean(pendingDelete)}
+                onCancel={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                title={deleteDialogTitle}
+                description={deleteDialogDescription}
+                confirmText="Delete"
+            />
+        </>
     );
 };
 
