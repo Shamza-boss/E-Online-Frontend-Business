@@ -12,11 +12,13 @@ import ClassManagementDataGrid from './Tables/classManagementDataGrid';
 interface ManagementTabsProps {
     activeTab: string;
     onTabChange: (event: React.SyntheticEvent, newValue: string) => void;
+    searchTerm: string;
 }
 
 export default function ManagementTabs({
     activeTab,
     onTabChange,
+    searchTerm,
 }: ManagementTabsProps) {
     return (
         <TabContext value={activeTab}>
@@ -28,12 +30,18 @@ export default function ManagementTabs({
             </Box>
             <DataGridTabPanel value="1" sx={{ flex: 1 }}>
                 <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
-                    <UserManagementDataGrid active={activeTab === '1'} />
+                    <UserManagementDataGrid
+                      active={activeTab === '1'}
+                      searchTerm={searchTerm}
+                    />
                 </Box>
             </DataGridTabPanel>
             <DataGridTabPanel value="2" sx={{ flex: 1 }}>
                 <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
-                    <ClassManagementDataGrid active={activeTab === '2'} />
+                    <ClassManagementDataGrid
+                      active={activeTab === '2'}
+                      searchTerm={searchTerm}
+                    />
                 </Box>
             </DataGridTabPanel>
         </TabContext>
