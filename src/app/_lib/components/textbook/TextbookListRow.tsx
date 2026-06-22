@@ -11,9 +11,9 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { FileDto } from '@/app/_lib/interfaces/types';
 import {
   extractTextbookName,
-  formatTextbookFileSize,
   getFileSizeBytes,
 } from '@/app/_lib/utils/textbook';
+import { getPdfSizeChipStyle } from '@/app/dashboard/library/_components/libraryChipStyles';
 
 interface TextbookListRowProps {
   file: FileDto;
@@ -32,6 +32,7 @@ export default function TextbookListRow({
 }: TextbookListRowProps) {
   const size = getFileSizeBytes(file);
   const name = extractTextbookName(file);
+  const sizeChip = getPdfSizeChipStyle(size);
 
   return (
     <ListItemButton
@@ -55,11 +56,7 @@ export default function TextbookListRow({
         {showSelectedChip && selected ? (
           <Chip size="small" label="Selected" color="primary" variant="outlined" />
         ) : null}
-        <Chip
-          size="small"
-          label={size != null ? formatTextbookFileSize(size) : 'Size unknown'}
-          variant="outlined"
-        />
+        <Chip size="small" label={sizeChip.label} sx={sizeChip.sx} />
       </Stack>
     </ListItemButton>
   );

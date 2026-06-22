@@ -68,3 +68,10 @@ export function formatLinkedCoursesTooltip(file: LibraryFileDto): string {
     })
     .join('\n');
 }
+
+export function formatLinkedCoursesDisplay(file: LibraryFileDto): string {
+  const linked = file.linkedClassrooms ?? [];
+  if (linked.length === 0) return 'Not linked';
+  if (linked.length === 1) return linked[0].name;
+  return `${linked.length} courses`;
+}

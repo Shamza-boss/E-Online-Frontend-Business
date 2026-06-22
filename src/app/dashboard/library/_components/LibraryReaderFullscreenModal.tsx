@@ -5,11 +5,12 @@ import {
   AppBar,
   Box,
   Button,
-  Chip,
   Dialog,
+  Link,
   Slide,
   Stack,
   Toolbar,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
@@ -18,9 +19,11 @@ import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 import { LibraryFileDto } from '@/app/_lib/interfaces/types';
 import {
   extractTextbookName,
-  formatTextbookFileSize,
+  formatLinkedCoursesTooltip,
   getFileSizeBytes,
 } from '@/app/_lib/utils/textbook';
+import { LibrarySizeChip, LibraryVisibilityChip } from './LibraryChips';
+import { formatLibraryDate } from './libraryChipStyles';
 import {
   ContentArea,
   FlexOutlinedWrapper,
@@ -118,32 +121,26 @@ export default function LibraryReaderFullscreenModal({
               <Typography variant="subtitle1" fontWeight={600} noWrap sx={{ maxWidth: 280 }}>
                 {extractTextbookName(file)}
               </Typography>
-              {fileSize != null ? (
-                <Chip
-                  size="small"
-                  label={formatTextbookFileSize(fileSize)}
-                  variant="outlined"
-                />
+              <LibrarySizeChip sizeBytes={fileSize} />
+              <LibraryVisibilityChip isPublic={file.isPublic} />
+              {(file.linkedClassrooms ?? []).length === 0 ? (
+                <Typography variant="caption" color="text.secondary" fontStyle="italic">
+                  Not linked
+                </Typography>
               ) : (
-                <Chip size="small" label="Size unknown" variant="outlined" />
+                (file.linkedClassrooms ?? []).slice(0, 2).map((classroom) => (
+                  <Tooltip key={classroom.id} title={formatLinkedCoursesTooltip(file)}>
+                    <Link
+                      href={buildCourseUrl(classroom)}
+                      variant="caption"
+                      underline="hover"
+                      sx={{ whiteSpace: 'nowrap' }}
+                    >
+                      {classroom.name}
+                    </Link>
+                  </Tooltip>
+                ))
               )}
-              <Chip
-                size="small"
-                label={file.isPublic ? 'Public' : 'Private'}
-                color={file.isPublic ? 'success' : 'default'}
-                variant="outlined"
-              />
-              {(file.linkedClassrooms ?? []).slice(0, 2).map((classroom) => (
-                <Chip
-                  key={classroom.id}
-                  size="small"
-                  label={classroom.name}
-                  component="a"
-                  href={buildCourseUrl(classroom)}
-                  clickable
-                  variant="outlined"
-                />
-              ))}
             </Stack>
           ) : null}
         </Toolbar>

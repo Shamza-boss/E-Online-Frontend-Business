@@ -6,17 +6,17 @@ import {
   Box,
   Button,
   Chip,
-  LinearProgress,
   Paper,
   Stack,
   Typography,
 } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { PdfMeta } from '../../interfaces/types';
+import { FileDto, PdfMeta } from '../../interfaces/types';
 import { uploadPdfAsset } from '../../services/storageUpload';
+import { fileDtoToPdfMeta } from '../../utils/media';
 import PDFViewer from '../PDFViewer/PDFViewer';
+import PdfSourceTabs, { type PdfSource } from './PdfSourceTabs';
 
 interface PdfUploadFieldProps {
   value?: PdfMeta;
@@ -43,6 +43,10 @@ export const PdfUploadField: React.FC<PdfUploadFieldProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<PdfSource>('upload');
+  const [selectedLibraryFileId, setSelectedLibraryFileId] = useState<string | null>(
+    null
+  );
 
   const handleSelectFile = () => {
     fileInputRef.current?.click();
@@ -74,6 +78,7 @@ export const PdfUploadField: React.FC<PdfUploadFieldProps> = ({
 
     setError(null);
     setUploading(true);
+    setSelectedLibraryFileId(null);
 
     try {
       const result = await uploadPdfAsset(file);
@@ -99,42 +104,37 @@ export const PdfUploadField: React.FC<PdfUploadFieldProps> = ({
     }
   };
 
+  const handleLibrarySelect = (file: FileDto) => {
+    setError(null);
+    setSelectedLibraryFileId(file.id);
+    onChange(fileDtoToPdfMeta(file));
+  };
+
   const handleRemove = () => {
     onChange(undefined);
     setError(null);
+    setSelectedLibraryFileId(null);
     resetInput();
+  };
+
+  const handleReplace = () => {
+    handleRemove();
   };
 
   return (
     <Box sx={{ mt: 1, mb: 2 }}>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/pdf"
-        style={{ display: 'none' }}
-        onChange={handleFileChange}
-        disabled={disabled || uploading}
-      />
-
       {!value && (
-        <Button
-          variant="outlined"
-          startIcon={<CloudUploadIcon />}
-          onClick={handleSelectFile}
-          disabled={disabled || uploading}
-          sx={{ py: 1.5 }}
-        >
-          Upload PDF
-        </Button>
-      )}
-
-      {uploading && (
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Uploading document…
-          </Typography>
-          <LinearProgress />
-        </Box>
+        <PdfSourceTabs
+          source={source}
+          onSourceChange={setSource}
+          fileInputRef={fileInputRef}
+          onUploadClick={handleSelectFile}
+          onFileChange={handleFileChange}
+          uploading={uploading}
+          selectedLibraryFileId={selectedLibraryFileId}
+          onLibrarySelect={handleLibrarySelect}
+          disabled={disabled}
+        />
       )}
 
       {value && !uploading && (
@@ -154,7 +154,7 @@ export const PdfUploadField: React.FC<PdfUploadFieldProps> = ({
               <Button
                 size="small"
                 color="primary"
-                onClick={handleSelectFile}
+                onClick={handleReplace}
                 disabled={disabled}
               >
                 Replace PDF

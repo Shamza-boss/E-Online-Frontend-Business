@@ -139,22 +139,12 @@ export default function StudentManagementComponent({
                     <TabContext value={value}>
                         <TabHeaderBox sx={{ borderBottom: 1, borderColor: 'divider' }}>
                             <TabList onChange={handleChange} aria-label="manage courses">
-                                <Tab label="Trainees" value="1" />
-                                <Tab label="All modules" value="2" />
+                                <Tab label="All modules" value="1" />
+                                <Tab label="Trainees" value="2" />
                             </TabList>
                         </TabHeaderBox>
 
                         <DataGridTabPanel value="1">
-                            <FlexMinHeightBox>
-                                <StudentDatagridTable
-                                    userData={userData}
-                                    usersLoading={false}
-                                    handleSeeHomeworkClick={handleSeeHomeworkClick}
-                                />
-                            </FlexMinHeightBox>
-                        </DataGridTabPanel>
-
-                        <DataGridTabPanel value="2">
                             <FlexMinHeightBox>
                                 <ModulesDataGrid
                                     teacherId={classDetails.teacherId}
@@ -163,6 +153,16 @@ export default function StudentManagementComponent({
                                     onEdit={onEditDraftModule}
                                     onAfterChange={onRefresh}
                                     onRowClick={(homeworkId) => onEditDraftModule(homeworkId)}
+                                />
+                            </FlexMinHeightBox>
+                        </DataGridTabPanel>
+
+                        <DataGridTabPanel value="2">
+                            <FlexMinHeightBox>
+                                <StudentDatagridTable
+                                    userData={userData}
+                                    usersLoading={false}
+                                    handleSeeHomeworkClick={handleSeeHomeworkClick}
                                 />
                             </FlexMinHeightBox>
                         </DataGridTabPanel>

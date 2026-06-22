@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   GridActionsCellItem,
@@ -9,18 +9,19 @@ import {
   GridRowParams,
   GridSortModel,
 } from '@mui/x-data-grid';
-import { Chip, Tooltip } from '@mui/material';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+import { Box, Tooltip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SchoolIcon from '@mui/icons-material/School';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
 import { LibraryFileDto } from '@/app/_lib/interfaces/types';
 import {
   extractTextbookName,
+  formatLinkedCoursesDisplay,
   formatLinkedCoursesTooltip,
-  formatTextbookFileSize,
   getFileSizeBytes,
 } from '@/app/_lib/utils/textbook';
+import { formatLibraryDate } from './libraryChipStyles';
+import { LibrarySizeChip, LibraryVisibilityChip } from './LibraryChips';
 
 interface LibraryTableProps {
   files: LibraryFileDto[];
@@ -37,13 +38,6 @@ function buildCourseUrl(classroom: { id: string; name: string }): string {
   return `/dashboard/courses/${encodeURIComponent(`${classroom.name}~${classroom.id}`)}`;
 }
 
-function linkedCoursesLabel(file: LibraryFileDto): string {
-  const linked = file.linkedClassrooms ?? [];
-  if (linked.length === 0) return 'Unlinked';
-  if (linked.length === 1) return linked[0].name;
-  return `${linked.length} courses`;
-}
-
 function gradesLabel(file: LibraryFileDto): string {
   const grades = [
     ...new Set(
@@ -53,6 +47,34 @@ function gradesLabel(file: LibraryFileDto): string {
     ),
   ];
   return grades.length ? grades.join(', ') : '—';
+}
+
+function GridCellText({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title?: string;
+}) {
+  const content = (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        height: '100%',
+        width: '100%',
+        overflow: 'hidden',
+      }}
+    >
+      <Typography variant="body2" noWrap component="span" sx={{ maxWidth: '100%' }}>
+        {children}
+      </Typography>
+    </Box>
+  );
+
+  if (!title) return content;
+
+  return <Tooltip title={title}>{content}</Tooltip>;
 }
 
 export default function LibraryTable({
@@ -87,16 +109,18 @@ export default function LibraryTable({
         flex: 0.6,
         minWidth: 110,
         valueGetter: (_, row) => getFileSizeBytes(row),
-        renderCell: ({ row }) => {
-          const size = getFileSizeBytes(row);
-          return (
-            <Chip
-              size="small"
-              variant="outlined"
-              label={size != null ? formatTextbookFileSize(size) : 'Size unknown'}
-            />
-          );
-        },
+        renderCell: ({ row }) => (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%',
+              width: '100%',
+            }}
+          >
+            <LibrarySizeChip sizeBytes={getFileSizeBytes(row)} />
+          </Box>
+        ),
       },
       {
         field: 'linkedClassrooms',
@@ -104,16 +128,11 @@ export default function LibraryTable({
         flex: 1.2,
         minWidth: 150,
         sortable: false,
+        valueGetter: (_, row) => formatLinkedCoursesDisplay(row),
         renderCell: ({ row }) => (
-          <Tooltip title={formatLinkedCoursesTooltip(row)}>
-            <Chip
-              size="small"
-              icon={<MenuBookIcon />}
-              label={linkedCoursesLabel(row)}
-              variant="outlined"
-              sx={{ maxWidth: '100%' }}
-            />
-          </Tooltip>
+          <GridCellText title={formatLinkedCoursesTooltip(row)}>
+            {formatLinkedCoursesDisplay(row)}
+          </GridCellText>
         ),
       },
       {
@@ -122,14 +141,13 @@ export default function LibraryTable({
         flex: 0.8,
         minWidth: 120,
         sortable: false,
+        valueGetter: (_, row) => gradesLabel(row),
         renderCell: ({ row }) => {
           const label = gradesLabel(row);
-          return label === '—' ? (
-            <Chip size="small" label="—" variant="outlined" />
-          ) : (
-            <Tooltip title={label}>
-              <Chip size="small" label={label} variant="outlined" sx={{ maxWidth: '100%' }} />
-            </Tooltip>
+          return (
+            <GridCellText title={label === '—' ? undefined : label}>
+              {label}
+            </GridCellText>
           );
         },
       },
@@ -138,13 +156,17 @@ export default function LibraryTable({
         headerName: 'Visibility',
         flex: 0.7,
         minWidth: 100,
-        renderCell: ({ value }) => (
-          <Chip
-            size="small"
-            label={value ? 'Public' : 'Private'}
-            color={value ? 'success' : 'default'}
-            variant="outlined"
-          />
+        renderCell: ({ row }) => (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%',
+              width: '100%',
+            }}
+          >
+            <LibraryVisibilityChip isPublic={row.isPublic} />
+          </Box>
         ),
       },
       {
@@ -152,8 +174,7 @@ export default function LibraryTable({
         headerName: 'Uploaded',
         flex: 0.8,
         minWidth: 120,
-        valueFormatter: (value: string | null) =>
-          value ? new Date(value).toLocaleDateString() : '—',
+        valueFormatter: (value: string | null) => formatLibraryDate(value),
       },
       {
         field: 'actions',
@@ -230,6 +251,12 @@ export default function LibraryTable({
       pageSizeOptions={[10, 20, 50]}
       disableRowSelectionOnClick
       slotProps={dataGridSlotProps}
+      sx={{
+        '& .MuiDataGrid-cell': {
+          display: 'flex',
+          alignItems: 'center',
+        },
+      }}
     />
   );
 }

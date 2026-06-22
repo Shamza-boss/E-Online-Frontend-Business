@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Pagination } from '@mui/material';
+import { Box, Pagination, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
 import useSWR from 'swr';
 
@@ -25,7 +25,9 @@ import ManageDialog from './ManageDialog';
 import PreviewDialog from './PreviewDialog';
 import LibraryReaderFullscreenModal from './LibraryReaderFullscreenModal';
 
-const DEFAULT_PAGE_SIZE = 20;
+const TABLE_PAGE_SIZE = 20;
+const CARD_DEFAULT_PAGE_SIZE = 5;
+const CARD_MAX_PAGE_SIZE = 10;
 const VIEW_MODE_KEY = 'library-view-mode';
 
 const extractName = (fileKey: string) => fileKey.split('_').pop() ?? fileKey;
@@ -53,9 +55,13 @@ export default function LibraryView() {
   const [searchTerm, setSearchTerm] = useState('');
   const [academicLevelId, setAcademicLevelId] = useState('');
   const [unlinkedOnly, setUnlinkedOnly] = useState(false);
+  const [cardPagination, setCardPagination] = useState({
+    page: 0,
+    pageSize: CARD_DEFAULT_PAGE_SIZE,
+  });
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: DEFAULT_PAGE_SIZE,
+    pageSize: TABLE_PAGE_SIZE,
   });
   const [sortModel, setSortModel] = useState<GridSortModel>([
     { field: 'uploadedAt', sort: 'desc' },
@@ -75,15 +81,21 @@ export default function LibraryView() {
   const debouncedSearch = useDebouncedValue(searchTerm, 300);
 
   useEffect(() => {
+    setCardPagination((prev) => ({ ...prev, page: 0 }));
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, [debouncedSearch, academicLevelId, unlinkedOnly]);
 
   const sortField = sortModel[0]?.field ?? 'uploadedAt';
   const sortDirection = sortModel[0]?.sort ?? 'desc';
 
+  const activePageNumber =
+    viewMode === 'cards' ? cardPagination.page + 1 : paginationModel.page + 1;
+  const activePageSize =
+    viewMode === 'cards' ? cardPagination.pageSize : paginationModel.pageSize;
+
   const { files, totalCount, isFetching, mutate } = useLibraryFilesPaged({
-    pageNumber: paginationModel.page + 1,
-    pageSize: paginationModel.pageSize,
+    pageNumber: activePageNumber,
+    pageSize: activePageSize,
     searchTerm: debouncedSearch || undefined,
     sortBy: sortField,
     sortDirection: sortDirection === 'asc' ? 'asc' : 'desc',
@@ -187,6 +199,23 @@ export default function LibraryView() {
     [manageFiles, manageOpen]
   );
 
+  const cardPageCount = Math.max(1, Math.ceil(rowCount / cardPagination.pageSize));
+
+  const handleCardPageChange = useCallback(
+    (_event: React.ChangeEvent<unknown>, page: number) => {
+      setCardPagination((prev) => ({ ...prev, page: page - 1 }));
+    },
+    []
+  );
+
+  const handleCardPageSizeChange = useCallback(
+    (_event: React.MouseEvent<HTMLElement>, value: number | null) => {
+      if (value !== CARD_DEFAULT_PAGE_SIZE && value !== CARD_MAX_PAGE_SIZE) return;
+      setCardPagination({ page: 0, pageSize: value });
+    },
+    []
+  );
+
   return (
     <Box
       sx={{
@@ -239,29 +268,49 @@ export default function LibraryView() {
                 onRead={handleRead}
               />
             </Box>
-            {rowCount > paginationModel.pageSize ? (
-              <Box
+            {rowCount > 0 ? (
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
                 sx={{
                   flexShrink: 0,
                   mt: 2,
-                  display: 'flex',
-                  justifyContent: 'center',
+                  pt: 2,
+                  borderTop: 1,
+                  borderColor: 'divider',
                 }}
               >
+                <ToggleButtonGroup
+                  size="small"
+                  exclusive
+                  value={cardPagination.pageSize}
+                  onChange={handleCardPageSizeChange}
+                  aria-label="Cards per page"
+                >
+                  <ToggleButton value={CARD_DEFAULT_PAGE_SIZE}>
+                    5 per page
+                  </ToggleButton>
+                  <ToggleButton value={CARD_MAX_PAGE_SIZE}>
+                    10 per page
+                  </ToggleButton>
+                </ToggleButtonGroup>
                 <Pagination
-                  count={Math.max(
-                    1,
-                    Math.ceil(rowCount / paginationModel.pageSize)
-                  )}
-                  page={paginationModel.page + 1}
-                  onChange={(_, page) =>
-                    setPaginationModel((prev) => ({ ...prev, page: page - 1 }))
-                  }
+                  count={cardPageCount}
+                  page={cardPagination.page + 1}
+                  onChange={handleCardPageChange}
                   color="primary"
+                  variant="outlined"
+                  shape="rounded"
                   showFirstButton
                   showLastButton
+                  disabled={isFetching}
                 />
-              </Box>
+                <Typography variant="caption" color="text.secondary">
+                  {rowCount} textbook{rowCount === 1 ? '' : 's'} total
+                </Typography>
+              </Stack>
             ) : null}
           </>
         ) : (

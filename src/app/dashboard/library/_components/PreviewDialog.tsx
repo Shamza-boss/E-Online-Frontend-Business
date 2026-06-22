@@ -8,7 +8,6 @@ import {
   Box,
   Stack,
   Typography,
-  Chip,
   Link,
   Button,
 } from '@mui/material';
@@ -18,9 +17,10 @@ import { FileDto, LibraryFileDto } from '@/app/_lib/interfaces/types';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 import {
   extractTextbookName,
-  formatTextbookFileSize,
   getFileSizeBytes,
 } from '@/app/_lib/utils/textbook';
+import { LibrarySizeChip, LibraryVisibilityChip } from './LibraryChips';
+import { formatLibraryDate } from './libraryChipStyles';
 import { FlexOutlinedWrapper } from '@/app/dashboard/courses/_components/Modals/FullscreenClassroomModal/elements';
 
 interface PreviewDialogProps {
@@ -92,28 +92,13 @@ export default function PreviewDialog({
                 <Typography variant="subtitle2" color="text.secondary">
                   Details
                 </Typography>
-                <Chip
-                  size="small"
-                  variant="outlined"
-                  label={
-                    fileSize != null
-                      ? formatTextbookFileSize(fileSize)
-                      : 'Size unknown'
-                  }
-                  sx={{ alignSelf: 'flex-start' }}
-                />
+                <LibrarySizeChip sizeBytes={fileSize} />
                 {file.uploadedAt ? (
                   <Typography variant="body2">
-                    Uploaded: {new Date(file.uploadedAt).toLocaleDateString()}
+                    Uploaded: {formatLibraryDate(file.uploadedAt)}
                   </Typography>
                 ) : null}
-                <Chip
-                  size="small"
-                  label={file.isPublic ? 'Public' : 'Private'}
-                  color={file.isPublic ? 'success' : 'default'}
-                  variant="outlined"
-                  sx={{ alignSelf: 'flex-start' }}
-                />
+                <LibraryVisibilityChip isPublic={file.isPublic} />
 
                 <Typography variant="subtitle2" color="text.secondary" sx={{ pt: 1 }}>
                   Linked courses

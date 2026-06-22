@@ -4,18 +4,13 @@ import { memo, useCallback } from 'react';
 import {
   Box,
   Button,
-  Chip,
   Skeleton,
   Typography,
   Tooltip,
   Stack,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import PublicIcon from '@mui/icons-material/Public';
-import LockIcon from '@mui/icons-material/Lock';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import StorageIcon from '@mui/icons-material/Storage';
 import { LibraryFileDto } from '@/app/_lib/interfaces/types';
 import {
   StyledCard,
@@ -24,11 +19,11 @@ import {
 import { useLazyCardThumbnail } from './hooks/useLazyCardThumbnail';
 import {
   extractTextbookName,
-  formatLinkedCoursesSummary,
+  formatLinkedCoursesDisplay,
   formatLinkedCoursesTooltip,
-  formatTextbookFileSize,
   getFileSizeBytes,
 } from '@/app/_lib/utils/textbook';
+import { LibrarySizeChip, LibraryVisibilityChip } from './LibraryChips';
 
 interface LibraryCardProps {
   file: LibraryFileDto;
@@ -40,6 +35,7 @@ const libraryAccent = '#3B82F6';
 function LibraryCard({ file, onRead }: LibraryCardProps) {
   const { ref, thumbnail, isLoading } = useLazyCardThumbnail(file);
   const fileSize = getFileSizeBytes(file);
+  const linked = file.linkedClassrooms ?? [];
 
   const handleRead = useCallback(
     (event: React.MouseEvent) => {
@@ -151,45 +147,23 @@ function LibraryCard({ file, onRead }: LibraryCardProps) {
             </Typography>
           </Tooltip>
 
-          <Stack
-            direction="row"
-            spacing={1.5}
-            alignItems="center"
-            sx={{ mt: 0.5 }}
-            flexWrap="wrap"
-          >
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <StorageIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
-              <Typography variant="caption" color="text.secondary">
-                {fileSize != null
-                  ? formatTextbookFileSize(fileSize)
-                  : 'Unknown size'}
-              </Typography>
-            </Stack>
-            <Typography variant="caption" color="text.disabled">
-              •
-            </Typography>
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <PictureAsPdfIcon sx={{ fontSize: 14, color: '#E53935' }} />
-              <Typography variant="caption" color="text.secondary">
-                PDF
-              </Typography>
-            </Stack>
+          <Stack direction="row" spacing={0.75} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+            <LibrarySizeChip sizeBytes={fileSize} />
           </Stack>
 
           <Tooltip title={formatLinkedCoursesTooltip(file)} placement="top">
-            <Chip
-              size="small"
-              icon={<MenuBookIcon />}
-              label={formatLinkedCoursesSummary(file)}
+            <Typography
+              variant="caption"
+              noWrap
               sx={{
                 mt: 1,
-                maxWidth: '100%',
-                bgcolor: alpha(libraryAccent, 0.08),
-                color: libraryAccent,
-                '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
+                display: 'block',
+                color: linked.length ? 'text.secondary' : 'text.disabled',
+                fontStyle: linked.length ? 'normal' : 'italic',
               }}
-            />
+            >
+              {formatLinkedCoursesDisplay(file)}
+            </Typography>
           </Tooltip>
         </StyledCardContent>
 
@@ -212,17 +186,9 @@ function LibraryCard({ file, onRead }: LibraryCardProps) {
                 : 'Only accessible by instructors and admins'
             }
           >
-            <Chip
-              size="small"
-              label={file.isPublic ? 'Public' : 'Private'}
-              icon={file.isPublic ? <PublicIcon /> : <LockIcon />}
-              sx={{
-                bgcolor: file.isPublic
-                  ? alpha('#10B981', 0.1)
-                  : alpha('#6B7280', 0.1),
-                color: file.isPublic ? '#10B981' : '#6B7280',
-              }}
-            />
+            <Box component="span">
+              <LibraryVisibilityChip isPublic={file.isPublic} />
+            </Box>
           </Tooltip>
           <Button size="small" variant="contained" onClick={handleRead}>
             Read

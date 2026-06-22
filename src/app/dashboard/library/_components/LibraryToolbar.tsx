@@ -2,8 +2,8 @@
 
 import {
   Box,
-  Chip,
   FormControl,
+  IconButton,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -17,6 +17,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import TableRowsIcon from '@mui/icons-material/TableRows';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { AcademicLevelDto } from '@/app/_lib/interfaces/types';
 
 export type LibraryViewMode = 'cards' | 'table';
@@ -45,29 +46,30 @@ export default function LibraryToolbar({
   onUnlinkedOnlyChange,
 }: LibraryToolbarProps) {
   return (
-    <Stack spacing={2} sx={{ mb: 3 }}>
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        spacing={1.5}
-        alignItems={{ xs: 'stretch', md: 'center' }}
-      >
-        <TextField
-          size="small"
-          placeholder="Search by textbook, course, grade, or subject…"
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          fullWidth
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
+    <Stack
+      direction={{ xs: 'column', md: 'row' }}
+      spacing={1.5}
+      alignItems={{ xs: 'stretch', md: 'center' }}
+      sx={{ mb: 3 }}
+    >
+      <TextField
+        size="small"
+        placeholder="Search by textbook, course, grade, or subject…"
+        value={searchTerm}
+        onChange={(e) => onSearchChange(e.target.value)}
+        fullWidth
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" color="action" />
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
 
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
         <FormControl size="small" sx={{ minWidth: { md: 180 } }}>
           <InputLabel id="library-grade-filter">Grade</InputLabel>
           <Select
@@ -85,37 +87,47 @@ export default function LibraryToolbar({
           </Select>
         </FormControl>
 
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={viewMode}
-          onChange={(_, value: LibraryViewMode | null) => {
-            if (value) onViewModeChange(value);
-          }}
-          aria-label="Library view mode"
-        >
-          <ToggleButton value="cards" aria-label="Card view">
-            <Tooltip title="Card view">
-              <ViewModuleIcon fontSize="small" />
-            </Tooltip>
-          </ToggleButton>
-          <ToggleButton value="table" aria-label="Table view">
-            <Tooltip title="Table view">
-              <TableRowsIcon fontSize="small" />
-            </Tooltip>
-          </ToggleButton>
-        </ToggleButtonGroup>
+        <Tooltip title="Show only textbooks that are not linked to any course">
+          <IconButton
+            size="small"
+            aria-label="Unlinked only filter"
+            aria-pressed={unlinkedOnly}
+            onClick={() => onUnlinkedOnlyChange(!unlinkedOnly)}
+            color={unlinkedOnly ? 'primary' : 'default'}
+            sx={{
+              border: 1,
+              borderColor: unlinkedOnly ? 'primary.main' : 'divider',
+              borderRadius: 1,
+              width: 40,
+              height: 40,
+            }}
+          >
+            <FilterAltIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Stack>
 
-      <Box>
-        <Chip
-          label="Unlinked only"
-          variant={unlinkedOnly ? 'filled' : 'outlined'}
-          color={unlinkedOnly ? 'primary' : 'default'}
-          onClick={() => onUnlinkedOnlyChange(!unlinkedOnly)}
-          size="small"
-        />
-      </Box>
+      <ToggleButtonGroup
+        size="small"
+        exclusive
+        value={viewMode}
+        onChange={(_, value: LibraryViewMode | null) => {
+          if (value) onViewModeChange(value);
+        }}
+        aria-label="Library view mode"
+        sx={{ flexShrink: 0 }}
+      >
+        <ToggleButton value="cards" aria-label="Card view">
+          <Tooltip title="Card view">
+            <ViewModuleIcon fontSize="small" />
+          </Tooltip>
+        </ToggleButton>
+        <ToggleButton value="table" aria-label="Table view">
+          <Tooltip title="Table view">
+            <TableRowsIcon fontSize="small" />
+          </Tooltip>
+        </ToggleButton>
+      </ToggleButtonGroup>
     </Stack>
   );
 }

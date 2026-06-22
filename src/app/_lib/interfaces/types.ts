@@ -152,6 +152,19 @@ export interface VideoMeta {
   sizeBytes?: number;
 }
 
+export interface VideoLibraryItem {
+  id: string;
+  uid: string;
+  provider: string;
+  playbackId?: string | null;
+  status: string;
+  posterUrl?: string | null;
+  durationSeconds?: number | null;
+  sizeBytes?: number | null;
+  title?: string | null;
+  usedInModuleCount: number;
+}
+
 export interface PdfMeta {
   provider: string;
   key: string;
