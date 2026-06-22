@@ -152,6 +152,19 @@ export interface VideoMeta {
   sizeBytes?: number;
 }
 
+export interface VideoLibraryItem {
+  id: string;
+  uid: string;
+  provider: string;
+  playbackId?: string | null;
+  status: string;
+  posterUrl?: string | null;
+  durationSeconds?: number | null;
+  sizeBytes?: number | null;
+  title?: string | null;
+  usedInModuleCount: number;
+}
+
 export interface PdfMeta {
   provider: string;
   key: string;
@@ -168,10 +181,28 @@ export interface FileDto {
   hash: string;
   isPublic: boolean;
   institutionId: string;
-  // New fields for metadata and thumbnail
-  thumbnail?: string | null; // Data URL or URL to the thumbnail image
+  thumbnail?: string | null;
   fileName?: string | null;
+  /** @deprecated prefer fileSizeBytes */
   sizeBytes?: number | null;
+  fileSizeBytes?: number | null;
+  previewImageKey?: string | null;
+  previewImageUrl?: string | null;
+  uploadedAt?: string | null;
+  uploadedByUserId?: string | null;
+}
+
+export interface LinkedClassroomDto {
+  id: string;
+  name: string;
+  academicLevelName?: string | null;
+  academicLevelId?: string | null;
+  subjectName?: string | null;
+}
+
+export interface LibraryFileDto extends FileDto {
+  linkedClassrooms: LinkedClassroomDto[];
+  linkedClassroomCount: number;
 }
 
 export interface VideoUploadResponse {

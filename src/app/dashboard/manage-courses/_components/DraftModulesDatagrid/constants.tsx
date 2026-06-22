@@ -17,7 +17,7 @@ export const buildColumns = (
     onEdit: (homeworkId: string) => void | Promise<void>,
     handlePublish: (homeworkId: string) => void,
     handleUnpublish: (homeworkId: string) => void,
-    handleDelete: (homeworkId: string) => void,
+    onRequestDelete: (homeworkId: string, title: string) => void,
 ): GridColDef<HomeworkRow>[] => [
     {
         field: 'title',
@@ -148,15 +148,25 @@ export const buildColumns = (
                 ),
                 <Tooltip
                     key={`delete-${moduleId}`}
-                    title="Permanently delete this module"
+                    title={
+                        isPublished
+                            ? 'Only draft modules can be deleted. Unpublish first to delete.'
+                            : 'Delete this draft module'
+                    }
                     arrow
                 >
                     <span>
                         <GridActionsCellItem
                             icon={<DeleteIcon fontSize="small" />}
                             label="Delete draft"
-                            onClick={() => moduleId && handleDelete(moduleId)}
-                            disabled={disabled}
+                            onClick={() =>
+                                moduleId &&
+                                onRequestDelete(
+                                    moduleId,
+                                    row.title?.trim() || 'Untitled module',
+                                )
+                            }
+                            disabled={disabled || isPublished}
                             showInMenu={false}
                         />
                     </span>

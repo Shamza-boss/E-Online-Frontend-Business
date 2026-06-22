@@ -12,7 +12,6 @@ import {
   Chip,
   CircularProgress,
 } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {
@@ -20,11 +19,14 @@ import {
   VideoUploadResponse,
   VideoMetaResponse,
   CreateUploadDto,
+  VideoLibraryItem,
 } from '../../interfaces/types';
 import { createDirectUpload, getVideoMeta } from '../../actions/stream';
+import { videoLibraryItemToVideoMeta } from '../../utils/media';
 import StudentClassCardSkeleton from '@/app/dashboard/_components/_skeletonLoaders/StudentClassCardSkeleton';
 import VideoCardThumbnail from '@/app/_lib/components/video/VideoCardThumbnail';
 import { useCreatorAccess } from '@/app/_lib/hooks/useCreatorAccess';
+import VideoSourceTabs, { type VideoSource } from './VideoSourceTabs';
 
 interface Props {
   value?: VideoMeta;
@@ -42,6 +44,8 @@ export const VideoUploadField: React.FC<Props> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [processingStatus, setProcessingStatus] = useState<string>('');
+  const [source, setSource] = useState<VideoSource>('upload');
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (
@@ -50,14 +54,12 @@ export const VideoUploadField: React.FC<Props> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Basic validation
     if (!file.type.startsWith('video/')) {
       setError('Please select a valid video file');
       return;
     }
 
     if (file.size > 500 * 1024 * 1024) {
-      // 500MB limit
       setError('File size must be less than 500MB');
       return;
     }
@@ -65,9 +67,9 @@ export const VideoUploadField: React.FC<Props> = ({
     setError(null);
     setUploading(true);
     setUploadProgress(0);
+    setSelectedVideoId(null);
 
     try {
-      // Step 1: Get upload URL
       const createUploadDto: CreateUploadDto = {
         filename: file.name,
         size: file.size,
@@ -76,7 +78,6 @@ export const VideoUploadField: React.FC<Props> = ({
       const uploadData: VideoUploadResponse =
         await createDirectUpload(createUploadDto);
 
-      // Step 2: Upload the file
       const formData = new FormData();
       formData.append('file', file);
 
@@ -91,7 +92,6 @@ export const VideoUploadField: React.FC<Props> = ({
 
       xhr.onload = async () => {
         if (xhr.status === 200) {
-          // Step 3: Set initial video metadata
           const videoMeta: VideoMeta = {
             provider: 'cloudflare',
             uid: uploadData.uid,
@@ -103,8 +103,7 @@ export const VideoUploadField: React.FC<Props> = ({
           setProcessingStatus('processing');
           setUploading(false);
 
-          // Step 4: Poll for video processing completion
-          pollVideoStatus(uploadData.uid);
+          pollVideoStatus(uploadData.uid, file.size);
         } else {
           throw new Error('Upload failed');
         }
@@ -123,8 +122,8 @@ export const VideoUploadField: React.FC<Props> = ({
     }
   };
 
-  const pollVideoStatus = async (uid: string) => {
-    const maxAttempts = 30; // Poll for up to 5 minutes (30 * 10 seconds)
+  const pollVideoStatus = async (uid: string, sizeBytes?: number) => {
+    const maxAttempts = 30;
     let attempts = 0;
 
     const poll = async () => {
@@ -132,7 +131,6 @@ export const VideoUploadField: React.FC<Props> = ({
         const metaData: VideoMetaResponse = await getVideoMeta(uid);
 
         if (metaData.status === 'ready') {
-          // Video is ready
           const updatedVideo: VideoMeta = {
             provider: 'cloudflare',
             uid,
@@ -140,7 +138,7 @@ export const VideoUploadField: React.FC<Props> = ({
             posterUrl: metaData.posterUrl,
             durationSeconds: metaData.durationSeconds,
             playbackId: metaData.playbackId,
-            sizeBytes: value?.sizeBytes,
+            sizeBytes: sizeBytes ?? value?.sizeBytes,
           };
           onChange(updatedVideo);
           setProcessingStatus('ready');
@@ -150,7 +148,7 @@ export const VideoUploadField: React.FC<Props> = ({
         attempts++;
         if (attempts < maxAttempts && metaData.status === 'processing') {
           setProcessingStatus('processing');
-          setTimeout(poll, 10000); // Poll every 10 seconds
+          setTimeout(poll, 10000);
         } else if (metaData.status === 'error') {
           setError('Video processing failed');
           setProcessingStatus('error');
@@ -167,13 +165,42 @@ export const VideoUploadField: React.FC<Props> = ({
     poll();
   };
 
+  const handleLibrarySelect = async (item: VideoLibraryItem) => {
+    setError(null);
+    setSelectedVideoId(item.id);
+
+    let meta = videoLibraryItemToVideoMeta(item);
+
+    if (meta.status !== 'ready') {
+      try {
+        const fresh = await getVideoMeta(item.uid);
+        meta = {
+          ...meta,
+          status: fresh.status,
+          posterUrl: fresh.posterUrl ?? meta.posterUrl,
+          durationSeconds: fresh.durationSeconds ?? meta.durationSeconds,
+          playbackId: fresh.playbackId ?? meta.playbackId,
+        };
+      } catch {
+        // Keep stored metadata when refresh fails.
+      }
+    }
+
+    onChange(meta);
+  };
+
   const handleRemoveVideo = () => {
     onChange(undefined);
     setProcessingStatus('');
     setError(null);
+    setSelectedVideoId(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleReplaceVideo = () => {
+    handleRemoveVideo();
   };
 
   const handleSelectFile = () => {
@@ -187,8 +214,8 @@ export const VideoUploadField: React.FC<Props> = ({
 
   const formattedDuration = value?.durationSeconds
     ? `${Math.floor((value.durationSeconds || 0) / 60)}:${String(
-      Math.floor((value.durationSeconds || 0) % 60)
-    ).padStart(2, '0')}`
+        Math.floor((value.durationSeconds || 0) % 60)
+      ).padStart(2, '0')}`
     : null;
 
   const sizeLabel = value?.sizeBytes
@@ -210,7 +237,7 @@ export const VideoUploadField: React.FC<Props> = ({
 
   const videoIdLabel = value?.playbackId || value?.uid || '—';
   const instructionsMessage =
-    'Your video has been successfully uploaded. To play it, please click the preview on the right-hand side of your screen that shows a play icon.';
+    'Your video has been successfully attached. Click the preview to play it.';
 
   const statusColor = (() => {
     const lowered = statusLabel.toLowerCase();
@@ -258,25 +285,18 @@ export const VideoUploadField: React.FC<Props> = ({
 
   return (
     <Box>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="video/*"
-        style={{ display: 'none' }}
-        onChange={handleFileSelect}
-        disabled={disabled || uploading}
-      />
-
-      {!value && (
-        <Button
-          variant="outlined"
-          startIcon={<CloudUploadIcon />}
-          onClick={handleSelectFile}
-          disabled={disabled || uploading}
-          sx={{ py: 2, mb: 1 }}
-        >
-          Upload Video
-        </Button>
+      {!value && !isProcessing && (
+        <VideoSourceTabs
+          source={source}
+          onSourceChange={setSource}
+          fileInputRef={fileInputRef}
+          onUploadClick={handleSelectFile}
+          onFileChange={handleFileSelect}
+          uploading={uploading}
+          selectedVideoId={selectedVideoId}
+          onLibrarySelect={handleLibrarySelect}
+          disabled={disabled}
+        />
       )}
 
       {isProcessing && (
@@ -301,9 +321,28 @@ export const VideoUploadField: React.FC<Props> = ({
       {value && !isProcessing && !isError && (
         <Paper sx={{ p: 2, mt: 2 }}>
           <Stack spacing={2}>
+            <Stack direction="row" spacing={1} justifyContent="flex-end">
+              <Button
+                size="small"
+                color="primary"
+                onClick={handleReplaceVideo}
+                disabled={disabled}
+              >
+                Replace video
+              </Button>
+              <Button
+                size="small"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={handleRemoveVideo}
+                disabled={disabled}
+              >
+                Remove
+              </Button>
+            </Stack>
             <VideoCardThumbnail
               mediaUrl={value.posterUrl}
-              mediaAlt="Uploaded video thumbnail"
+              mediaAlt="Video thumbnail"
               metadataLabel={
                 formattedDuration
                   ? `Duration ${formattedDuration}`
@@ -312,17 +351,6 @@ export const VideoUploadField: React.FC<Props> = ({
               titleContent={statusChip}
               subtitle={instructionsMessage}
               avatarLabel="Embedded assessment video"
-              footerAction={
-                <Button
-                  color="error"
-                  startIcon={<DeleteIcon />}
-                  onClick={handleRemoveVideo}
-                  disabled={disabled}
-                  size="small"
-                >
-                  Delete
-                </Button>
-              }
             />
             <Stack direction="row" spacing={2} flexWrap="wrap">
               <Typography variant="body2" color="text.secondary">

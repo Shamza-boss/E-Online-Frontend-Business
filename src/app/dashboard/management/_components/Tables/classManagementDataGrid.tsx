@@ -34,7 +34,6 @@ import { PagedResult } from '@/app/_lib/interfaces/pagination';
 import { getUsers } from '@/app/_lib/actions/users';
 import { getAllAcademics } from '@/app/_lib/actions/academics';
 import { getAllSubjects } from '@/app/_lib/actions/subjects';
-import { useRegisterSearch } from '@/app/_lib/context/SearchContext';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -63,10 +62,12 @@ const sanitizeOptionalInput = (value: unknown) => {
 
 interface ClassManagementDataGridProps {
   active: boolean;
+  searchTerm: string;
 }
 
 export default function ClassManagementDataGrid({
   active,
+  searchTerm,
 }: ClassManagementDataGridProps) {
   const { data: session } = useSession();
   const userRole = Number(session?.user?.role);
@@ -84,21 +85,11 @@ export default function ClassManagementDataGrid({
     pageSize: DEFAULT_PAGE_SIZE,
   });
   const [sortModel, setSortModel] = useState<GridSortModel>([]);
-  const [searchTerm, setSearchTermState] = useState('');
   const [rowCount, setRowCount] = useState(0);
 
-  const handleSearch = useCallback((term: string) => {
-    setSearchTermState(term);
+  useEffect(() => {
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
-  }, []);
-
-  useRegisterSearch({
-    id: 'dashboard-management-classes',
-    placeholder: 'Search courses',
-    onSearch: handleSearch,
-    debounceMs: 300,
-    active,
-  });
+  }, [searchTerm]);
 
   const sortField = sortModel[0]?.field ?? null;
   const sortDirection = sortModel[0]?.sort ?? null;

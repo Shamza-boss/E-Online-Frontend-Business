@@ -1,13 +1,10 @@
 'use client';
 
-import { Stack, Typography, Button, Box, Alert, Chip } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Stack, Typography, Button, Box } from '@mui/material';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import PublishIcon from '@mui/icons-material/Publish';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import PublicIcon from '@mui/icons-material/Public';
-import LockIcon from '@mui/icons-material/Lock';
+import { LibraryVisibilityChip } from './LibraryChips';
 
 interface LibraryHeaderProps {
     canManage: boolean;
@@ -68,31 +65,13 @@ export default function LibraryHeader({
             {/* Visibility legend */}
             <Stack direction="row" spacing={3} flexWrap="wrap" sx={{ gap: 1 }}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                    <Chip
-                        size="small"
-                        icon={<PublicIcon />}
-                        label="Public"
-                        sx={{
-                            bgcolor: alpha('#10B981', 0.1),
-                            color: '#10B981',
-                            '& .MuiChip-icon': { color: 'inherit' },
-                        }}
-                    />
+                    <LibraryVisibilityChip isPublic />
                     <Typography variant="caption" color="text.secondary">
                         Visible to all trainees in your organization
                     </Typography>
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
-                    <Chip
-                        size="small"
-                        icon={<LockIcon />}
-                        label="Private"
-                        sx={{
-                            bgcolor: alpha('#6B7280', 0.1),
-                            color: '#6B7280',
-                            '& .MuiChip-icon': { color: 'inherit' },
-                        }}
-                    />
+                    <LibraryVisibilityChip isPublic={false} />
                     <Typography variant="caption" color="text.secondary">
                         Only accessible by instructors and admins
                     </Typography>

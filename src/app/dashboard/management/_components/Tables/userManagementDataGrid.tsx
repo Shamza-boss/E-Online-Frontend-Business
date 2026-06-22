@@ -17,7 +17,6 @@ import { RoleChip } from '@/app/_lib/components/role/roleChip';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { UserDto } from '@/app/_lib/interfaces/types';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
-import { useRegisterSearch } from '@/app/_lib/context/SearchContext';
 import {
   PagedResult,
   PaginationParams,
@@ -28,6 +27,7 @@ import { deleteUser, getUsers } from '@/app/_lib/actions';
 
 interface UserManagementDataGridProps {
   active: boolean;
+  searchTerm: string;
 }
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -58,6 +58,7 @@ const sanitizeOptionalInput = (value: unknown) => {
 
 export default function UserManagementDataGrid({
   active,
+  searchTerm,
 }: UserManagementDataGridProps) {
   const [editTarget, setEditTarget] = React.useState<UserDto | null>(null);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
@@ -71,22 +72,13 @@ export default function UserManagementDataGrid({
       pageSize: DEFAULT_PAGE_SIZE,
     });
   const [sortModel, setSortModel] = React.useState<GridSortModel>([]);
-  const [searchTerm, setSearchTermState] = React.useState('');
   const [rowCount, setRowCount] = React.useState(0);
   const { data: session } = useSession();
   const alert = useAlert();
-  const handleSearch = React.useCallback((term: string) => {
-    setSearchTermState(term);
-    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-  }, []);
 
-  useRegisterSearch({
-    id: 'dashboard-management-users',
-    placeholder: 'Search users',
-    onSearch: handleSearch,
-    debounceMs: 300,
-    active,
-  });
+  React.useEffect(() => {
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [searchTerm]);
 
   const sortField = sortModel[0]?.field ?? null;
   const sortDirection = sortModel[0]?.sort ?? null;
