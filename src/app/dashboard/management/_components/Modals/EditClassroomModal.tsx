@@ -7,7 +7,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { ClassDto } from '@/app/_lib/interfaces/types';
-import ClassroomCreationForm from '../Forms/classroomCreationForm';
+import ClassroomCreationForm from '../ClassroomCreationForm';
 
 interface EditClassroomModalProps {
   open: boolean;

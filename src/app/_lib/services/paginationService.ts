@@ -1,4 +1,6 @@
-import { serverFetch } from '../serverFetch';
+import 'server-only';
+
+import { serverFetch } from '../serverFetch.server';
 import { PagedResult, PaginationParams } from '../interfaces/pagination';
 
 export const DEFAULT_PAGE_SIZE = 20;

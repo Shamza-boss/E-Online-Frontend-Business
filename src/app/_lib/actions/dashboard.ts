@@ -1,27 +1,30 @@
+'use server';
+
 import {
   InstitutionBillingDashboardDto,
   InstitutionTrendsDashboardDto,
   PlatformOwnerDashboardDto,
   SystemAdminDashboardDto,
 } from '../interfaces/types';
-import { serverFetch } from '../serverFetch';
+import { serverFetch } from '../serverFetch.server';
 
+/** Server Actions for SWR refresh paths — initial page data comes from _lib/data */
 export async function getSystemAdminDashBoard(): Promise<SystemAdminDashboardDto> {
-  return serverFetch<SystemAdminDashboardDto>(`/Dashboard/system`);
+  return serverFetch<SystemAdminDashboardDto>('/Dashboard/system');
 }
 
 export async function getInstitutionDashBoard(): Promise<InstitutionTrendsDashboardDto> {
-  return serverFetch<InstitutionTrendsDashboardDto>(`/Dashboard/institution`);
+  return serverFetch<InstitutionTrendsDashboardDto>('/Dashboard/institution');
 }
 
 export async function getPlatformOwnerDashboard(): Promise<PlatformOwnerDashboardDto> {
-  return serverFetch<PlatformOwnerDashboardDto>(`/Dashboard/platform-owner`);
+  return serverFetch<PlatformOwnerDashboardDto>('/Dashboard/platform-owner');
 }
 
 export async function getInstitutionBillingDashboard(
-  institutionId: string
+  institutionId: string,
 ): Promise<InstitutionBillingDashboardDto> {
   return serverFetch<InstitutionBillingDashboardDto>(
-    `/Dashboard/platform-owner/institution/${encodeURIComponent(institutionId)}`
+    `/Dashboard/platform-owner/institution/${encodeURIComponent(institutionId)}`,
   );
 }

@@ -26,18 +26,35 @@ interface ClassroomLookups {
   usersLoading: boolean;
 }
 
-export function useClassroomLookups(): ClassroomLookups {
+interface ClassroomLookupsOptions {
+  initialAcademics?: AcademicLevelDto[];
+  initialSubjects?: SubjectDto[];
+}
+
+export function useClassroomLookups(
+  options: ClassroomLookupsOptions = {},
+): ClassroomLookups {
+  const { initialAcademics, initialSubjects } = options;
+
   const {
     data: subjectData,
     isLoading: subjectsLoading,
     mutate: mutateSubjects,
-  } = useSWR<SubjectDto[]>('subjects', getAllSubjects);
+  } = useSWR<SubjectDto[]>('subjects', getAllSubjects, {
+    fallbackData: initialSubjects,
+    revalidateOnMount: !initialSubjects,
+    revalidateOnFocus: false,
+  });
 
   const {
     data: academicData,
     isLoading: academicsLoading,
     mutate: mutateAcademics,
-  } = useSWR<AcademicLevelDto[]>('academics', getAllAcademics);
+  } = useSWR<AcademicLevelDto[]>('academics', getAllAcademics, {
+    fallbackData: initialAcademics,
+    revalidateOnMount: !initialAcademics,
+    revalidateOnFocus: false,
+  });
 
   const { data: usersData, isLoading: usersLoading } = useSWR<
     PagedResult<UserDto>

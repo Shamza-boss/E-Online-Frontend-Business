@@ -2,7 +2,7 @@
 
 import { PaginationParams, PagedResult } from '../interfaces/pagination';
 import { UserDto } from '../interfaces/types';
-import { serverFetch } from '../serverFetch';
+import { serverFetch } from '../serverFetch.server';
 import {
   DEFAULT_PAGE_SIZE,
   fetchPaginatedResource,

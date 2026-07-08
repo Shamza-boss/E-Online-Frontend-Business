@@ -42,6 +42,7 @@ import {
     unpayInvoice as unpayInvoiceAction,
 } from '@/app/_lib/actions/invoices';
 import type { InstitutionWithAdminDto, InvoiceDto } from '@/app/_lib/interfaces/types';
+import type { BillingExperienceProps } from './interfaces';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { setCreatorAddon } from '@/app/_lib/actions/subscriptions';
 import { normalizeRole, buildInstitutionOptions } from './utils';
@@ -53,14 +54,20 @@ import {
     BoldChip,
 } from './elements';
 
-export default function BillingExperience() {
+export default function BillingExperience({
+    initialInstitutions,
+    initialInstitutionId,
+    initialBillingDashboard,
+}: BillingExperienceProps = {}) {
     const { data: session, status } = useSession();
     const rawRole = session?.user?.role;
     const normalizedRole = normalizeRole(rawRole);
     const isPlatformOwner = normalizedRole === UserRole.PlatformAdmin;
     const { showAlert } = useAlert();
 
-    const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
+    const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(
+        initialInstitutionId ?? null,
+    );
 
     // Dialog state
     const [sendDialogInvoice, setSendDialogInvoice] = useState<InvoiceDto | null>(null);
@@ -78,6 +85,11 @@ export default function BillingExperience() {
     } = useSWR<InstitutionWithAdminDto[]>(
         isPlatformOwner ? 'billing-institutions' : null,
         getAllInstitutions,
+        {
+            fallbackData: initialInstitutions,
+            revalidateOnMount: !initialInstitutions,
+            revalidateOnFocus: false,
+        },
     );
 
     const institutionOptions = useMemo(
@@ -98,7 +110,12 @@ export default function BillingExperience() {
     const summary = useInstitutionBilling(selectedInstitutionId ?? undefined);
     const invoices = useInstitutionInvoices(selectedInstitutionId ?? undefined);
     const projection = useInstitutionProjection(selectedInstitutionId ?? undefined);
-    const billingDashboard = useInstitutionBillingDashboard(selectedInstitutionId ?? undefined);
+    const billingDashboard = useInstitutionBillingDashboard(
+        selectedInstitutionId ?? undefined,
+        selectedInstitutionId === initialInstitutionId
+            ? initialBillingDashboard
+            : undefined,
+    );
 
     // ── Handlers ──────────────────────────────────────────────────
 

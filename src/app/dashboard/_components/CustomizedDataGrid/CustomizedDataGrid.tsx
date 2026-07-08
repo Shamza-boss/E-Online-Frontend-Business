@@ -1,7 +1,11 @@
 import * as React from 'react';
 import type { CustomizedDataGridProps } from './interfaces';
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from './constants';
-import { getColumnDefinitions } from './utils';
+import {
+  DEFAULT_PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
+  FILTER_PANEL_SLOT_PROPS,
+} from './constants';
+import { getColumnDefinitions, getRowClassName } from './utils';
 import { StyledDataGrid } from './elements';
 
 export default function CustomizedDataGrid({
@@ -18,45 +22,18 @@ export default function CustomizedDataGrid({
     return null;
   }
 
-  const columns = getColumnDefinitions();
-
   return (
     <StyledDataGrid
       checkboxSelection={false}
       rows={rows}
-      columns={columns}
-      getRowClassName={(params) =>
-        params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
-      }
+      columns={getColumnDefinitions()}
+      getRowClassName={(params) => getRowClassName(params.indexRelativeToCurrentPage)}
       initialState={{
         pagination: { paginationModel: { pageSize: DEFAULT_PAGE_SIZE } },
       }}
       pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
       loading={isLoading}
-      slotProps={{
-        filterPanel: {
-          filterFormProps: {
-            logicOperatorInputProps: {
-              variant: 'outlined',
-              size: 'small',
-            },
-            columnInputProps: {
-              variant: 'outlined',
-              size: 'small',
-            },
-            operatorInputProps: {
-              variant: 'outlined',
-              size: 'small',
-            },
-            valueInputProps: {
-              InputComponentProps: {
-                variant: 'outlined',
-                size: 'small',
-              },
-            },
-          },
-        },
-      }}
+      slotProps={FILTER_PANEL_SLOT_PROPS}
     />
   );
 }

@@ -6,7 +6,7 @@ import {
   VideoLibraryItem,
 } from '../interfaces/types';
 import { PagedResult } from '../interfaces/pagination';
-import { serverFetch } from '../serverFetch';
+import { serverFetch } from '../serverFetch.server';
 
 export interface InstitutionVideosParams {
   searchTerm?: string;

@@ -17,9 +17,11 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { SessionProvider, useSession } from 'next-auth/react';
 import type { Session } from 'next-auth';
 import { usePathname, useRouter } from 'next/navigation';
+import { SWRConfig } from 'swr';
 import AppTheme from './_lib/components/shared-theme/AppTheme';
 import { WarpTransitionProvider } from './_lib/components/shared-theme/WarpTransition';
 import { AlertProvider } from './_lib/components/alert/AlertProvider';
+import { swrConfig } from './_lib/config/swr';
 import { PDF_NOTE_SENTINEL_ATTRIBUTE } from './_lib/utils/pdfNoteLinks';
 
 // Session configuration - extracted for clarity
@@ -81,19 +83,22 @@ const SessionInvalidRedirect = memo(function SessionInvalidRedirect() {
 export default function Providers({ children, session }: ProvidersProps) {
   // Memoize config to prevent unnecessary re-renders
   const sessionConfig = useMemo(() => SESSION_CONFIG, []);
+  const mergedSwrConfig = useMemo(() => swrConfig, []);
 
   return (
     <SessionProvider session={session} {...sessionConfig}>
       <SessionInvalidRedirect />
-      <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-        <AppTheme>
-          <CssBaseline enableColorScheme />
-          <GlobalStyles styles={pdfNoteStyles} />
-          <WarpTransitionProvider>
-            <AlertProvider>{children}</AlertProvider>
-          </WarpTransitionProvider>
-        </AppTheme>
-      </AppRouterCacheProvider>
+      <SWRConfig value={mergedSwrConfig}>
+        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+          <AppTheme>
+            <CssBaseline enableColorScheme />
+            <GlobalStyles styles={pdfNoteStyles} />
+            <WarpTransitionProvider>
+              <AlertProvider>{children}</AlertProvider>
+            </WarpTransitionProvider>
+          </AppTheme>
+        </AppRouterCacheProvider>
+      </SWRConfig>
     </SessionProvider>
   );
 }

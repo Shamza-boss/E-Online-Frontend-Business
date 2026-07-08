@@ -1,9 +1,11 @@
+'use server';
+
 import {
   BillingProjectionDto,
   BillingRateDto,
   BillingSummaryDto,
 } from '../interfaces/types';
-import { serverFetch } from '../serverFetch';
+import { serverFetch } from '../serverFetch.server';
 
 const SUBSCRIPTION_BASE = '/subscriptions';
 

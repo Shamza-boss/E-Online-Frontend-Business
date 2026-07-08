@@ -14,8 +14,13 @@ export const AccessDeniedAlert = styled(Alert)(({ theme }) => ({
     margin: theme.spacing(3),
 }));
 
+import { getDashboardPagePadding } from '@/app/_lib/layout/dashboardPageLayout';
+
 export const PageStack = styled(Stack)(({ theme }) => ({
-    padding: theme.spacing(3),
+  minWidth: 0,
+  width: '100%',
+  boxSizing: 'border-box',
+  ...getDashboardPagePadding(theme),
 }));
 
 export const FlexBox = styled(Box)({

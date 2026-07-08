@@ -15,37 +15,52 @@ import {
 export function useSystemDashboard() {
   return useSWR<SystemAdminDashboardDto>(
     'dashboard-system',
-    getSystemAdminDashBoard
+    getSystemAdminDashBoard,
   );
 }
 
-export function useInstitutionDashboard() {
+export function useInstitutionDashboard(
+  fallbackData?: InstitutionTrendsDashboardDto,
+) {
   return useSWR<InstitutionTrendsDashboardDto>(
     'dashboard-institution',
-    getInstitutionDashBoard
+    getInstitutionDashBoard,
+    {
+      fallbackData,
+      revalidateOnMount: !fallbackData,
+      revalidateOnFocus: false,
+      dedupingInterval: 60_000,
+    },
   );
 }
 
-export function usePlatformOwnerDashboard() {
+export function usePlatformOwnerDashboard(
+  fallbackData?: PlatformOwnerDashboardDto,
+) {
   return useSWR<PlatformOwnerDashboardDto>(
     'dashboard-platform-owner',
     getPlatformOwnerDashboard,
     {
+      fallbackData,
+      revalidateOnMount: !fallbackData,
       revalidateOnFocus: false,
       dedupingInterval: 60_000,
-    }
+    },
   );
 }
 
-export function useInstitutionBillingDashboard(institutionId?: string) {
+export function useInstitutionBillingDashboard(
+  institutionId?: string,
+  fallbackData?: InstitutionBillingDashboardDto,
+) {
   return useSWR<InstitutionBillingDashboardDto>(
-    institutionId
-      ? ['dashboard-institution-billing', institutionId]
-      : null,
+    institutionId ? ['dashboard-institution-billing', institutionId] : null,
     () => getInstitutionBillingDashboard(institutionId as string),
     {
+      fallbackData,
+      revalidateOnMount: !fallbackData,
       revalidateOnFocus: false,
       dedupingInterval: 60_000,
-    }
+    },
   );
 }

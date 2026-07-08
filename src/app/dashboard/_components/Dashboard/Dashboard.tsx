@@ -32,7 +32,7 @@ export default function DashboardComponent({
         <AppNavbar />
         <MainArea>
           <SearchProvider>
-            <ContentStack spacing={1}>
+            <ContentStack>
               <Header />
               <ChildrenContainer>{children}</ChildrenContainer>
             </ContentStack>

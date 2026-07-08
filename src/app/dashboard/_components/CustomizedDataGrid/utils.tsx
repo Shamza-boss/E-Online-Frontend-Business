@@ -5,6 +5,10 @@ import { format } from 'date-fns';
 import { getPercentageColor } from '@/app/_lib/utils/gradeCalculator';
 import { DATE_FORMAT } from './constants';
 
+export function getRowClassName(indexRelativeToCurrentPage: number): string {
+  return indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd';
+}
+
 export function renderPercentageChip(value: number | null, multiplier: number = 1): React.ReactNode {
   if (value == null) return 'N/A';
   const percentage = value * multiplier;

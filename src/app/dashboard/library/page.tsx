@@ -1,7 +1,8 @@
-import LibraryView from './_components/LibraryView';
+import { getAllAcademics } from '@/app/_lib/actions/academics';
+import LibraryClient from './LibraryClient';
 
-const LibraryPage = () => {
-  return <LibraryView />;
-};
+export default async function LibraryPage() {
+  const initialAcademics = await getAllAcademics();
 
-export default LibraryPage;
+  return <LibraryClient initialAcademics={initialAcademics} />;
+}

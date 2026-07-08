@@ -1,5 +1,5 @@
-import PageSkeleton from '../_components/_skeletonLoaders/PageSkeleton';
+import SettingsPageSkeleton from '../_components/_skeletonLoaders/SettingsPageSkeleton';
 
 export default function SettingsLoading() {
-    return <PageSkeleton />;
+  return <SettingsPageSkeleton />;
 }

@@ -45,10 +45,11 @@ export default function SubscriptionSettingsPanel() {
 
     return (
         <Paper
+            variant="outlined"
             sx={(theme) => ({
-                borderRadius: 4,
-                p: 3,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                borderRadius: 2,
+                p: { xs: 2, sm: 3 },
+                borderColor: alpha(theme.palette.primary.main, 0.2),
                 background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${theme.palette.background.paper} 100%)`,
             })}
         >

@@ -1,4 +1,5 @@
 'use server';
+import { revalidatePath } from 'next/cache';
 import {
   ClassDto,
   ClassroomDetailsDto,
@@ -7,16 +8,18 @@ import {
   UserDto,
 } from '../interfaces/types';
 import { redirect } from 'next/navigation';
-import { serverFetch } from '../serverFetch';
+import { serverFetch } from '../serverFetch.server';
 import { auth } from '@/auth';
 import { PagedResult, PaginationParams } from '../interfaces/pagination';
 import { fetchPaginatedResource } from '../services/paginationService';
 
-export async function createClassroom(classroom: ClassDto): Promise<any> {
-  return serverFetch('/classrooms', {
+export async function createClassroom(classroom: ClassDto): Promise<unknown> {
+  const result = await serverFetch('/classrooms', {
     method: 'POST',
     body: classroom,
   });
+  revalidatePath('/dashboard/manage-courses');
+  return result;
 }
 
 export async function EnrollStudents(

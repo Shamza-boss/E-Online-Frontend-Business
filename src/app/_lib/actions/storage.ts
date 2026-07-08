@@ -1,6 +1,6 @@
 'use server';
 
-import { serverFetch } from '../serverFetch';
+import { serverFetch } from '../serverFetch.server';
 import { FileDto, LibraryFileDto } from '../interfaces/types';
 import { PagedResult, PaginationParams } from '../interfaces/pagination';
 

@@ -13,7 +13,7 @@ import {
   extractTextbookName,
   getFileSizeBytes,
 } from '@/app/_lib/utils/textbook';
-import { getPdfSizeChipStyle } from '@/app/dashboard/library/_components/libraryChipStyles';
+import { getPdfSizeChipStyle } from '@/app/dashboard/library/_components/LibraryChips';
 
 interface TextbookListRowProps {
   file: FileDto;

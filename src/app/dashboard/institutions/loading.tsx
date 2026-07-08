@@ -1,5 +1,5 @@
-import PageSkeleton from '../_components/_skeletonLoaders/PageSkeleton';
+import InstitutionsPageSkeleton from '../_components/_skeletonLoaders/InstitutionsPageSkeleton';
 
 export default function InstitutionsLoading() {
-    return <PageSkeleton />;
+  return <InstitutionsPageSkeleton />;
 }

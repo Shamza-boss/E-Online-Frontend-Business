@@ -8,7 +8,7 @@ import {
   SubmitHomeworkDto,
   Homework,
 } from '../interfaces/types';
-import { serverFetch } from '../serverFetch';
+import { serverFetch } from '../serverFetch.server';
 
 export async function createHomework(
   homework: HomeworkPayload,

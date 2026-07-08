@@ -22,8 +22,8 @@ export default function LegalPanel() {
   const [privacyOpen, setPrivacyOpen] = React.useState(false);
 
   return (
-    <Stack spacing={3}>
-      <Paper elevation={0} sx={{ p: 3, borderRadius: 4 }}>
+    <Stack spacing={2} sx={{ width: '100%', minWidth: 0 }}>
+      <Paper elevation={0} variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
         <Stack spacing={2}>
           <Box display="flex" alignItems="center" gap={1}>
             <GavelOutlinedIcon color="primary" />
@@ -38,7 +38,7 @@ export default function LegalPanel() {
         </Stack>
       </Paper>
 
-      <Paper elevation={0} sx={{ p: 3, borderRadius: 4 }}>
+      <Paper elevation={0} variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
         <Stack spacing={3}>
           {/* Terms of Service */}
           <Box>

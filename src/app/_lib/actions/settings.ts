@@ -1,6 +1,6 @@
 'use server';
 
-import { serverFetch } from '../serverFetch';
+import { serverFetch } from '../serverFetch.server';
 import type { SettingsResponseDto } from '../interfaces/types';
 
 export async function getMySettings() {

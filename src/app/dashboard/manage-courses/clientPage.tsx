@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box, Button, Stack, Tooltip, Typography } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { dashboardScrollablePageSx, dashboardSectionSpacing } from '@/app/_lib/layout/dashboardPageLayout';
 import { ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import AssignStudentsToClassModal from './_components/Modals/AssignStudentsToClassModal';
 import StudentClassesCards from './_components/Classes';
@@ -21,8 +22,8 @@ export default function StudentClassesManagementClient({ fallbackClasses }: Prop
   const handleClose = useCallback(() => setOpen(false), []);
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Stack spacing={2}>
+    <Box sx={dashboardScrollablePageSx}>
+      <Stack spacing={dashboardSectionSpacing}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           <Stack spacing={2} direction={'row'}>
             <Tooltip title={hasClasses 

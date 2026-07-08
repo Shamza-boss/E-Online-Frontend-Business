@@ -1,17 +1,11 @@
 'use client';
 
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Box,
     Button,
-    Checkbox,
     Chip,
-    FormControl,
     IconButton,
-    InputLabel,
-    MenuItem,
-    Radio,
-    Select,
     Stack,
     Typography,
 } from '@mui/material';
@@ -22,11 +16,8 @@ import { VideoUploadField } from '@/app/_lib/components/video/VideoUploadField';
 import { PdfUploadField } from '@/app/_lib/components/pdf/PdfUploadField';
 import { isChoiceType, IsValidChild, NEW_QUESTION_DND_MIME } from '../questionUtils';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
-import { RichTextEditor, RichTextEditorRef } from 'mui-tiptap';
-import useExtensions from '@/app/_lib/components/TipTapEditor/useExtensions';
-import EditorMenuControls from '@/app/_lib/components/TipTapEditor/EditorMenuControls';
 import type { QuestionEditorPanelProps } from './interfaces';
-import { SUBQUESTION_DND_MIME, ANTI_ASSIST_ATTRS } from './constants';
+import { SUBQUESTION_DND_MIME } from './constants';
 import {
     isSectionType,
     allowedTypeHint,
@@ -45,116 +36,10 @@ import {
     ReorderSlotBox,
     DropHintBox,
     ContainerBranch,
-    RichTextWrapper,
 } from './elements';
-import BufferedTextField from './BufferedTextField';
-
-interface QuestionRichTextFieldProps {
-    label: string;
-    value: string;
-    placeholder: string;
-    onChange: (value: string) => void;
-    minHeight?: number;
-    showToolbar?: boolean;
-    debounceMs?: number;
-}
-
-const QuestionRichTextField: React.FC<QuestionRichTextFieldProps> = ({
-    label,
-    value,
-    placeholder,
-    onChange,
-    minHeight = 180,
-    showToolbar = true,
-    debounceMs = 1000,
-}) => {
-    const fieldId = useId();
-    const editorRef = useRef<RichTextEditorRef>(null);
-    const extensions = useExtensions({ placeholder });
-    const normalizedValue = value ?? '';
-    const timeoutRef = useRef<number | null>(null);
-    const latestOnChangeRef = useRef(onChange);
-
-    useEffect(() => {
-        latestOnChangeRef.current = onChange;
-    }, [onChange]);
-
-    useEffect(() => {
-        const editor = editorRef.current?.editor;
-        if (!editor) return;
-
-        if (!normalizedValue) {
-            if (!editor.isEmpty) {
-                editor.commands.clearContent();
-            }
-            return;
-        }
-
-        if (editor.getHTML() !== normalizedValue) {
-            editor.commands.setContent(normalizedValue, false);
-        }
-    }, [normalizedValue]);
-
-    useEffect(() => {
-        return () => {
-            if (timeoutRef.current) {
-                window.clearTimeout(timeoutRef.current);
-                timeoutRef.current = null;
-            }
-        };
-    }, []);
-
-    const handleUpdate = () => {
-        const editor = editorRef.current?.editor;
-        if (!editor) return;
-
-        const html = editor.isEmpty ? '' : editor.getHTML();
-        if (html !== normalizedValue) {
-            if (timeoutRef.current) {
-                window.clearTimeout(timeoutRef.current);
-            }
-
-            timeoutRef.current = window.setTimeout(() => {
-                timeoutRef.current = null;
-                latestOnChangeRef.current(html);
-            }, debounceMs);
-        }
-    };
-
-    return (
-        <RichTextWrapper {...(ANTI_ASSIST_ATTRS as any)}>
-            <Typography
-                variant="caption"
-                color="text.secondary"
-                component="label"
-                htmlFor={fieldId}
-                sx={{ display: 'block', mb: 0.5 }}
-            >
-                {label}
-            </Typography>
-            <RichTextEditor
-                ref={editorRef}
-                content={normalizedValue}
-                extensions={extensions}
-                onUpdate={handleUpdate}
-                renderControls={showToolbar ? () => <EditorMenuControls /> : undefined}
-                immediatelyRender={false}
-                RichTextFieldProps={{
-                    id: fieldId,
-                    variant: 'outlined',
-                    RichTextContentProps: ANTI_ASSIST_ATTRS as any,
-                    sx: {
-                        mt: 1,
-                        '& .MuiRichTextContent-root': {
-                            minHeight,
-                            px: 1,
-                        },
-                    },
-                }}
-            />
-        </RichTextWrapper>
-    );
-};
+import QuestionRichTextField from './components/QuestionRichTextField';
+import QuestionTypeSelector from './components/QuestionTypeSelector';
+import QuestionOptionsEditor from './components/QuestionOptionsEditor';
 
 const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
     question,
@@ -547,83 +432,14 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
         );
     };
 
-    const renderChoiceOptions = (target: Question) => {
-        if (!isChoiceType(target.type) || (target.subquestions?.length ?? 0) > 0) return null;
-
-        const options = target.options ?? [];
-        const isRadio = target.type === 'single-select';
-
-        const handleToggle = (option: string, checked: boolean) => {
-            if (isRadio) {
-                onFieldChange(target.id, 'correctAnswer', option);
-                return;
-            }
-
-            const current = new Set(target.correctAnswers ?? []);
-            if (checked) {
-                current.add(option);
-            } else {
-                current.delete(option);
-            }
-            onFieldChange(target.id, 'correctAnswers', Array.from(current));
-        };
-
-        return (
-            <Box sx={{ mt: 1 }}>
-                <Typography variant="subtitle2">
-                    Options &amp; correct answer{isRadio ? '' : 's'}
-                </Typography>
-                {options.map((option, index) => {
-                    const trimmed = option.trim();
-                    const isChecked = isRadio
-                        ? (target.correctAnswer ?? '') === option
-                        : Array.isArray(target.correctAnswers) &&
-                          target.correctAnswers.includes(option);
-
-                    return (
-                        <Stack
-                            key={index}
-                            direction={{ xs: 'column', sm: 'row' }}
-                            spacing={1}
-                            alignItems={{ xs: 'flex-start', sm: 'center' }}
-                            sx={{ mt: 1 }}
-                        >
-                            {isRadio ? (
-                                <Radio
-                                    color="primary"
-                                    checked={isChecked}
-                                    disabled={!trimmed}
-                                    onChange={(event) =>
-                                        handleToggle(option, event.target.checked)
-                                    }
-                                />
-                            ) : (
-                                <Checkbox
-                                    color="primary"
-                                    checked={isChecked}
-                                    disabled={!trimmed}
-                                    onChange={(event) =>
-                                        handleToggle(option, event.target.checked)
-                                    }
-                                />
-                            )}
-                            <BufferedTextField
-                                label={`Option ${index + 1}`}
-                                fullWidth
-                                margin="dense"
-                                value={option}
-                                inputProps={ANTI_ASSIST_ATTRS as any}
-                                onCommit={(next) => onOptionChange(target.id, index, next)}
-                            />
-                        </Stack>
-                    );
-                })}
-                <Button onClick={() => onAddOption(target.id)} sx={{ mt: 1 }}>
-                    Add Option
-                </Button>
-            </Box>
-        );
-    };
+    const renderChoiceOptions = (target: Question) => (
+        <QuestionOptionsEditor
+            target={target}
+            onFieldChange={onFieldChange}
+            onAddOption={onAddOption}
+            onOptionChange={onOptionChange}
+        />
+    );
 
     if (!question) {
         return (
@@ -774,41 +590,19 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
                     />
                 )}
 
-                <Stack spacing={1} mt={2} direction="row">
-                    <FormControl fullWidth margin="normal">
-                        <InputLabel>Type</InputLabel>
-                        <Select
-                            value={sub.type}
-                            label="Type"
-                            onChange={(e) =>
-                                onTypeChange(sub.id, e.target.value as Question['type'])
-                            }
-                        >
-                            {questionTypeOptions
-                                .filter((type) => {
-                                    if (question.type === 'group') return true;
-                                    return type.value !== 'video' && type.value !== 'pdf';
-                                })
-                                .map((type) => (
-                                    <MenuItem key={type.value} value={type.value}>
-                                        {type.label}
-                                    </MenuItem>
-                                ))}
-                        </Select>
-                    </FormControl>
-                    <BufferedTextField
-                        label="Weight"
-                        type="number"
-                        fullWidth
-                        margin="normal"
-                        value={sub.weight}
-                        onCommit={(next) => onWeightChange(sub.id, next)}
-                        onKeyDown={(e) => {
-                            if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
-                        }}
-                        inputProps={{ min: 1 }}
-                    />
-                </Stack>
+                <QuestionTypeSelector
+                    questionId={sub.id}
+                    type={sub.type}
+                    weight={sub.weight}
+                    showWeight
+                    questionTypeOptions={questionTypeOptions}
+                    filterOptions={(type) => {
+                        if (question.type === 'group') return true;
+                        return type !== 'video' && type !== 'pdf';
+                    }}
+                    onTypeChange={onTypeChange}
+                    onWeightChange={onWeightChange}
+                />
 
                 {isLeaf && isChoiceType(sub.type) && renderChoiceOptions(sub)}
 
@@ -951,38 +745,15 @@ const QuestionEditorPanel: React.FC<QuestionEditorPanelProps> = ({
 
             {showTypeControls && (
                 <>
-                    <Stack direction="row" spacing={1}>
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Type</InputLabel>
-                            <Select
-                                value={question.type}
-                                label="Type"
-                                onChange={(e) =>
-                                    onTypeChange(question.id, e.target.value as Question['type'])
-                                }
-                            >
-                                {questionTypeOptions.map((type) => (
-                                    <MenuItem key={type.value} value={type.value}>
-                                        {type.label}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        {!isSection && !hasSubquestions && (
-                            <BufferedTextField
-                                label="Weight"
-                                type="number"
-                                fullWidth
-                                margin="normal"
-                                value={question.weight}
-                                onCommit={(next) => onWeightChange(question.id, next)}
-                                onKeyDown={(e) => {
-                                    if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
-                                }}
-                                inputProps={{ min: 1 }}
-                            />
-                        )}
-                    </Stack>
+                    <QuestionTypeSelector
+                        questionId={question.id}
+                        type={question.type}
+                        weight={question.weight}
+                        showWeight={!isSection && !hasSubquestions}
+                        questionTypeOptions={questionTypeOptions}
+                        onTypeChange={onTypeChange}
+                        onWeightChange={onWeightChange}
+                    />
 
                     {isChoiceType(question.type) &&
                         !hasSubquestions &&
