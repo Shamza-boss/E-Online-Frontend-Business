@@ -5,8 +5,8 @@ import { STAT_INTERVAL } from './constants';
 
 type DashboardMetric = {
   total?: number;
-  trend?: string;
-  dataPoints?: number[];
+  trend?: string | null;
+  dataPoints?: number[] | null;
 };
 
 export function buildStatCard(
@@ -36,10 +36,20 @@ export function normalizeRole(
     : (rawRole as UserRole);
 }
 
-export function normalizeTrend(trend: string | undefined): TrendDirection {
+export function normalizeTrend(
+  trend: string | null | undefined,
+): TrendDirection {
   return trend === 'up' || trend === 'down' || trend === 'neutral'
     ? trend
     : 'neutral';
+}
+
+export function normalizeGradeTrendColor(
+  color: string | null | undefined,
+): 'success' | 'error' | 'default' {
+  return color === 'success' || color === 'error' || color === 'default'
+    ? color
+    : 'default';
 }
 
 export function formatTrendAverage(average: number | null | undefined): string {

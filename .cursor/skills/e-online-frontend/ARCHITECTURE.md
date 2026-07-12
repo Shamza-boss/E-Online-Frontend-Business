@@ -173,7 +173,7 @@ Backend `InstitutionContextMiddleware` reads `institutionId` from JWT. Platform 
 
 ### DTO alignment
 
-Frontend types in `src/app/_lib/interfaces/types.ts` mirror backend `Application/DTOs/`. When adding endpoints, update both sides.
+Frontend API wire types are generated from the backend OpenAPI contract (`contracts/openapi.v1.json` → `src/app/_lib/api/generated/schema.d.ts`, aliases in `_lib/api/schemas.ts`). Prefer those over hand-syncing DTOs; see `docs/OPENAPI_CLIENT.md`. Remaining UI/domain types live in `src/app/_lib/interfaces/types.ts`.
 
 ### CORS
 

@@ -10,7 +10,7 @@ import {
   type InstitutionTrendsDashboardDto,
   type PlatformOwnerDashboardDto,
   type InstitutionBillingDashboardDto,
-} from '../interfaces/types';
+} from '../api/schemas';
 import { swrKeys } from '../config/swrKeys';
 
 export function useSystemDashboard() {

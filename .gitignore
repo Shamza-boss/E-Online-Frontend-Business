@@ -17,9 +17,6 @@
 /blob-report/
 /playwright/.cache/
 
-# OpenAPI generated types (regenerate with npm run generate:api-types)
-/src/app/_lib/api/generated/
-
 # next.js
 /.next/
 /out/

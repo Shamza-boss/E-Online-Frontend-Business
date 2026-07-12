@@ -53,12 +53,12 @@ Prioritized opportunities based on current codebase state (mid RSC migration).
 | Item | Why | Where |
 |------|-----|-------|
 | ~~**ESLint boundary rule**~~ | ✅ Done | `no-restricted-imports` blocks `_lib/data` from hooks/components/client modules |
-| ~~**API type generation**~~ | ✅ Spike done | `docs/OPENAPI_CLIENT.md` + `npm run generate:api-types` (`openapi-typescript` → `_lib/api/generated/`) |
+| ~~**API type generation**~~ | ✅ Contract flow | Backend `contracts/openapi.v1.json` + FE `npm run generate:api-types` → `_lib/api/generated/` + `_lib/api/schemas.ts`; dashboard DTOs wired |
 | ~~**E2E smoke tests**~~ | ✅ Done | Playwright: `e2e/smoke.spec.ts` (signin load + unauth `/dashboard` → `/signin`); `npm run test:e2e` |
 | ~~**Rename dashboard typos**~~ | ✅ Done | `getSystemAdminDashboard` / `getInstitutionDashboard` (removed `DashBoard` casing) |
 
 ## Suggested next PRs
 
-1. Wire generated OpenAPI types into hot `_lib/data` endpoints (incremental; see `docs/OPENAPI_CLIENT.md`)
+1. Map more `_lib/data` / actions modules onto `_lib/api/schemas` (classrooms, library, billing)
 2. Optional CI job for Playwright smoke against preview
 3. Further leaf splits in FormBuilder review/tree handlers if those files grow again

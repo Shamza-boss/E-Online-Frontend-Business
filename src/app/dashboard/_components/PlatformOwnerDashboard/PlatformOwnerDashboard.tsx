@@ -7,7 +7,7 @@ import PageViewsBarChart from '../PageViewsBarChart';
 import ActiveSubjectsChart from '../ActiveSubjectsChart';
 import { usePlatformOwnerDashboard } from '@/app/_lib/hooks/useDashboard';
 import type { PlatformOwnerDashboardDto } from '@/app/_lib/interfaces/types';
-import { buildStatCard, formatTrendAverage, normalizeTrend } from '../MainGrid/utils';
+import { formatTrendAverage, normalizeGradeTrendColor, normalizeTrend } from '../MainGrid/utils';
 import { DashboardGrid, HeaderBox, DescriptionText } from '../MainGrid/elements';
 import {
   DASHBOARD_TITLE,
@@ -68,7 +68,7 @@ export default function PlatformOwnerDashboard({
           isLoading={isLoading}
           months={platformData?.profitMarginMonths ?? []}
           series={platformData?.profitMarginPerformance ?? []}
-          trend={profitTrend?.color ?? 'default'}
+          trend={normalizeGradeTrendColor(profitTrend?.color)}
           numberOfTrainees={platformData?.users?.total ?? 0}
           title={PROFIT_MARGIN_CHART.title}
           description={PROFIT_MARGIN_CHART.description}

@@ -1,12 +1,12 @@
 import 'server-only';
 
 import { cache } from 'react';
-import {
-  type InstitutionBillingDashboardDto,
-  type InstitutionTrendsDashboardDto,
-  type PlatformOwnerDashboardDto,
-  type SystemAdminDashboardDto,
-} from '../interfaces/types';
+import type {
+  InstitutionBillingDashboardDto,
+  InstitutionTrendsDashboardDto,
+  PlatformOwnerDashboardDto,
+  SystemAdminDashboardDto,
+} from '../api/schemas';
 import { serverFetch } from '../serverFetch.server';
 import { CACHE_TAGS } from './tags';
 

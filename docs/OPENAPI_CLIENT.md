@@ -1,44 +1,48 @@
-# OpenAPI client generation (spike)
+# OpenAPI client types
 
-Generate TypeScript types from the ASP.NET Swagger document instead of hand-syncing DTOs.
+TypeScript types for the ASP.NET API are generated from the OpenAPI contract — not hand-synced DTO copies.
 
 ## Source of truth
 
-Backend Swashbuckle serves:
+| Layer | Location |
+|-------|----------|
+| Authoritative contract | Backend `E-Online-Backend-Business/contracts/openapi.v1.json` |
+| Vendored copy (this repo) | `contracts/openapi.v1.json` |
+| Generated types | `src/app/_lib/api/generated/schema.d.ts` |
+| App aliases | `src/app/_lib/api/schemas.ts` |
 
-- UI: `{BASE_API_URL}/swagger`
-- Spec: `{BASE_API_URL}/swagger/v1/swagger.json`
-
-Local default from `.env.example`: `http://localhost:5064`.
-
-## Recommended tool
-
-[`openapi-typescript`](https://github.com/openapi-ts/openapi-typescript) — types only (no runtime client). Fits the existing `serverFetch` / `clientFetch` layers.
-
-Alternative later: [orval](https://orval.dev/) if you want generated fetchers + React Query/SWR hooks.
+Backend ownership and export/check scripts: sibling repo `docs/API_CONTRACT.md`.
 
 ## Generate
 
-1. Start the backend so Swagger is reachable.
-2. From the frontend repo:
+From the frontend repo (prefers sibling backend contract when present):
 
 ```bash
 npm run generate:api-types
 ```
 
-This writes `src/app/_lib/api/generated/schema.d.ts`.
+Resolution order:
 
-Override the spec URL:
+1. `OPENAPI_SPEC_PATH` (file)
+2. `../E-Online-Backend-Business/contracts/openapi.v1.json`
+3. `./contracts/openapi.v1.json` (vendored)
+4. `OPENAPI_SPEC_URL` or `{BASE_API_URL}/swagger/v1/swagger.json`
 
-```bash
-OPENAPI_SPEC_URL=https://api.example.com/swagger/v1/swagger.json npm run generate:api-types
+When generating from the sibling (or an explicit path), the script also refreshes `contracts/openapi.v1.json`.
+
+`AppDto<SchemaName>` in `schemas.ts` deep-requires properties (Swashbuckle marks most as optional) while still deriving names/types from the generated schema.
+
+Commit both the vendored JSON and `schema.d.ts` after API contract changes.
+
+## Using types
+
+Prefer aliases from `schemas.ts` (keeps FE names stable where needed):
+
+```ts
+import type { SystemAdminDashboardDto } from '@/app/_lib/api/schemas';
 ```
 
-## Adoption path (incremental)
-
-1. Generate `schema.d.ts` and keep it out of day-to-day edits (regenerate on API changes).
-2. Map hot endpoints first — e.g. dashboard, subjects, classrooms — by importing `paths` / `components['schemas']` into `_lib/data` return types.
-3. Do **not** replace `serverFetch` wholesale; wrap typed responses at the boundary:
+Or path-level responses:
 
 ```ts
 import type { paths } from '@/app/_lib/api/generated/schema';
@@ -47,12 +51,10 @@ type InstitutionDashboard =
   paths['/api/dashboard/institution']['get']['responses'][200]['content']['application/json'];
 ```
 
-(Adjust path keys to match the actual Swagger document.)
+Wire types at `_lib/data` / `_lib/actions` boundaries. Keep Zod/Conform for forms.
 
-4. Keep Zod/Conform schemas for forms; OpenAPI types cover API wire shapes.
+## Workflow after a backend API change
 
-## Out of scope for this spike
-
-- Committing generated output until the first consumer is wired
-- Auth scheme codegen (Bearer is already handled by NextAuth + fetch wrappers)
-- Breaking rename of existing `_lib/interfaces/types.ts` in one PR
+1. Backend: export + commit `contracts/openapi.v1.json` (`scripts/export-openapi.ps1`).
+2. Frontend: `npm run generate:api-types` (with sibling repo checked out next to this one).
+3. Fix any TypeScript breakages; ship FE PR with vendored contract + generated types.

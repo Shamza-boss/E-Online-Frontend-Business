@@ -17,7 +17,7 @@ import {
   INSTITUTION_DASHBOARD_TITLE,
   INSTITUTION_DASHBOARD_DESCRIPTION,
 } from './constants';
-import { buildStatCard, formatTrendAverage } from './utils';
+import { buildStatCard, formatTrendAverage, normalizeGradeTrendColor } from './utils';
 import { DashboardGrid, HeaderBox, DescriptionText } from './elements';
 
 export type MainGridProps = {
@@ -87,7 +87,7 @@ function InstitutionMainGrid({ initialData }: InstitutionMainGridProps) {
           isLoading={isLoading}
           months={institutionData?.gradePerformanceMonths ?? []}
           series={institutionData?.gradePerformance ?? []}
-          trend={gradeTrend?.color ?? 'default'}
+          trend={normalizeGradeTrendColor(gradeTrend?.color)}
           numberOfTrainees={institutionData?.students?.total ?? 0}
           average={formatTrendAverage(gradeTrend?.average)}
         />

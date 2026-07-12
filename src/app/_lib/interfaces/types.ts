@@ -501,134 +501,31 @@ export type NewAdminDto = {
   email: string;
 }
 
-export type HourlyLoginStat = {
-  hour: number; // 0–23
-  count: number; // login count
-}
+// Dashboard / billing DTOs — sourced from OpenAPI (`_lib/api/schemas.ts`)
+export type {
+  BillingUsageMetricsDto,
+  GradePerfomanceDto,
+  GradePerformanceDto,
+  GradePerformanceLableTrendDto,
+  HourlyLoginStat,
+  InstitutionActivitySeries,
+  InstitutionBillingDashboardDto,
+  InstitutionTrendDashboardDto,
+  InstitutionTrendsDashboardDto,
+  MostActiveClassSubjectSeriesDto,
+  MostActiveInstitutionSeriesDto,
+  PlatformOwnerDashboardDto,
+  RecentHomeworkStatDto,
+  SubjectSeries,
+  SystemAdminDashboardDto,
+  TrendMetricDto,
+} from '../api/schemas';
 
-export type TrendMetricDto = {
-  total: number;
-  trend: string;
-  dataPoints: number[];
-}
-
-export type SystemAdminDashboardDto = {
-  totalInstitutions: number;
-  activeInstitutions: number;
-  totalUsers: number;
-  teachers: number;
-  students: number;
-  notesCreated: number;
-  homeworkCreated: number;
-  totalClassrooms: number;
-  peakUsageHours: HourlyLoginStat[]; // may be empty if untracked
-}
-
-// Platform Owner Dashboard DTOs
-export type PlatformOwnerDashboardDto = {
-  // Sparkline trend cards (30 daily data points, same shape as InstitutionTrendsDashboardDto)
-  institutions: TrendMetricDto;
-  users: TrendMetricDto;
-  modules: TrendMetricDto;
-  totalCost: TrendMetricDto;
-  averageProfit: TrendMetricDto;
-
-  // Top 3 most active institutions (same series format as MostActiveClassSubjectSeriesDto)
-  mostActiveInstitutions: MostActiveInstitutionSeriesDto;
-
-  // Profit margin buckets (same format as gradePerformance: 6-month bars)
-  profitMarginPerformance: GradePerfomanceDto[];
-  profitMarginMonths: string[];
-  profitMarginTrends: GradePerformanceLableTrendDto;
-}
-
-export type MostActiveInstitutionSeriesDto = {
-  labels: string[];
-  series: InstitutionActivitySeries[];
-}
-
-export type InstitutionActivitySeries = {
-  id: string;
-  label: string;
-  data: number[];
-}
-
-export type InstitutionBillingDashboardDto = {
-  institutionId: string;
-  institutionName: string;
-  userCount: number;
-  ratePerUserZar: number;
-  monthlyRevenueZar: number;
-  usageMetrics: BillingUsageMetricsDto;
-  totalCostZar: number;
-  costPerUserZar: number;
-  projectedMonthlyCostZar: number;
-  profitZar: number;
-  profitMarginPercent: number;
-}
-
-export type BillingUsageMetricsDto = {
-  storedVideoMinutes: number;
-  deliveredVideoMinutes: number;
-  pdfStorageGb: number;
-  pdfDownloads: number;
-  cpuSeconds: number;
-  memoryGbSeconds: number;
-  egressGb: number;
-  cloudflareCostUsd: number;
-  railwayCostUsd: number;
-  totalCostUsd: number;
-}
-
+/** Not present in OpenAPI yet — keep until backend exposes it. */
 export type EngagementStatDto = {
-  submissionRate: number; // e.g., 0.91 → 91%
+  submissionRate: number;
   avgNotePerStudent: number;
   avgHomeworkAssigned: number;
-}
-
-export type GradePerfomanceDto = {
-  label: string;
-  data: number[];
-}
-
-export type GradePerformanceLableTrendDto = {
-  average: number;
-  color: 'success' | 'error' | 'default';
-}
-
-export type SubjectSeries = {
-  id: string;
-  label: string;
-  data: number[];
-}
-
-export type MostActiveClassSubjectSeriesDto = {
-  labels: string[];
-  series: SubjectSeries[];
-}
-
-export type RecentHomeworkStatDto = {
-  classroomName: string;
-  subjectCode: string;
-  homeworkTitle: string;
-  dueDate: string; // ISO date string
-  studentsAssigned: number;
-  submissions: number;
-  submissionRate: number; // e.g., 0.85 → 85%
-  averageGrade: number; // null if not graded yet
-}
-
-export type InstitutionTrendsDashboardDto = {
-  id: string;
-  teachers: TrendMetricDto;
-  students: TrendMetricDto;
-  notesCreated: TrendMetricDto;
-  homeworkCreated: TrendMetricDto;
-  gradePerformance: GradePerfomanceDto[];
-  gradePerformanceMonths: string[]; // e.g., ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
-  gradePerformanceTrends: GradePerformanceLableTrendDto;
-  mostActiveSubjects: MostActiveClassSubjectSeriesDto;
-  recentHomeworkStats: RecentHomeworkStatDto[];
 }
 
 // Settings / Profile insights

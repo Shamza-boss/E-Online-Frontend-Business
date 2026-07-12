@@ -47,9 +47,10 @@ Slug format for courses: `{classroomName}~{classroomId}` (URL-encoded).
 | Dashboard shell | `dashboard/_components/Dashboard/`, `layout.tsx` |
 | Side nav + RBAC menu | `dashboard/_components/MenuContent/` |
 | Layout tokens (padding/scroll) | `src/app/_lib/layout/dashboardPageLayout.ts` |
-| Types | `src/app/_lib/interfaces/types.ts` |
+| Types | `src/app/_lib/interfaces/types.ts` (+ OpenAPI: `_lib/api/schemas.ts`) |
 | User roles | `src/app/_lib/Enums/UserRole.ts` |
 | Engineering standards | `docs/TYPE_STANDARDS.md`, `docs/DATA_FETCHING_STANDARDS.md`, `docs/COMPONENT_STANDARDS.md`, `docs/OPENAPI_CLIENT.md` |
+| API contract (vendored) | `contracts/openapi.v1.json` — generate with `npm run generate:api-types` |
 
 ## Data-fetch decision tree
 
