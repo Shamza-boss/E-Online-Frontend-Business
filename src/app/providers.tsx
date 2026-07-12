@@ -23,6 +23,7 @@ import { WarpTransitionProvider } from './_lib/components/shared-theme/WarpTrans
 import { AlertProvider } from './_lib/components/alert/AlertProvider';
 import { swrConfig } from './_lib/config/swr';
 import { PDF_NOTE_SENTINEL_ATTRIBUTE } from './_lib/utils/pdfNoteLinks';
+import { xThemeComponents } from './dashboard/_components/Dashboard/constants';
 
 // Session configuration - extracted for clarity
 const SESSION_CONFIG = {
@@ -90,7 +91,7 @@ export default function Providers({ children, session }: ProvidersProps) {
       <SessionInvalidRedirect />
       <SWRConfig value={mergedSwrConfig}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <AppTheme>
+          <AppTheme themeComponents={xThemeComponents}>
             <CssBaseline enableColorScheme />
             <GlobalStyles styles={pdfNoteStyles} />
             <WarpTransitionProvider>

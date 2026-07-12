@@ -8,12 +8,12 @@ import {
 } from '../interfaces/types';
 import { serverFetch } from '../serverFetch.server';
 
-/** Server Actions for SWR refresh paths — initial page data comes from _lib/data */
-export async function getSystemAdminDashBoard(): Promise<SystemAdminDashboardDto> {
+/** Server Actions for SWR refresh paths — initial page data comes from `_lib/data`. */
+export async function getSystemAdminDashboard(): Promise<SystemAdminDashboardDto> {
   return serverFetch<SystemAdminDashboardDto>('/Dashboard/system');
 }
 
-export async function getInstitutionDashBoard(): Promise<InstitutionTrendsDashboardDto> {
+export async function getInstitutionDashboard(): Promise<InstitutionTrendsDashboardDto> {
   return serverFetch<InstitutionTrendsDashboardDto>('/Dashboard/institution');
 }
 

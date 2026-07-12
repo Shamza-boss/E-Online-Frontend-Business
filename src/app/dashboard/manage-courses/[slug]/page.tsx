@@ -1,8 +1,8 @@
-import StudentManagementComponent from '../_components/Class';
 import {
   getAllUsersInClassroom,
-  getClassroomById,
-} from '../../../_lib/actions/classrooms';
+} from '@/app/_lib/actions/classrooms';
+import { getClassroomById } from '@/app/_lib/data/classrooms';
+import StudentManagementComponent from '../_components/Class';
 import { type Metadata } from 'next';
 import { notFound } from 'next/navigation';
 

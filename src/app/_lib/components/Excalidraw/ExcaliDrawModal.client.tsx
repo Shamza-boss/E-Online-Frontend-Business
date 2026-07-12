@@ -21,6 +21,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { type TransitionProps } from '@mui/material/transitions';
 import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { type ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
+import '@excalidraw/excalidraw/index.css';
 
 const Excalidraw = dynamic(
   () => import('@excalidraw/excalidraw').then((m) => m.Excalidraw),

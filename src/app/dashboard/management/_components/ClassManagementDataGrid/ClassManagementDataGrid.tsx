@@ -451,6 +451,7 @@ export default function ClassManagementDataGrid({
         onSortModelChange={setSortModel}
         loading={classLoading}
         slotProps={DATA_GRID_SLOT_PROPS}
+        mobileHiddenFields={['numberOfUsers', 'subjectCode', 'academicLevelId']}
       />
       <EditClassroomModal
         open={editModalOpen}

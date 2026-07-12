@@ -8,11 +8,14 @@ import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { useSession } from 'next-auth/react';
 import type { InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
 import type { PagedResult } from '@/app/_lib/interfaces/pagination';
-import { getDashboardPagePadding } from '@/app/_lib/layout/dashboardPageLayout';
+import {
+  dashboardFlexBodySx,
+  dashboardPageRootSx,
+} from '@/app/_lib/layout/dashboardPageLayout';
 
 export type InstitutionsClientProps = {
   initialInstitutionsPage?: PagedResult<InstitutionWithAdminDto>;
-}
+};
 
 export default function InstitutionsClient({
   initialInstitutionsPage,
@@ -33,19 +36,9 @@ export default function InstitutionsClient({
   };
 
   return (
-    <Box
-      sx={(theme) => ({
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        minWidth: 0,
-        boxSizing: 'border-box',
-        ...getDashboardPagePadding(theme),
-      })}
-    >
+    <Box sx={dashboardPageRootSx}>
       <Box sx={{ flexShrink: 0, marginBottom: 2 }}>
-        <Stack spacing={2} direction={'row'}>
+        <Stack spacing={2} direction="row">
           <Button
             sx={{ maxWidth: 'max-content' }}
             variant="outlined"
@@ -56,14 +49,7 @@ export default function InstitutionsClient({
           </Button>
         </Stack>
       </Box>
-      <Box
-        sx={{
-          flex: '1 1 0%',
-          display: 'flex',
-          overflow: 'hidden',
-          minHeight: 0,
-        }}
-      >
+      <Box sx={dashboardFlexBodySx}>
         <OutlinedWrapper
           sx={{
             display: 'flex',

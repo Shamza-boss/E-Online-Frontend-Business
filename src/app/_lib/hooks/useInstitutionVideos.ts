@@ -8,10 +8,11 @@ import {
   type InstitutionVideosParams,
 } from '@/app/_lib/actions/stream';
 import { type PagedResult } from '@/app/_lib/interfaces/pagination';
+import { swrKeys } from '@/app/_lib/config/swrKeys';
 
 export type UseInstitutionVideosParams = {
   enabled?: boolean;
-} & InstitutionVideosParams
+} & InstitutionVideosParams;
 
 export const useInstitutionVideos = (params: UseInstitutionVideosParams = {}) => {
   const {
@@ -24,9 +25,9 @@ export const useInstitutionVideos = (params: UseInstitutionVideosParams = {}) =>
   const swrKey = useMemo(
     () =>
       enabled
-        ? ['institution-videos', pageNumber, pageSize, searchTerm ?? '']
+        ? swrKeys.institutionVideos(pageNumber, pageSize, searchTerm ?? '')
         : null,
-    [enabled, pageNumber, pageSize, searchTerm]
+    [enabled, pageNumber, pageSize, searchTerm],
   );
 
   const fetcher = useCallback(

@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+import '@excalidraw/excalidraw/index.css';
 
 const Excalidraw = dynamic(
   () => import('@excalidraw/excalidraw').then((m) => m.Excalidraw),

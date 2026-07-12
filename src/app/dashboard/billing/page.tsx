@@ -21,6 +21,7 @@ export default async function BillingPage() {
   }
 
   const initialInstitutions = await getAllInstitutionsList();
+  // Billing dashboard depends on the first institution id — must stay sequential.
   const initialInstitutionId = initialInstitutions[0]?.institution?.id;
   const initialBillingDashboard = initialInstitutionId
     ? await getInstitutionBillingDashboard(initialInstitutionId)

@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 import {
-  getSystemAdminDashBoard,
-  getInstitutionDashBoard,
+  getSystemAdminDashboard,
+  getInstitutionDashboard,
   getPlatformOwnerDashboard,
   getInstitutionBillingDashboard,
 } from '../actions/dashboard';
@@ -11,11 +11,12 @@ import {
   type PlatformOwnerDashboardDto,
   type InstitutionBillingDashboardDto,
 } from '../interfaces/types';
+import { swrKeys } from '../config/swrKeys';
 
 export function useSystemDashboard() {
   return useSWR<SystemAdminDashboardDto>(
-    'dashboard-system',
-    getSystemAdminDashBoard,
+    swrKeys.dashboardSystem,
+    getSystemAdminDashboard,
   );
 }
 
@@ -23,8 +24,8 @@ export function useInstitutionDashboard(
   fallbackData?: InstitutionTrendsDashboardDto,
 ) {
   return useSWR<InstitutionTrendsDashboardDto>(
-    'dashboard-institution',
-    getInstitutionDashBoard,
+    swrKeys.dashboardInstitution,
+    getInstitutionDashboard,
     {
       fallbackData,
       revalidateOnMount: !fallbackData,
@@ -38,7 +39,7 @@ export function usePlatformOwnerDashboard(
   fallbackData?: PlatformOwnerDashboardDto,
 ) {
   return useSWR<PlatformOwnerDashboardDto>(
-    'dashboard-platform-owner',
+    swrKeys.dashboardPlatformOwner,
     getPlatformOwnerDashboard,
     {
       fallbackData,
@@ -54,7 +55,9 @@ export function useInstitutionBillingDashboard(
   fallbackData?: InstitutionBillingDashboardDto,
 ) {
   return useSWR<InstitutionBillingDashboardDto>(
-    institutionId ? ['dashboard-institution-billing', institutionId] : null,
+    institutionId
+      ? swrKeys.dashboardInstitutionBilling(institutionId)
+      : null,
     () => getInstitutionBillingDashboard(institutionId as string),
     {
       fallbackData,

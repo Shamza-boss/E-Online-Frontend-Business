@@ -3,39 +3,18 @@
 /**
  * Dashboard Layout
  *
- * Provides the main dashboard shell with:
- * - Navigation sidebar
- * - MathJax for mathematical expressions
- * - Date picker localization
+ * Shell + auth-notice handling. Heavy providers (MathJax, date pickers)
+ * live on the routes/components that need them.
  */
 
 import { useEffect } from 'react';
 import { Box } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { MathJaxContext } from 'better-react-mathjax';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { Route } from 'next';
 import DashboardComponent from './_components/Dashboard';
 import { AUTH_NOTICE_QUERY_KEY } from '@/app/_lib/utils/alreadySignedInNotice';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 
-// MathJax configuration for LaTeX-style math rendering
-const MATHJAX_CONFIG = {
-  tex: {
-    inlineMath: [
-      ['$', '$'],
-      ['\\(', '\\)'],
-    ],
-    displayMath: [
-      ['$$', '$$'],
-      ['\\[', '\\]'],
-    ],
-  },
-  loader: { load: ['input/tex', 'output/chtml'] },
-} as const;
-
-// Layout styles - extracted for maintainability
 const layoutStyles = {
   container: {
     width: '100%',
@@ -51,7 +30,7 @@ const layoutStyles = {
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
-}
+};
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
@@ -73,13 +52,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <DashboardComponent>
-      <MathJaxContext version={3} config={MATHJAX_CONFIG}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <Box sx={layoutStyles.container}>
-            <Box sx={layoutStyles.content}>{children}</Box>
-          </Box>
-        </LocalizationProvider>
-      </MathJaxContext>
+      <Box sx={layoutStyles.container}>
+        <Box sx={layoutStyles.content}>{children}</Box>
+      </Box>
     </DashboardComponent>
   );
 }

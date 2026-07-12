@@ -24,6 +24,7 @@ import type {
 } from '@/app/_lib/utils/pdfNoteLinks';
 import { sanitizeBookmarkColor } from '@/app/_lib/utils/pdfNoteLinks';
 import BookmarkDialog, { type BookmarkDialogPayload } from './BookmarkDialog';
+import type { PdfNoteLinkOptions } from './types';
 import {
   getHighlights as getStoredHighlights,
   setHighlights as setStoredHighlights,
@@ -31,6 +32,8 @@ import {
   migrateLocalStorageHighlights,
   normalizeStorageKey,
 } from '@/app/_lib/utils/pdfHighlightStore';
+
+export type { PdfNoteLinkOptions } from './types';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/build/pdf.worker.mjs`;
 
@@ -73,15 +76,7 @@ type Highlight = {
   };
 }
 
-export type PdfNoteLinkOptions = {
-  enabled: boolean;
-  links: PdfNoteLinkSummary[];
-  activeLinkId?: string | null;
-  onSelectLink?: (link: PdfNoteLinkSummary) => void;
-  onOpenNote?: (link: PdfNoteLinkSummary) => void;
-  onCreateLink?: (payload: PdfNoteLinkRequest) => void;
-  onUpdateLink?: (link: PdfNoteLinkSummary, payload: BookmarkDialogPayload) => void;
-}
+export type { PdfNoteLinkSummary, PdfNoteLinkRequest } from '@/app/_lib/utils/pdfNoteLinks';
 
 const highlightCursorStyle = {
   position: 'relative',
@@ -963,5 +958,3 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
 };
 
 export default React.memo(PdfViewer);
-
-export type { PdfNoteLinkSummary, PdfNoteLinkRequest } from '@/app/_lib/utils/pdfNoteLinks';

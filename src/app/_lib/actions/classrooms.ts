@@ -1,5 +1,5 @@
 'use server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import {
   type ClassDto,
   type ClassroomDetailsDto,
@@ -12,13 +12,25 @@ import { serverFetch } from '../serverFetch.server';
 import { auth } from '@/auth';
 import { type PagedResult, type PaginationParams } from '../interfaces/pagination';
 import { fetchPaginatedResource } from '../services/paginationService';
+import {
+  getAllUserClassrooms as getAllUserClassroomsCached,
+  getClassroomById as getClassroomByIdCached,
+} from '../data/classrooms';
+import { CACHE_TAGS } from '../data/tags';
+
+function revalidateClassroomCaches(): void {
+  updateTag(CACHE_TAGS.classrooms);
+  revalidatePath('/dashboard/manage-courses');
+  revalidatePath('/dashboard/courses');
+  revalidatePath('/dashboard/management');
+}
 
 export async function createClassroom(classroom: ClassDto): Promise<ClassDto> {
   const result = await serverFetch<ClassDto>('/classrooms', {
     method: 'POST',
     body: classroom,
   });
-  revalidatePath('/dashboard/manage-courses');
+  revalidateClassroomCaches();
   return result;
 }
 
@@ -65,13 +77,9 @@ export async function getClassroomsAndData(
   );
 }
 
+/** Client-callable read — RSC pages should import from `_lib/data` instead. */
 export async function getAllUserClassrooms(): Promise<ClassroomDetailsDto[]> {
-  const session = await auth();
-  if (!session) redirect('/signin');
-
-  return serverFetch<ClassroomDetailsDto[]>(
-    `/classrooms/user/${session?.user.id}`
-  );
+  return getAllUserClassroomsCached();
 }
 
 export async function getAllUsersInClassroom(
@@ -80,24 +88,27 @@ export async function getAllUsersInClassroom(
   return serverFetch<UserDto[]>(`/classrooms/classUsers/${classId}`);
 }
 
+/** Client-callable read — RSC pages should import from `_lib/data` instead. */
 export async function getClassroomById(classroomId: string): Promise<ClassDto> {
-  return serverFetch<ClassDto>(`/classrooms/${classroomId}`);
+  return getClassroomByIdCached(classroomId);
 }
 
 export async function updateClassroom(
-  payload: UpdateClassroomDto
+  payload: UpdateClassroomDto,
 ): Promise<void> {
-  return serverFetch<void>(`/classrooms/${payload.id}`, {
+  await serverFetch<void>(`/classrooms/${payload.id}`, {
     method: 'PUT',
     body: {
       ...payload,
       teacherId: payload.teacherId ?? null,
     },
   });
+  revalidateClassroomCaches();
 }
 
 export async function deleteClassroom(classroomId: string): Promise<void> {
-  return serverFetch<void>(`/classrooms/${classroomId}`, {
+  await serverFetch<void>(`/classrooms/${classroomId}`, {
     method: 'DELETE',
   });
+  revalidateClassroomCaches();
 }

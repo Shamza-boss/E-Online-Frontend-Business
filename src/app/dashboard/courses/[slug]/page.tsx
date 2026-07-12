@@ -2,7 +2,7 @@ import React from 'react';
 import { type Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ClassComponent } from '../_components/Class';
-import { getClassroomById } from '@/app/_lib/actions/classrooms';
+import { getClassroomById } from '@/app/_lib/data/classrooms';
 
 type PageProps = {
   params: Promise<{ slug: string }>;

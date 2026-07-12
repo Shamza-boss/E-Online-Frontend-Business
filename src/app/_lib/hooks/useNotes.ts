@@ -8,11 +8,12 @@ import {
   type UpdateNotePayload,
 } from '../actions/notes';
 import type { NoteDto } from '../interfaces/types';
+import { swrKeys } from '../config/swrKeys';
 
 const emptyNoteList: NoteDto[] = [];
 
 export function useClassroomNote(classId?: string) {
-  const key = classId ? ['classroom-note', classId] : null;
+  const key = classId ? swrKeys.classroomNote(classId) : null;
 
   const swr = useSWR<NoteDto | null>(
     key,
@@ -58,7 +59,7 @@ export function useClassroomNote(classId?: string) {
 }
 
 export function useClassroomNotesForTeacher(classId?: string) {
-  const key = classId ? ['classroom-notes', classId] : null;
+  const key = classId ? swrKeys.classroomNotes(classId) : null;
   return useSWR<NoteDto[]>(
     key,
     () => (classId ? getNotesForClassroom(classId) : Promise.resolve(emptyNoteList)),
@@ -79,6 +80,6 @@ export function useClassroomNotesForTeacher(classId?: string) {
 export async function deleteNote(noteId: string, classId?: string) {
   await deleteNoteById(noteId);
   if (classId) {
-    await globalMutate(['classroom-notes', classId]);
+    await globalMutate(swrKeys.classroomNotes(classId));
   }
 }

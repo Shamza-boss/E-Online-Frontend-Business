@@ -21,7 +21,7 @@ import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 import type { Question, GradedHomework } from '@/app/_lib/interfaces/types';
 import dynamic from 'next/dynamic';
 import { MathJaxContext } from 'better-react-mathjax';
-import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer from '@/app/_lib/components/PDFViewer';
 import type { ReviewAndGradeHomeworkProps, GradingData, GradingEntry } from './types';
 import {
     ContentPaper,

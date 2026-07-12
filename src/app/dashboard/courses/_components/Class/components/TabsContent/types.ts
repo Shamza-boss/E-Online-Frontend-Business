@@ -1,4 +1,4 @@
-import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/PDFViewer';
+import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/types';
 import type { PdfViewState } from '../../hooks/useClassroomLayout';
 
 export type TabsContentProps = {

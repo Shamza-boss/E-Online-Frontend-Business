@@ -2,7 +2,7 @@
 
 import SegmentError from '@/app/dashboard/_components/SegmentError/SegmentError';
 
-export default function DashboardError({
+export default function ManagementError({
   error,
   reset,
 }: {
@@ -13,8 +13,8 @@ export default function DashboardError({
     <SegmentError
       error={error}
       reset={reset}
-      title="Something went wrong"
-      description="We could not load this dashboard page. Please try again."
+      title="Management unavailable"
+      description="We could not load management data. Please try again."
     />
   );
 }

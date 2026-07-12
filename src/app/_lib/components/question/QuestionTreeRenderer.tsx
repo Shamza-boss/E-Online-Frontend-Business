@@ -13,7 +13,7 @@ import { alpha } from '@mui/material/styles';
 import { type Question } from '../../interfaces/types';
 import QuestionTextDisplay from '../TipTapEditor/QuestionTextDisplay';
 import { VideoPlayer } from '../video/VideoPlayer';
-import PDFViewer from '../PDFViewer/PDFViewer';
+import PDFViewer from '../PDFViewer';
 
 type AnswersMap = Record<string, any>;
 

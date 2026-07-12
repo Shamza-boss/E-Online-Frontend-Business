@@ -1,10 +1,16 @@
-import type { SxProps, Theme } from '@mui/material/styles';
-
 /**
  * Shared dashboard page layout tokens.
  * Use these instead of fixed `p: 3` so small screens keep horizontal room
  * while md+ keeps the familiar desktop rhythm.
+ *
+ * Shell choice:
+ * - `dashboardScrollablePageSx` — long content (card grids, billing stacks); parent scrolls
+ * - `dashboardPageRootSx` — full-height flex shells with an *internal* scroll region
+ *   (management tabs, library table, settings). Do not put unbounded card grids here
+ *   without a `dashboardScrollRegionSx` child — overflow will clip.
  */
+import type { SxProps, Theme } from '@mui/material/styles';
+
 export const dashboardPagePadding = {
   xs: 1.5,
   sm: 2,
@@ -23,7 +29,7 @@ export const dashboardGridSpacing = {
   md: 2,
 } as const;
 
-/** Outer page shell used by most dashboard routes. */
+/** Outer page shell for full-height flex + internal scroll (datagrids, settings). */
 export const dashboardPageRootSx: SxProps<Theme> = {
   height: '100%',
   width: '100%',

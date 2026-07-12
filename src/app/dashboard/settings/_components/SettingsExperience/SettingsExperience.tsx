@@ -28,6 +28,7 @@ import RoleGuidancePanel from './components/RoleGuidancePanel';
 import RocketBackdrop from './components/RocketBackdrop';
 import SettingsPageSkeleton from '@/app/dashboard/_components/_skeletonLoaders/SettingsPageSkeleton';
 import { dashboardSectionSpacing } from '@/app/_lib/layout/dashboardPageLayout';
+import { swrKeys } from '@/app/_lib/config/swrKeys';
 
 export type SettingsExperienceProps = {
   initialSettings: SettingsResponseDto;
@@ -35,7 +36,7 @@ export type SettingsExperienceProps = {
 
 export default function SettingsExperience({ initialSettings }: SettingsExperienceProps) {
   const { data, error, isLoading } = useSWR<SettingsResponseDto>(
-    'my-settings',
+    swrKeys.settingsMe,
     getMySettings,
     { fallbackData: initialSettings, revalidateOnMount: false },
   );

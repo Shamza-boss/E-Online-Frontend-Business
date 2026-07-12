@@ -1,16 +1,16 @@
 /**
  * Config barrel export
  *
- * Import config with cleaner paths:
- * import { swrConfig, createFetcher } from '@/config';
+ * import { swrConfig } from '@/config';
  */
 
+export { swrConfig } from './swr';
+export type { SWRState } from './swr';
+export { swrKeys } from './swrKeys';
+
 export {
-  swrConfig,
-  createFetcher,
-  createCustomFetcher,
+  clientFetch,
+  swrFetcher,
   proxyFetcher,
   createProxyFetcher,
-} from './swr';
-
-export type { SWRState } from './swr';
+} from '../services/clientFetch';

@@ -5,9 +5,8 @@ import TabList from '@mui/lab/TabList';
 import ConditionalTabPanel from '@/app/_lib/components/conditionalTabPanel';
 import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
 import SeeAssignmentsAndPreview from '../../../Homework/SeeAssignmentsAndPreview';
-import PDFViewer, {
-    type PdfNoteLinkOptions,
-} from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer from '@/app/_lib/components/PDFViewer';
+import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/types';
 import type { PdfViewState } from '../../hooks/useClassroomLayout';
 import type { TabsContentProps } from './types';
 import { FlexColumnBox, TabHeaderBox } from './elements';

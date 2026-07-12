@@ -1,6 +1,5 @@
-import PDFViewer, {
-    type PdfNoteLinkOptions,
-} from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer from '@/app/_lib/components/PDFViewer';
+import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/types';
 import {
     Dialog,
     AppBar,

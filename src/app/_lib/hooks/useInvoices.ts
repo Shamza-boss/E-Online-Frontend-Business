@@ -11,10 +11,11 @@ import type {
   InvoiceSummaryDto,
   InvoiceStatusSummaryDto,
 } from '../interfaces/types';
+import { swrKeys } from '../config/swrKeys';
 
 export function useInstitutionInvoices(institutionId?: string) {
   return useSWR<InvoiceDto[]>(
-    institutionId ? ['institution-invoices', institutionId] : null,
+    institutionId ? swrKeys.institutionInvoices(institutionId) : null,
     () => getInstitutionInvoices(institutionId as string),
     {
       revalidateOnFocus: false,
@@ -28,7 +29,7 @@ export function useInstitutionInvoices(institutionId?: string) {
 
 export function useInvoiceDetail(invoiceId?: string) {
   return useSWR<InvoiceDto>(
-    invoiceId ? ['invoice-detail', invoiceId] : null,
+    invoiceId ? swrKeys.invoiceDetail(invoiceId) : null,
     () => getInvoiceDetail(invoiceId as string),
     {
       revalidateOnFocus: false,
@@ -40,19 +41,15 @@ export function useInvoiceDetail(invoiceId?: string) {
 }
 
 export function useOverdueInvoices() {
-  return useSWR<InvoiceDto[]>(
-    'invoices-overdue',
-    getOverdueInvoices,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 60_000,
-    },
-  );
+  return useSWR<InvoiceDto[]>(swrKeys.invoicesOverdue, getOverdueInvoices, {
+    revalidateOnFocus: false,
+    dedupingInterval: 60_000,
+  });
 }
 
 export function useInvoiceSummary(year?: number, month?: number) {
   return useSWR<InvoiceSummaryDto>(
-    ['invoice-summary', year, month],
+    swrKeys.invoiceSummary(year, month),
     () => getInvoiceSummary(year, month),
     {
       revalidateOnFocus: false,
@@ -63,7 +60,7 @@ export function useInvoiceSummary(year?: number, month?: number) {
 
 export function useInvoiceStatusSummaries() {
   return useSWR<InvoiceStatusSummaryDto[]>(
-    'invoice-status-summaries',
+    swrKeys.invoiceStatusSummaries,
     getInvoiceStatusSummaries,
     {
       revalidateOnFocus: false,

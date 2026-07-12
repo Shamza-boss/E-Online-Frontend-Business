@@ -25,7 +25,7 @@ import {
 import { MathJaxContext } from 'better-react-mathjax';
 import QuestionTreeRenderer from '../question/QuestionTreeRenderer';
 import { sortQuestionTreeByDisplayOrder } from '../../utils/questionOrder';
-import PDFViewer from '../PDFViewer/PDFViewer';
+import PDFViewer from '../PDFViewer';
 import { StepPill } from '@/app/dashboard/courses/_components/Homework/HomeworkView';
 
 const mathJaxConfig = {

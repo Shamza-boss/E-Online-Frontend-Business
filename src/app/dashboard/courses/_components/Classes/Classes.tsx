@@ -1,63 +1,65 @@
-import { getAllUserClassrooms } from '@/app/_lib/actions/classrooms';
+import { getAllUserClassrooms } from '@/app/_lib/data/classrooms';
 import ClassCard from '@/app/_lib/components/shared-theme/customizations/card';
 import { type ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import { SchoolRounded } from '@mui/icons-material';
 import ErrorLayout from '../../../_components/ErrorLayout';
 import Link from 'next/link';
+import type { Route } from 'next';
 import { ClassesGrid, CardWrapper } from './elements';
 
+function courseHref(classItem: ClassroomDetailsDto): Route {
+  return `/dashboard/courses/${encodeURIComponent(
+    `${classItem.classroomName}~${classItem.classroomId}`,
+  )}` as Route;
+}
+
 export default async function ClassroomClasses() {
-    let classes: ClassroomDetailsDto[] = [];
+  let classes: ClassroomDetailsDto[] = [];
 
-    try {
-        const result = await getAllUserClassrooms();
-        classes = Array.isArray(result) ? result : [];
-    } catch (error) {
-        console.error('Unable to load classrooms', error);
-        return (
-            <ErrorLayout
-                icon={<SchoolRounded sx={{ fontSize: 80 }} />}
-                title="Courses unavailable"
-                description="We couldn't load your courses just now. Please refresh the page."
-                actionLabel="Back to Dashboard"
-                actionHref="/dashboard"
-                tone="error"
-            />
-        );
-    }
-
-    if (classes.length === 0) {
-        return (
-            <ErrorLayout
-                icon={<SchoolRounded sx={{ fontSize: 80 }} />}
-                title="No courses Found"
-                description="You are not enrolled into any courses yet. Please contact your instructor or institution for access."
-                actionLabel="Back to Dashboard"
-                actionHref="/dashboard"
-                tone="info"
-            />
-        );
-    }
-
+  try {
+    const result = await getAllUserClassrooms();
+    classes = Array.isArray(result) ? result : [];
+  } catch (error) {
+    console.error('Unable to load classrooms', error);
     return (
-        <ClassesGrid>
-            {classes.map((classItem) => (
-                <CardWrapper key={classItem.classroomId}>
-                    <Link
-                        style={{ textDecoration: 'none' }}
-                        href={
-                            `/dashboard/courses/${encodeURIComponent(`${classItem.classroomName}~${classItem.classroomId}`)}` as any
-                        }
-                    >
-                        <ClassCard
-                            className={classItem.classroomName}
-                            teacherNameAbb={`${classItem.teacherLastName} ${classItem.teacherFirstName.charAt(0)}`}
-                            subjectName={classItem.subjectName}
-                            academicLevelName={classItem.academicLevelName}
-                        />
-                    </Link>
-                </CardWrapper>
-            ))}
-        </ClassesGrid>
+      <ErrorLayout
+        icon={<SchoolRounded sx={{ fontSize: 80 }} />}
+        title="Courses unavailable"
+        description="We couldn't load your courses just now. Please refresh the page."
+        actionLabel="Back to Dashboard"
+        actionHref="/dashboard"
+        tone="error"
+      />
     );
+  }
+
+  if (classes.length === 0) {
+    return (
+      <ErrorLayout
+        icon={<SchoolRounded sx={{ fontSize: 80 }} />}
+        title="No courses Found"
+        description="You are not enrolled into any courses yet. Please contact your instructor or institution for access."
+        actionLabel="Back to Dashboard"
+        actionHref="/dashboard"
+        tone="info"
+      />
+    );
+  }
+
+  return (
+    <ClassesGrid>
+      {classes.map((classItem) => (
+        <CardWrapper key={classItem.classroomId}>
+          <Link style={{ textDecoration: 'none' }} href={courseHref(classItem)}>
+            <ClassCard
+              className={classItem.classroomName}
+              teacherNameAbb={`${classItem.teacherLastName} ${classItem.teacherFirstName.charAt(0)}`}
+              subjectName={classItem.subjectName}
+              academicLevelName={classItem.academicLevelName}
+            />
+          </Link>
+        </CardWrapper>
+      ))}
+    </ClassesGrid>
+  );
 }

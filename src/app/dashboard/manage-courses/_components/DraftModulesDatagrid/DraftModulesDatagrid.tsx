@@ -147,6 +147,7 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
                 }
                 loading={isLoading}
                 onRowClick={handleRowClick}
+                mobileHiddenFields={['description', 'expiryDate', 'completions']}
                 sx={{
                     '& .MuiDataGrid-row': {
                         cursor: 'pointer',

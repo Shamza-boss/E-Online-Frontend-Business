@@ -1,15 +1,14 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { type AcademicLevelDto } from '../interfaces/types';
 import { serverFetch } from '../serverFetch.server';
+import { getAllAcademics as getAllAcademicsCached } from '../data/academics';
 import { CACHE_TAGS } from '../data/tags';
 
+/** Client-callable read — RSC pages should import from `_lib/data` instead. */
 export async function getAllAcademics(): Promise<AcademicLevelDto[]> {
-  return serverFetch<AcademicLevelDto[]>('/academicLevel', {
-    tags: [CACHE_TAGS.academics],
-    revalidate: 300,
-  });
+  return getAllAcademicsCached();
 }
 
 export async function createAcademics(
@@ -19,6 +18,7 @@ export async function createAcademics(
     method: 'POST',
     body: newAcademics,
   });
+  updateTag(CACHE_TAGS.academics);
   revalidatePath('/dashboard/management');
   return result;
 }

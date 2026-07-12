@@ -2,7 +2,7 @@
 
 import SegmentError from '@/app/dashboard/_components/SegmentError/SegmentError';
 
-export default function DashboardError({
+export default function CoursesError({
   error,
   reset,
 }: {
@@ -13,8 +13,8 @@ export default function DashboardError({
     <SegmentError
       error={error}
       reset={reset}
-      title="Something went wrong"
-      description="We could not load this dashboard page. Please try again."
+      title="Courses unavailable"
+      description="We could not load your courses. Please try again."
     />
   );
 }

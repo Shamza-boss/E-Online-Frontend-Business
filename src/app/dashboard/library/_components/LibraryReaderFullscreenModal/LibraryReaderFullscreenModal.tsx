@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
-import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer from '@/app/_lib/components/PDFViewer';
 import {
   extractTextbookName,
   formatLinkedCoursesTooltip,

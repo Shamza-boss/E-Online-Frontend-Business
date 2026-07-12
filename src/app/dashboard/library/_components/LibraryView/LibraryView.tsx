@@ -28,7 +28,7 @@ import {
   TABLE_PAGE_SIZE,
   CARD_DEFAULT_PAGE_SIZE,
   CARD_MAX_PAGE_SIZE,
-  ACADEMICS_SWR_KEY,
+  librarySwrKeys,
   SEARCH_DEBOUNCE_MS,
   VIEW_MODE_KEY,
 } from './constants';
@@ -104,7 +104,7 @@ export default function LibraryView({ initialAcademics }: LibraryViewProps) {
 
   const { files: manageFiles, mutate: mutateManageFiles } = useLibraryFiles();
 
-  const { data: academicOptions = [] } = useSWR(ACADEMICS_SWR_KEY, getAllAcademics, {
+  const { data: academicOptions = [] } = useSWR(librarySwrKeys.academics, getAllAcademics, {
     fallbackData: initialAcademics,
   });
 

@@ -377,6 +377,12 @@ export default function InstitutionUserDataGrid({
         }}
         pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
         rowCount={rowCount}
+        mobileHiddenFields={[
+          'adminEmail',
+          'creatorEnabled',
+          'statusToggle',
+          'updatedAt',
+        ]}
         loading={institutionsLoading || institutionsValidating}
         onRowDoubleClick={handleRowDoubleClick}
         slotProps={DATA_GRID_SLOT_PROPS}

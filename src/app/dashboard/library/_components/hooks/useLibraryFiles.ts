@@ -10,12 +10,13 @@ import {
   type LibraryQueryParams,
 } from '@/app/_lib/actions/storage';
 import { type PagedResult } from '@/app/_lib/interfaces/pagination';
+import { swrKeys } from '@/app/_lib/config/swrKeys';
 
 export const useLibraryFiles = () => {
   const { data, isLoading, isValidating, mutate } = useSWR<FileDto[]>(
-    'repository-files',
+    swrKeys.repositoryFiles,
     getRepositoryFiles,
-    { revalidateOnMount: true }
+    { revalidateOnMount: true },
   );
 
   const files = data ?? [];

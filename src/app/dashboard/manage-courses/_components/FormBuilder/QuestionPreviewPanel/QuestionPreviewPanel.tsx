@@ -5,7 +5,7 @@ import { Box, Chip, Checkbox, Radio, RadioGroup, Typography } from '@mui/materia
 import { useTheme } from '@mui/material/styles';
 import type { Question } from '@/app/_lib/interfaces/types';
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
-import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer from '@/app/_lib/components/PDFViewer';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 import type { QuestionPreviewPanelProps } from './types';
 import {

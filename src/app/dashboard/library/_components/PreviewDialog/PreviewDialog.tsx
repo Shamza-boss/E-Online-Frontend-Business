@@ -14,7 +14,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { type LibraryFileDto } from '@/app/_lib/interfaces/types';
-import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer from '@/app/_lib/components/PDFViewer';
 import {
   extractTextbookName,
   getFileSizeBytes,

@@ -21,7 +21,7 @@ import {
     type PdfNoteLinkRequest,
     type PdfNoteLinkSummary,
 } from '@/app/_lib/utils/pdfNoteLinks';
-import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/PDFViewer';
+import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/types';
 import type { ClassComponentProps } from './types';
 import { ClassShell, ToolbarRow, ContentArea, InnerColumn } from './elements';
 import {

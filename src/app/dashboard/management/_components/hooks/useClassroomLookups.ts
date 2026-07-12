@@ -12,6 +12,7 @@ import type {
   UserDto,
 } from '@/app/_lib/interfaces/types';
 import type { PagedResult } from '@/app/_lib/interfaces/pagination';
+import { swrKeys } from '@/app/_lib/config/swrKeys';
 
 type ClassroomLookups = {
   subjectOptions: SubjectDto[];
@@ -40,7 +41,7 @@ export function useClassroomLookups(
     data: subjectData,
     isLoading: subjectsLoading,
     mutate: mutateSubjects,
-  } = useSWR<SubjectDto[]>('subjects', getAllSubjects, {
+  } = useSWR<SubjectDto[]>(swrKeys.subjects, getAllSubjects, {
     fallbackData: initialSubjects,
     revalidateOnMount: !initialSubjects,
     revalidateOnFocus: false,
@@ -50,7 +51,7 @@ export function useClassroomLookups(
     data: academicData,
     isLoading: academicsLoading,
     mutate: mutateAcademics,
-  } = useSWR<AcademicLevelDto[]>('academics', getAllAcademics, {
+  } = useSWR<AcademicLevelDto[]>(swrKeys.academics, getAllAcademics, {
     fallbackData: initialAcademics,
     revalidateOnMount: !initialAcademics,
     revalidateOnFocus: false,
@@ -58,13 +59,13 @@ export function useClassroomLookups(
 
   const { data: usersData, isLoading: usersLoading } = useSWR<
     PagedResult<UserDto>
-  >('users-instructors', () =>
+  >(swrKeys.usersInstructors, () =>
     getUsers({
       pageNumber: 1,
       pageSize: 100,
       sortBy: 'lastName',
       sortDirection: 'asc',
-    })
+    }),
   );
 
   const instructors = useMemo(

@@ -310,6 +310,7 @@ export default function UserManagementDataGrid({
         onSortModelChange={setSortModel}
         loading={usersLoading || usersValidating}
         slotProps={DATA_GRID_SLOT_PROPS}
+        mobileHiddenFields={['email']}
       />
       <EditUserModal
         open={editModalOpen}

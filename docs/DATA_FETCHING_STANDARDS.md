@@ -28,8 +28,8 @@ Next.js treats the **entire import graph** of a `'use client'` file as client bu
 | Layer | File | Import from | Mechanism |
 |-------|------|-------------|-----------|
 | Server reads (RSC pages) | `_lib/data/*.ts` | `page.tsx` only | `import 'server-only'` + `cache()` + `serverFetch.server` |
-| Server mutations + client-callable reads | `_lib/actions/*.ts` | Client components, hooks, forms | **Must** have `'use server'` at file top + `serverFetch.server` |
-| Client proxy fetch (legacy SWR only) | `serverFetch.ts` or `clientFetch.ts` | Avoid for new code; prefer Server Actions | `/api/proxy` |
+| Server mutations + client-callable reads | `_lib/actions/*.ts` | Client components, hooks, forms | **Must** have `'use server'` at file top; reads may delegate to `_lib/data` |
+| Client proxy fetch (legacy SWR only) | `clientFetch.ts` / `proxyFetcher` | Avoid for new code; prefer Server Actions | `/api/proxy` |
 
 ### Do / don't
 
@@ -58,7 +58,7 @@ Mutations live in `_lib/actions/*.ts` with `'use server'`. Return explicit types
 |-------|------|------|
 | Server reads | `_lib/data/*.ts` | `cache()`-wrapped functions, `import 'server-only'` |
 | Server fetch | `_lib/serverFetch.server.ts` | Authenticated backend calls (server only) |
-| Client fetch | `_lib/serverFetch.ts` / `_lib/services/clientFetch.ts` | Proxy-routed client calls (no server branch) |
+| Client fetch | `_lib/services/clientFetch.ts` / `_lib/config/swr.ts` | Proxy-routed client calls |
 | Mutations | `_lib/actions/*.ts` | `'use server'` + `revalidateTag` / `revalidatePath` |
 | Client cache | `_lib/hooks/*.ts` | SWR for interactive/live data |
 

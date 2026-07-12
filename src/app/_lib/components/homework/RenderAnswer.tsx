@@ -5,7 +5,7 @@ import { Typography, Box } from '@mui/material';
 import { RichTextAnswer } from './RichTextAnswer';
 import { type Question } from '../../interfaces/types';
 import { VideoPlayer } from '../video/VideoPlayer';
-import PDFViewer from '../PDFViewer/PDFViewer';
+import PDFViewer from '../PDFViewer';
 
 type RenderAnswerProps = {
   question: Question;

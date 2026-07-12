@@ -324,6 +324,7 @@ const StudentManagementTable: React.FC<StudentManagementTableProps> = ({
                     initialState={{ pagination: { paginationModel: { pageSize: 20 } } }}
                     loading={studentsLoading}
                     slotProps={dataGridSlotProps}
+                    mobileHiddenFields={['email']}
                     slots={{
                         noResultsOverlay: CustomNoResultsOverlay,
                     }}

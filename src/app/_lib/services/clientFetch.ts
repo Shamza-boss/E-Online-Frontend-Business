@@ -1,27 +1,48 @@
 /**
- * Client-side API Fetch Utility
+ * Client-side API fetch via authenticated `/api/proxy`.
  *
- * Safe wrapper for client components using SWR or other client-side data fetching.
- * Uses the proxy endpoint to avoid redirect() issues in client components.
+ * Single entry point for browser → BFF calls. Prefer Server Actions for new code;
+ * use this only for SWR keys that hit the proxy directly.
  */
 
 import { type HttpMethod, BODYLESS_METHODS, CONTENT_TYPES } from '@/lib/api';
 import type { JsonValue } from '@/lib/api/json';
+import type { Fetcher } from 'swr';
 
 type ClientFetchBody = JsonValue | FormData | string;
 
-type ClientFetchOptions = {
-  /** HTTP method (default: 'GET') */
+export type ClientFetchOptions = {
   method?: HttpMethod;
-  /** Request body - automatically serialized for JSON */
   body?: ClientFetchBody;
-  /** Additional headers */
   headers?: Record<string, string>;
 };
 
+type ProxyQueryParams = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
+
+type FetchHttpError = Error & {
+  status: number;
+  info?: string;
+};
+
+function createFetchError(response: Response, info?: string): FetchHttpError {
+  const error = new Error(
+    'An error occurred while fetching the data.',
+  ) as FetchHttpError;
+  error.status = response.status;
+  error.info = info;
+  return error;
+}
+
+function normalizeEndpoint(endpoint: string): string {
+  return endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+}
+
 /**
- * Client-safe fetch for use in client components
- * Routes through /api/proxy to avoid server-side redirect issues
+ * Client-safe fetch for use in client components.
+ * Routes through `/api/proxy` to keep auth cookies and avoid server-only redirects.
  */
 export async function clientFetch<T>(
   endpoint: string,
@@ -29,8 +50,7 @@ export async function clientFetch<T>(
 ): Promise<T> {
   const { method = 'GET', body, headers: customHeaders = {} } = options;
 
-  const normalized = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-  const url = `/api/proxy/${normalized}`;
+  const url = `/api/proxy/${normalizeEndpoint(endpoint)}`;
 
   const headers: Record<string, string> = {
     'Content-Type': CONTENT_TYPES.json,
@@ -61,7 +81,7 @@ export async function clientFetch<T>(
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`API Error: ${response.status} - ${text.slice(0, 200)}`);
+    throw createFetchError(response, text.slice(0, 200));
   }
 
   const text = await response.text();
@@ -70,5 +90,29 @@ export async function clientFetch<T>(
   return JSON.parse(text) as T;
 }
 
+/** SWR-compatible GET fetcher (alias of `clientFetch`). */
 export const swrFetcher = <T>(endpoint: string): Promise<T> =>
   clientFetch<T>(endpoint);
+
+/** @deprecated Prefer `clientFetch` / `swrFetcher`. */
+export const proxyFetcher = swrFetcher;
+
+export function createProxyFetcher<T>(
+  baseEndpoint: string,
+): Fetcher<T | null, ProxyQueryParams | undefined> {
+  return async (params?: ProxyQueryParams): Promise<T | null> => {
+    let endpoint = normalizeEndpoint(baseEndpoint);
+
+    if (params && Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== null) {
+          searchParams.set(key, String(value));
+        }
+      }
+      endpoint += `?${searchParams.toString()}`;
+    }
+
+    return clientFetch<T | null>(endpoint);
+  };
+}

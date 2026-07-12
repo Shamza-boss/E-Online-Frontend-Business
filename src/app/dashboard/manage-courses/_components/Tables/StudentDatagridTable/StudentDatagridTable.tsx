@@ -122,6 +122,7 @@ export default function StudentDatagridTable({
             onProcessRowUpdateError={handleRowUpdateError}
             loading={isLoading}
             slotProps={dataGridSlotProps}
+            mobileHiddenFields={['email']}
         />
     );
 }

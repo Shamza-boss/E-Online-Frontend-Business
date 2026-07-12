@@ -15,7 +15,7 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { type FileDto, type PdfMeta } from '../../interfaces/types';
 import { uploadPdfAsset } from '../../services/storageUpload';
 import { fileDtoToPdfMeta } from '../../utils/media';
-import PDFViewer from '../PDFViewer/PDFViewer';
+import PDFViewer from '../PDFViewer';
 import PdfSourceTabs, { type PdfSource } from './PdfSourceTabs';
 
 type PdfUploadFieldProps = {

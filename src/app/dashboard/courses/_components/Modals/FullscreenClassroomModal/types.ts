@@ -1,4 +1,4 @@
-import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/PDFViewer';
+import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/types';
 import type { EditorHandle } from '@/app/_lib/components/TipTapEditor/Editor';
 import type { NoteDto } from '@/app/_lib/interfaces/types';
 import type { PdfNoteLinkSummary } from '@/app/_lib/utils/pdfNoteLinks';

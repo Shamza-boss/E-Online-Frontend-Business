@@ -8,4 +8,5 @@ export {
 export { getMySettings } from './settings';
 export { getAllAcademics } from './academics';
 export { getAllSubjects } from './subjects';
+export { getAllUserClassrooms, getClassroomById } from './classrooms';
 export { getAllInstitutionsList, getInstitutionsPage } from './institutions';

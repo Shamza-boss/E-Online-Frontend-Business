@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
-import { getDashboardPagePadding } from '@/app/_lib/layout/dashboardPageLayout';
+import {
+  dashboardFlexBodySx,
+  dashboardPageRootSx,
+} from '@/app/_lib/layout/dashboardPageLayout';
 import CreateClassroomModal from './_components/Modals/CreateClassroomModal';
 import RegisterPersonModal from './_components/Modals/RegisterPersonModal';
 import CreateSubjectModal from './_components/Modals/CreateSubjectModal';
@@ -62,17 +65,7 @@ export default function ManagementClient({
   }, [activeTab]);
 
   return (
-    <Box
-      sx={(theme) => ({
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        minWidth: 0,
-        boxSizing: 'border-box',
-        ...getDashboardPagePadding(theme),
-      })}
-    >
+    <Box sx={dashboardPageRootSx}>
       <Box sx={{ flexShrink: 0, marginBottom: 1 }}>
         <ManagementHeader
           activeTab={activeTab}
@@ -86,7 +79,7 @@ export default function ManagementClient({
         />
       </Box>
 
-      <Box sx={{ flex: '1 1 0%', display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+      <Box sx={dashboardFlexBodySx}>
         <OutlinedWrapper
           sx={{
             display: 'flex',
