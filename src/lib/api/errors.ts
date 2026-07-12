@@ -8,6 +8,8 @@
  * - Type guards for error handling
  */
 
+import type { JsonObject, JsonValue } from './json';
+
 // ============================================================================
 // Error Codes - Use these to quickly identify error types in logs
 // ============================================================================
@@ -56,7 +58,7 @@ export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
 // Error Context - Additional debugging information
 // ============================================================================
 
-export interface ErrorContext {
+export type ErrorContext = {
   /** Unique tracking ID for log correlation */
   trackingId: string;
   /** ISO timestamp when error occurred */
@@ -68,8 +70,8 @@ export interface ErrorContext {
   /** Request/response headers (sanitized) */
   headers?: Record<string, string>;
   /** Additional context data */
-  metadata?: Record<string, unknown>;
-}
+  metadata?: JsonObject;
+};
 
 /**
  * Generate a unique tracking ID for error correlation
@@ -104,7 +106,7 @@ export class ApiError extends Error {
     message: string,
     public readonly status: number,
     public readonly code: ErrorCodeType = ErrorCode.UNKNOWN,
-    contextOrDetails?: Partial<ErrorContext> | unknown
+    contextOrDetails?: Partial<ErrorContext> | JsonValue
   ) {
     super(message);
     this.name = 'ApiError';
@@ -194,15 +196,25 @@ export class ApiError extends Error {
   /**
    * Get a JSON representation for logging
    */
-  toJSON(): Record<string, unknown> {
-    return {
+  toJSON(): JsonObject {
+    const payload: JsonObject = {
       name: this.name,
       message: this.message,
       code: this.code,
       status: this.status,
-      context: this.context,
-      stack: this.stack,
+      context: {
+        trackingId: this.context.trackingId,
+        timestamp: this.context.timestamp,
+        ...(this.context.url ? { url: this.context.url } : {}),
+        ...(this.context.method ? { method: this.context.method } : {}),
+        ...(this.context.headers ? { headers: this.context.headers } : {}),
+        ...(this.context.metadata ? { metadata: this.context.metadata } : {}),
+      },
     };
+    if (this.stack) {
+      payload.stack = this.stack;
+    }
+    return payload;
   }
 }
 
@@ -239,7 +251,10 @@ export class ValidationError extends ApiError {
   ) {
     super(message, 422, ErrorCode.VALIDATION_FAILED, {
       ...context,
-      metadata: { ...context?.metadata, fields },
+      metadata: {
+        ...(context?.metadata ?? {}),
+        fields: fields ?? null,
+      },
     });
     this.name = 'ValidationError';
   }
@@ -260,7 +275,10 @@ export class RateLimitError extends ApiError {
   ) {
     super(message, 429, ErrorCode.RATE_LIMITED, {
       ...context,
-      metadata: { ...context?.metadata, retryAfter },
+      metadata: {
+        ...(context?.metadata ?? {}),
+        retryAfter: retryAfter ?? null,
+      },
     });
     this.name = 'RateLimitError';
   }
@@ -270,7 +288,7 @@ export class NetworkError extends Error {
   public readonly code = ErrorCode.NETWORK_ERROR;
   public readonly context: ErrorContext;
 
-  constructor(message = 'Network error', cause?: unknown) {
+  constructor(message = 'Network error', cause?: Error | JsonValue) {
     super(message);
     this.name = 'NetworkError';
     this.cause = cause;
@@ -405,4 +423,20 @@ export function formatErrorForLog(error: unknown): string {
     return `[ERR] ${error.name}: ${error.message}\n  Stack: ${error.stack}`;
   }
   return `[ERR] Unknown error: ${String(error)}`;
+}
+
+/**
+ * User-facing message from a caught value (catch blocks and action errors).
+ */
+export function getErrorMessage(error: unknown): string {
+  if (isApiError(error)) {
+    return error.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'An unexpected error occurred';
 }

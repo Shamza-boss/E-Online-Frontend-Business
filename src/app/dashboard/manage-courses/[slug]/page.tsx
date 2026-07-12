@@ -3,18 +3,19 @@ import {
   getAllUsersInClassroom,
   getClassroomById,
 } from '../../../_lib/actions/classrooms';
-import { Metadata } from 'next';
+import { type Metadata } from 'next';
+import { notFound } from 'next/navigation';
 
-interface PageProps {
+type PageProps = {
   params: Promise<{ slug: string }>;
-}
+};
 
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const decoded = decodeURIComponent(slug);
-  const [name] = decoded.split('~');
+  const name = decoded.split('~')[0] ?? 'Course';
 
   return {
     title: `Manage ${name}`,
@@ -24,7 +25,10 @@ export async function generateMetadata({
 export default async function ManageLectures({ params }: PageProps) {
   const { slug } = await params;
   const decoded = decodeURIComponent(slug);
-  const [, classId] = decoded.split('~');
+  const classId = decoded.split('~')[1];
+  if (!classId) {
+    notFound();
+  }
 
   const [classUsers, classDetails] = await Promise.all([
     getAllUsersInClassroom(classId),

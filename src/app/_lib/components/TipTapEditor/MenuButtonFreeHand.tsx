@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 // ← import this instead of useCurrentEditor
 import { MenuButton, useRichTextEditorContext } from 'mui-tiptap';
 import DrawIcon from '@mui/icons-material/Gesture';
-import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import ExcalidrawModal from '../Excalidraw/ExcaliDrawModal.client';
 
 export default function DrawingButton() {

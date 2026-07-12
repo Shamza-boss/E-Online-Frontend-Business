@@ -1,6 +1,6 @@
 import { styled } from '@mui/material/styles';
 import { Box } from '@mui/material';
-import type { ErrorTone } from './interfaces';
+import type { ErrorTone } from './types';
 
 export const PageContainer = styled(Box)({
   height: '100vh',

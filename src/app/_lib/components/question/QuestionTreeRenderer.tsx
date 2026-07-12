@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { Question } from '../../interfaces/types';
+import { type Question } from '../../interfaces/types';
 import QuestionTextDisplay from '../TipTapEditor/QuestionTextDisplay';
 import { VideoPlayer } from '../video/VideoPlayer';
 import PDFViewer from '../PDFViewer/PDFViewer';
@@ -30,7 +30,7 @@ type QuestionTreeMode =
   | 'review'
   | 'graded';
 
-interface QuestionTreeRendererProps {
+type QuestionTreeRendererProps = {
   question: Question;
   questionIndex: number;
   mode: QuestionTreeMode;

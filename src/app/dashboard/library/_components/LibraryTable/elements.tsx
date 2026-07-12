@@ -1,5 +1,5 @@
 import { Box, Tooltip, Typography } from '@mui/material';
-import type { GridCellTextProps } from './interfaces';
+import type { GridCellTextProps } from './types';
 
 export function GridCellText({ children, title }: GridCellTextProps) {
   const content = (

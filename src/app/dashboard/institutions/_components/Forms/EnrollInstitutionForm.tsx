@@ -19,8 +19,10 @@ import { mutate } from 'swr';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { institutionSchema } from '@/app/_lib/schemas/management';
 import { SubmitInstitution } from './SubmitInstitution';
+import { isInstitutionSubmitSuccess } from '@/app/_lib/types/actionState';
+import type { SubmissionResult } from '@conform-to/react';
 
-interface EnrollInstitutionFormProps {
+type EnrollInstitutionFormProps = {
   onSuccess?: () => void;
 }
 
@@ -40,7 +42,7 @@ export default function EnrollInstitutionForm({
       creatorEnabled,
     },
   ] = useForm({
-    lastResult,
+    lastResult: lastResult as SubmissionResult<string[]> | null,
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: institutionSchema });
     },
@@ -49,29 +51,22 @@ export default function EnrollInstitutionForm({
   });
 
   useEffect(() => {
-    if (
+    if (isInstitutionSubmitSuccess(lastResult)) {
+      showAlert(
+        'success',
+        `Institution "${lastResult.institution}" was successfully created! 🚀`,
+      );
+      mutate('institutions');
+      onSuccess?.();
+    } else if (
       lastResult &&
       typeof lastResult === 'object' &&
-      'success' in lastResult
+      'success' in lastResult &&
+      !lastResult.success &&
+      'error' in lastResult &&
+      lastResult.error
     ) {
-      if (
-        lastResult.success &&
-        'institution' in lastResult &&
-        lastResult.institution
-      ) {
-        showAlert(
-          'success',
-          `Institution "${lastResult.institution}" was successfully created! 🚀`
-        );
-        mutate('institutions');
-        onSuccess?.();
-      } else if (
-        !lastResult.success &&
-        'error' in lastResult &&
-        lastResult.error
-      ) {
-        showAlert('error', lastResult.error);
-      }
+      showAlert('error', lastResult.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResult, onSuccess]);

@@ -112,7 +112,7 @@ export function getSubjectTheme(subjectName: string): { gradient: string; accent
   // Fall back to hash-based selection for unknown subjects
   const hash = hashString(normalizedSubject);
   const index = hash % GRADIENT_PRESETS.length;
-  return GRADIENT_PRESETS[index];
+  return GRADIENT_PRESETS[index] ?? GRADIENT_PRESETS[0]!;
 }
 
 /**

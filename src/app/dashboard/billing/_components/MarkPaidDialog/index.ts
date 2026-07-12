@@ -1,2 +1,2 @@
 export { default } from './MarkPaidDialog';
-export type { MarkPaidDialogProps } from './interfaces';
+export type { MarkPaidDialogProps } from './types';

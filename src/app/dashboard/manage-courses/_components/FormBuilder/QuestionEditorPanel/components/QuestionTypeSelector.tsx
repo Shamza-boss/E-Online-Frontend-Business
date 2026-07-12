@@ -10,7 +10,7 @@ import {
 import type { Question } from '@/app/_lib/interfaces/types';
 import BufferedTextField from '../BufferedTextField';
 
-export interface QuestionTypeSelectorProps {
+export type QuestionTypeSelectorProps = {
   questionId: string;
   type: Question['type'];
   weight: number;

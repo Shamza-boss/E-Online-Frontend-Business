@@ -6,7 +6,7 @@ import { SchoolRounded } from '@mui/icons-material';
 import Link from 'next/link';
 import ErrorLayout from '../../../_components/ErrorLayout';
 import { ClassesGrid, CardWrapper } from './elements';
-import type { StudentClassesCardsProps } from './interfaces';
+import type { StudentClassesCardsProps } from './types';
 
 function StudentClassesCards({ classes }: StudentClassesCardsProps) {
     if (classes.length === 0) {

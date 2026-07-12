@@ -3,7 +3,7 @@ import Card from '@mui/material/Card';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import type { AreaGradientProps } from './interfaces';
+import type { AreaGradientProps } from './types';
 
 export const StatCardRoot = styled(Card)({
   height: '100%',

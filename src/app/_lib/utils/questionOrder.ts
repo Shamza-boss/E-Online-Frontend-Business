@@ -1,4 +1,4 @@
-import { Question } from '../interfaces/types';
+import { type Question } from '../interfaces/types';
 
 const parseDisplaySegments = (displayOrder?: string): number[] | null => {
   if (!displayOrder) return null;

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { CustomizedDataGridProps } from './interfaces';
+import type { CustomizedDataGridProps } from './types';
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZE_OPTIONS,

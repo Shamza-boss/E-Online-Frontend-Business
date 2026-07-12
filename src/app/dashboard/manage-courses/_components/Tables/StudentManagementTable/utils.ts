@@ -1,5 +1,5 @@
 import type { GridRowSelectionModel } from '@mui/x-data-grid';
-import type { NormalizedSelection } from './interfaces';
+import type { NormalizedSelection } from './types';
 import type { EnrollStudentsDto, UserDto } from '@/app/_lib/interfaces/types';
 import { EnrollStudents, UnenrollStudents } from '@/app/_lib/actions';
 

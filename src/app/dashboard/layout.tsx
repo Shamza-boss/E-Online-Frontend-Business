@@ -49,7 +49,7 @@ const layoutStyles = {
   },
 } as const;
 
-interface DashboardLayoutProps {
+type DashboardLayoutProps = {
   children: React.ReactNode;
 }
 

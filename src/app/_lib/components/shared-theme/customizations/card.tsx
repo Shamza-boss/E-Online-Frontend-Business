@@ -19,7 +19,7 @@ import {
 } from '../../website/components/styled/StyledComponents';
 import { getSubjectTheme, getSubjectIconType, type SubjectIconType } from '@/app/_lib/utils/subjectTheme';
 
-interface ClassCardProps {
+type ClassCardProps = {
   className: string;
   academicLevelName: string;
   subjectName: string;

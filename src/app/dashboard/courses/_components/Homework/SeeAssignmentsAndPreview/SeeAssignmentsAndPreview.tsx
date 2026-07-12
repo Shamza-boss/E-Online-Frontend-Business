@@ -11,9 +11,9 @@ import {
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import EDataGrid from '../../../../_components/EDataGrid';
 import {
-    HomeworkAssignmentDto,
-    AssignmentDetailsDto,
-    SubmittedHomework,
+    type HomeworkAssignmentDto,
+    type AssignmentDetailsDto,
+    type SubmittedHomework,
 } from '../../../../../_lib/interfaces/types';
 import { getStudentAssignments, resetAssignment } from '../../../../../_lib/actions';
 import HomeworkView from '../HomeworkView';
@@ -23,7 +23,7 @@ import { useSession } from 'next-auth/react';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
-import type { SeeAssignmentsAndPreviewProps } from './interfaces';
+import type { SeeAssignmentsAndPreviewProps } from './types';
 import { buildColumns } from './constants';
 import {
     handleRowClick as handleRowClickUtil,

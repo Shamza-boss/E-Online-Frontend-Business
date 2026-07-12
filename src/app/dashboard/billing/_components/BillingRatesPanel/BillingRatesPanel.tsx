@@ -7,7 +7,7 @@ import {
     Switch,
     Typography,
 } from '@mui/material';
-import type { BillingRatesPanelProps } from './interfaces';
+import type { BillingRatesPanelProps } from './types';
 import { RoundedPaper, CenteredLoadingBox, CreatorToggleStack } from './elements';
 
 export default function BillingRatesPanel({

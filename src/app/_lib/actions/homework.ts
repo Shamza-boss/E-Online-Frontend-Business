@@ -1,12 +1,12 @@
 'use server';
 import {
-  AssignmentDetailsDto,
-  GradeHomeworkDto,
-  HomeworkAssignmentDto,
-  HomeworkPayload,
-  HomeworkSummaryDto,
-  SubmitHomeworkDto,
-  Homework,
+  type AssignmentDetailsDto,
+  type GradeHomeworkDto,
+  type HomeworkAssignmentDto,
+  type HomeworkPayload,
+  type HomeworkSummaryDto,
+  type SubmitHomeworkDto,
+  type Homework,
 } from '../interfaces/types';
 import { serverFetch } from '../serverFetch.server';
 
@@ -83,8 +83,11 @@ export async function updateHomeworkDraft(
   );
 }
 
-export async function publishHomework(teacherId: string, homeworkId: string) {
-  return serverFetch(
+export async function publishHomework(
+  teacherId: string,
+  homeworkId: string,
+): Promise<void> {
+  await serverFetch<void>(
     `/homework/teacher/${encodeURIComponent(teacherId)}/module/${encodeURIComponent(homeworkId)}/publish`,
     {
       method: 'POST',
@@ -92,8 +95,11 @@ export async function publishHomework(teacherId: string, homeworkId: string) {
   );
 }
 
-export async function unpublishHomework(teacherId: string, homeworkId: string) {
-  return serverFetch(
+export async function unpublishHomework(
+  teacherId: string,
+  homeworkId: string,
+): Promise<void> {
+  await serverFetch<void>(
     `/homework/teacher/${encodeURIComponent(teacherId)}/module/${encodeURIComponent(homeworkId)}/unpublish`,
     {
       method: 'POST',
@@ -103,13 +109,13 @@ export async function unpublishHomework(teacherId: string, homeworkId: string) {
 
 export async function softDeleteHomework(
   teacherId: string,
-  homeworkId: string
-) {
-  return serverFetch(
+  homeworkId: string,
+): Promise<void> {
+  await serverFetch<void>(
     `/homework/teacher/${encodeURIComponent(teacherId)}/module/${encodeURIComponent(homeworkId)}`,
     {
       method: 'DELETE',
-    }
+    },
   );
 }
 

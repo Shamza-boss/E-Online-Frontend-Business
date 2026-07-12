@@ -3,7 +3,7 @@
 import { Stack, Typography, Button, Switch } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import NextImage from '@/app/_lib/components/shared-theme/NextImage';
-import type { UploadSectionProps } from './interfaces';
+import type { UploadSectionProps } from './types';
 
 export default function UploadSection({
   selectedFile,

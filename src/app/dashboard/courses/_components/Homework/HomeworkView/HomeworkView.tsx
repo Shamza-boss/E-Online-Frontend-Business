@@ -5,7 +5,7 @@ import { Typography, Button } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import type { Question } from '../../../../../_lib/interfaces/types';
 import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
-import type { HomeworkViewProps, HomeworkNavState, PdfPreviewState } from './interfaces';
+import type { HomeworkViewProps, HomeworkNavState, PdfPreviewState, HomeworkAnswersMap, HomeworkAnswerValue } from './types';
 import { COVER_PAGE } from './constants';
 import {
   computeTotalWeight,
@@ -30,7 +30,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
   onBack,
   onNavChange,
 }) => {
-  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [answers, setAnswers] = useState<HomeworkAnswersMap>({});
   const [currentPage, setCurrentPage] = useState(COVER_PAGE);
   const [pdfPreview, setPdfPreview] = useState<PdfPreviewState | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
@@ -49,7 +49,7 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
       ? Math.min(Math.max(questionIndex, 0), totalQuestions - 1)
       : 0;
 
-  const handleChange = (questionId: string, value: unknown) => {
+  const handleChange = (questionId: string, value: HomeworkAnswerValue) => {
     if (!readOnly) {
       setAnswers((prev) => updateAnswer(prev, questionId, value));
     }
@@ -112,7 +112,10 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
     onPrev: () => setCurrentPage((p) => Math.max(COVER_PAGE, p - 1)),
     onNext: () => setCurrentPage((p) => Math.min(totalQuestions - 1, p + 1)),
     onGoTo: setCurrentPage,
-    isCompleted: (i) => isNodeCompleted(sortedQuestions[i], answers),
+    isCompleted: (i) => {
+      const question = sortedQuestions[i];
+      return question ? isNodeCompleted(question, answers) : false;
+    },
     readOnly,
     onSubmit: () => handleSubmit(),
   };
@@ -121,6 +124,8 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
     onNavChange?.(navState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safeIndex, totalQuestions, readOnly, answers, currentPage]);
+
+  const currentQuestion = sortedQuestions[safeIndex];
 
   return (
     <React.Fragment>
@@ -158,10 +163,10 @@ const HomeworkView: React.FC<HomeworkViewProps> = ({
                 minHeight: 0,
               }}
             >
-              {totalQuestions > 0 ? (
+              {totalQuestions > 0 && currentQuestion ? (
                 <QuestionScrollBox>
                   <QuestionNode
-                    node={sortedQuestions[safeIndex]}
+                    node={currentQuestion}
                     numbering={String(safeIndex + 1)}
                     answers={answers}
                     readOnly={readOnly}

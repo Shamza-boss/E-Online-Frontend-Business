@@ -11,7 +11,7 @@ import {
   PUBLIC_VISIBILITY_LABEL,
   PRIVATE_VISIBILITY_LABEL,
 } from './constants';
-import type { LibraryHeaderProps } from './interfaces';
+import type { LibraryHeaderProps } from './types';
 
 export default function LibraryHeader({
   canManage,

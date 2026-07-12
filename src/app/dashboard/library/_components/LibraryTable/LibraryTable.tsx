@@ -4,14 +4,14 @@ import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   GridActionsCellItem,
-  GridColDef,
-  GridRowParams,
+  type GridColDef,
+  type GridRowParams,
 } from '@mui/x-data-grid';
 import { Box, Tooltip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SchoolIcon from '@mui/icons-material/School';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
-import { LibraryFileDto } from '@/app/_lib/interfaces/types';
+import { type LibraryFileDto } from '@/app/_lib/interfaces/types';
 import {
   extractTextbookName,
   formatLinkedCoursesDisplay,
@@ -22,7 +22,7 @@ import { LibrarySizeChip, LibraryVisibilityChip, formatLibraryDate } from '../Li
 import { TABLE_PAGE_SIZE_OPTIONS } from './constants';
 import { GridCellText } from './elements';
 import { buildCourseUrl, gradesLabel } from './utils';
-import type { LibraryTableProps } from './interfaces';
+import type { LibraryTableProps } from './types';
 
 export default function LibraryTable({
   files,

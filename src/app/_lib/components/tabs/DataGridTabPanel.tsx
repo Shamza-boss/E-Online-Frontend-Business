@@ -1,6 +1,6 @@
 import * as React from 'react';
-import TabPanel, { TabPanelProps } from '@mui/lab/TabPanel';
-import { SxProps, Theme } from '@mui/material/styles';
+import TabPanel, { type TabPanelProps } from '@mui/lab/TabPanel';
+import { type SxProps, type Theme } from '@mui/material/styles';
 
 export type DataGridTabPanelProps = TabPanelProps;
 

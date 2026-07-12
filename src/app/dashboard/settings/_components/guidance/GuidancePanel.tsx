@@ -27,24 +27,24 @@ import { RoleChip } from '@/app/_lib/components/role/roleChip';
 import { getRoleChipConfig } from '@/app/_lib/common/functions';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 
-interface RoleGuidanceCard {
+type RoleGuidanceCard = {
     title: string;
     role: UserRole;
     summary: string;
     actions: string[];
 }
 
-interface GuidancePanelProps {
+type GuidancePanelProps = {
     activeRole?: UserRole | null;
 }
 
-interface ViewExpectation {
+type ViewExpectation = {
     role: UserRole;
     detail: string;
     hasAccess: boolean;
 }
 
-interface ViewGuidanceEntry {
+type ViewGuidanceEntry = {
     title: string;
     description: string;
     expectations: ViewExpectation[];

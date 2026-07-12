@@ -10,7 +10,7 @@ import type { InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
 import type { PagedResult } from '@/app/_lib/interfaces/pagination';
 import { getDashboardPagePadding } from '@/app/_lib/layout/dashboardPageLayout';
 
-export interface InstitutionsClientProps {
+export type InstitutionsClientProps = {
   initialInstitutionsPage?: PagedResult<InstitutionWithAdminDto>;
 }
 

@@ -5,7 +5,7 @@ import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 import { getPdfSizeChipStyle } from './utils';
 import { libraryVisibilityChipSx } from './constants';
-import type { LibrarySizeChipProps, LibraryVisibilityChipProps } from './interfaces';
+import type { LibrarySizeChipProps, LibraryVisibilityChipProps } from './types';
 
 export function LibrarySizeChip({ sizeBytes }: LibrarySizeChipProps) {
   const { label, sx } = getPdfSizeChipStyle(sizeBytes);

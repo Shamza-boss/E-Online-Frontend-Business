@@ -7,7 +7,7 @@ import type { Question } from '@/app/_lib/interfaces/types';
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
-import type { QuestionPreviewPanelProps } from './interfaces';
+import type { QuestionPreviewPanelProps } from './types';
 import {
     EmptyPreviewPaper,
     IntroPaper,

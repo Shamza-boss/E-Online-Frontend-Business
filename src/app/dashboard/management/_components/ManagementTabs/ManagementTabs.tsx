@@ -8,7 +8,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import DataGridTabPanel from '@/app/_lib/components/tabs/DataGridTabPanel';
 import UserManagementDataGrid from '../UserManagementDataGrid';
 import ClassManagementDataGrid from '../ClassManagementDataGrid';
-import type { ManagementTabsProps } from './interfaces';
+import type { ManagementTabsProps } from './types';
 import {
   TAB_ARIA_LABEL,
   TAB_COURSES,

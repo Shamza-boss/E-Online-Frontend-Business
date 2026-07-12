@@ -27,7 +27,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card);
 
-interface FeatureItem {
+type FeatureItem = {
   icon: React.ReactNode;
   title: string;
   category: 'Core' | 'Content' | 'Analytics' | 'Coming Soon';
@@ -176,7 +176,11 @@ const cardVariants = {
 export default function Features() {
   const theme = useTheme();
   const [selectedIndex, setSelectedIndex] = React.useState(0);
-  const selectedFeature = allFeatures[selectedIndex];
+  const selectedFeature = allFeatures[selectedIndex] ?? allFeatures[0];
+
+  if (!selectedFeature) {
+    return null;
+  }
 
   const handlePrev = () => {
     setSelectedIndex((prev) => (prev === 0 ? allFeatures.length - 1 : prev - 1));

@@ -1,2 +1,2 @@
 export { default } from './ActiveSubjectsChart';
-export type { ActiveSubjectsChartProps, SubjectSeriesItem } from './interfaces';
+export type { ActiveSubjectsChartProps, SubjectSeriesItem } from './types';

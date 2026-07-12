@@ -11,7 +11,7 @@ import {
     Typography,
     Button,
 } from '@mui/material';
-import { GridColDef } from '@mui/x-data-grid';
+import { type GridColDef } from '@mui/x-data-grid';
 import { Close } from '@mui/icons-material';
 import useSWR, { mutate } from 'swr';
 import { format } from 'date-fns';
@@ -28,7 +28,7 @@ import EDataGrid from '../../../../_components/EDataGrid';
 import ReviewAndGradeHomework from '../ReviewAndGradeHomework';
 import { getStatusChipConfig } from '@/app/_lib/common/functions';
 import HomeworkReview from '@/app/dashboard/courses/_components/Homework/HomeworkReview';
-import type { ManageStudentHomeworkProps } from './interfaces';
+import type { ManageStudentHomeworkProps } from './types';
 import { TabContentBox } from './elements';
 import { getStatusAndTab, buildFetchAssignments, submitGradedHomework } from './utils';
 

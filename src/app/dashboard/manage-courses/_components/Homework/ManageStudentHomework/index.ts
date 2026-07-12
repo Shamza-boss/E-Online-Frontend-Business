@@ -1,2 +1,2 @@
 export { default } from './ManageStudentHomework';
-export type { ManageStudentHomeworkProps } from './interfaces';
+export type { ManageStudentHomeworkProps } from './types';

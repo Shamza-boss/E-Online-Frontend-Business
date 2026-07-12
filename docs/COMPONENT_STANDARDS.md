@@ -12,7 +12,7 @@ ComponentName/
 ├── constants.ts        # Labels, config, static copy
 ├── utils.ts            # Pure transforms, formatters, access rules
 ├── elements.tsx        # Styled MUI primitives
-├── interfaces.ts       # Props/types (when non-trivial)
+├── types.ts            # Props/types (when non-trivial)
 ├── index.ts            # Barrel: export { default } from './ComponentName'
 └── components/         # Optional nested children (large features)
 ```
@@ -27,7 +27,7 @@ Use `utils.tsx` when helpers return JSX (charts, icons).
 | `constants.ts` | Strings, numeric config, route lists | React components |
 | `utils.ts` | Pure functions, data mapping | Side effects, fetch calls |
 | `elements.tsx` | `styled()` MUI wrappers | Business logic |
-| `interfaces.ts` | Props, local types | Implementation |
+| `types.ts` | Props, local types | Implementation |
 
 ## Naming
 
@@ -48,6 +48,7 @@ Use `utils.tsx` when helpers return JSX (charts, icons).
 - Add `'use client'` only on the **leaf** that needs state, effects, or browser APIs
 - Pass **serializable props** from server parents to client children (no functions from server except Server Actions)
 - See [Data Fetching Standards — Server/Client module boundaries](./DATA_FETCHING_STANDARDS.md#serverclient-module-boundaries) for fetch-layer rules, import-graph constraints, and build verification
+- See [TypeScript Standards](./TYPE_STANDARDS.md) for `type`-over-`interface`, nullability, and Server Action return types
 
 ## `_lib` vs feature components
 
@@ -68,7 +69,7 @@ Large features (e.g. `Class/`) may nest child folders:
 ```
 Class/
 ├── ClassComponent.tsx
-├── constants.ts, utils.ts, elements.tsx, interfaces.ts
+├── constants.ts, utils.ts, elements.tsx, types.ts
 ├── hooks/
 └── components/
     ├── NotesPanel/

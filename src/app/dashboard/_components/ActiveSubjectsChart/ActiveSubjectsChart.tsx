@@ -4,7 +4,7 @@ import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import { LineChart } from '@mui/x-charts/LineChart';
-import type { ActiveSubjectsChartProps } from './interfaces';
+import type { ActiveSubjectsChartProps } from './types';
 import {
   CHART_HEIGHT,
   DEFAULT_TITLE,
@@ -140,13 +140,16 @@ export default function ActiveSubjectsChart({
           grid={{ horizontal: true }}
           sx={areaFillStyles}
         >
-          {normalizedSeries.map((_, idx) => (
+          {normalizedSeries.map((_, idx) => {
+            const color = colorPalette[idx % colorPalette.length] ?? colorPalette[0] ?? '#1976d2';
+            return (
             <AreaGradient
               key={`grad-${idx}`}
-              color={colorPalette[idx % colorPalette.length]}
+              color={color}
               id={`${AREA_GRADIENT_ID_PREFIX}${idx}`}
             />
-          ))}
+            );
+          })}
         </LineChart>
       </CardContent>
     </ChartCard>

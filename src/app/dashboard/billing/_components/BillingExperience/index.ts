@@ -1,2 +1,2 @@
 export { default } from './BillingExperience';
-export type { InstitutionOption } from './interfaces';
+export type { InstitutionOption } from './types';

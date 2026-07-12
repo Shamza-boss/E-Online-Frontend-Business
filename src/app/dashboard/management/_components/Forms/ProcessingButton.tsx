@@ -8,11 +8,11 @@ import { green } from '@mui/material/colors';
 import CheckIcon from '@mui/icons-material/Check';
 import SaveIcon from '@mui/icons-material/Save';
 
-interface ProcessingButtonProps extends ButtonProps {
+type ProcessingButtonProps = {
     loading?: boolean;
     success?: boolean;
     showIcon?: boolean;
-}
+} & ButtonProps
 
 export function ProcessingButton({
     loading = false,

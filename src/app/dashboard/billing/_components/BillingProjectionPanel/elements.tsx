@@ -13,7 +13,7 @@ export const CenteredLoadingStack = styled(Stack)(({ theme }) => ({
     paddingBottom: theme.spacing(4),
 }));
 
-interface MetricHighlightBoxProps {
+type MetricHighlightBoxProps = {
     $variant: 'success' | 'info' | 'primary';
 }
 

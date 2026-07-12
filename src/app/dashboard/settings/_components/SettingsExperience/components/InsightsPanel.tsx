@@ -16,7 +16,7 @@ import {
   getChartPalette,
 } from '../utils';
 
-interface InsightsPanelProps {
+type InsightsPanelProps = {
   stats: SettingsStatsDto;
   roleTheme: RoleTheme;
   roleLabel: string;

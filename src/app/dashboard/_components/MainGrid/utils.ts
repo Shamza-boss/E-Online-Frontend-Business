@@ -1,6 +1,6 @@
-import { UserRole } from '@/app/_lib/Enums/UserRole';
+import { type UserRole } from '@/app/_lib/Enums/UserRole';
 import type { StatCardProps } from '../StatCard';
-import type { TrendDirection } from '../StatCard/interfaces';
+import type { TrendDirection } from '../StatCard/types';
 import { STAT_INTERVAL } from './constants';
 
 type DashboardMetric = {
@@ -25,11 +25,15 @@ export function buildStatCard(
 }
 
 export function normalizeRole(
-  rawRole: string | number | undefined
+  rawRole: string | number | UserRole | null | undefined,
 ): UserRole | undefined {
+  if (rawRole === null || rawRole === undefined) {
+    return undefined;
+  }
+
   return typeof rawRole === 'string'
     ? (parseInt(rawRole, 10) as UserRole)
-    : (rawRole as UserRole | undefined);
+    : (rawRole as UserRole);
 }
 
 export function normalizeTrend(trend: string | undefined): TrendDirection {

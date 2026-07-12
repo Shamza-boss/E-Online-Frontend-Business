@@ -1,9 +1,9 @@
 'use server';
 
 import {
-  BillingProjectionDto,
-  BillingRateDto,
-  BillingSummaryDto,
+  type BillingProjectionDto,
+  type BillingRateDto,
+  type BillingSummaryDto,
 } from '../interfaces/types';
 import { serverFetch } from '../serverFetch.server';
 

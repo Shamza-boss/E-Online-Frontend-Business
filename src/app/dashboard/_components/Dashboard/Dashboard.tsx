@@ -10,7 +10,7 @@ import SideMenu from '../SideMenu';
 import NavigationProgress from '../NavigationProgress';
 import AppTheme from '../../../_lib/components/shared-theme/AppTheme';
 import { SearchProvider } from '@/app/_lib/context/SearchContext';
-import type { DashboardComponentProps } from './interfaces';
+import type { DashboardComponentProps } from './types';
 import { xThemeComponents } from './constants';
 import {
   RootContainer,

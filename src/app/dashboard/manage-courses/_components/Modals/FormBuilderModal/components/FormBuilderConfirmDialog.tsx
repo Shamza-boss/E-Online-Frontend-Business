@@ -11,7 +11,7 @@ import {
 
 export type FormBuilderConfirmType = 'reset' | 'saveDraft' | 'publish' | 'close' | null;
 
-interface FormBuilderConfirmDialogProps {
+type FormBuilderConfirmDialogProps = {
   open: boolean;
   type: FormBuilderConfirmType;
   onCancel: () => void;

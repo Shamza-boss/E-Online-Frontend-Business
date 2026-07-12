@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, Typography, Button, CircularProgress, Box } from '@mui/material';
 import { motion } from 'framer-motion';
-import type { ErrorLayoutProps } from './interfaces';
+import type { ErrorLayoutProps } from './types';
 import {
   DEFAULT_ACTION_LABEL,
   DEFAULT_ACTION_HREF,

@@ -2,7 +2,7 @@ import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import { DataGrid } from '@mui/x-data-grid';
 
-interface GridContainerProps {
+type GridContainerProps = {
   $isMobile: boolean;
 }
 

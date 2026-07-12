@@ -7,14 +7,14 @@ import { Box, Chip, Tooltip, Typography } from '@mui/material';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 
-interface OutlineNode {
+type OutlineNode = {
   title: string;
   dest: string | any[];
   items?: OutlineNode[];
   pageNumber?: number;
 }
 
-interface PDFOutlineProps {
+type PDFOutlineProps = {
   outline: OutlineNode[];
   onNavigate: (item: OutlineNode) => void;
   currentPage?: number;

@@ -11,7 +11,7 @@ import {
     Alert,
 } from '@mui/material';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
-import type { ConfirmConvertQuestionModalProps } from './interfaces';
+import type { ConfirmConvertQuestionModalProps } from './types';
 import { ContentColumn, QuestionPreviewBox } from './elements';
 
 export const ConfirmConvertQuestionModal: React.FC<ConfirmConvertQuestionModalProps> = ({

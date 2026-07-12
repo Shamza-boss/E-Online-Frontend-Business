@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
-  MouseEvent as ReactMouseEvent,
+  type MouseEvent as ReactMouseEvent,
 } from 'react';
 import { pdfjs, Document, Page } from 'react-pdf';
 import { Box, CircularProgress, Alert, Tabs, Tab, useTheme } from '@mui/material';
@@ -23,7 +23,7 @@ import type {
   PdfNoteLinkRequest,
 } from '@/app/_lib/utils/pdfNoteLinks';
 import { sanitizeBookmarkColor } from '@/app/_lib/utils/pdfNoteLinks';
-import BookmarkDialog, { BookmarkDialogPayload } from './BookmarkDialog';
+import BookmarkDialog, { type BookmarkDialogPayload } from './BookmarkDialog';
 import {
   getHighlights as getStoredHighlights,
   setHighlights as setStoredHighlights,
@@ -51,7 +51,7 @@ const normalizeFileUrl = (value?: string | null): string | null => {
   }
 };
 
-interface PdfViewerProps {
+type PdfViewerProps = {
   fileUrl: string;
   initialPage?: number;
   initialZoom?: number;
@@ -62,7 +62,7 @@ interface PdfViewerProps {
   noteLinkOptions?: PdfNoteLinkOptions;
 }
 
-interface Highlight {
+type Highlight = {
   pageNumber: number;
   content: string;
   position: {
@@ -73,7 +73,7 @@ interface Highlight {
   };
 }
 
-export interface PdfNoteLinkOptions {
+export type PdfNoteLinkOptions = {
   enabled: boolean;
   links: PdfNoteLinkSummary[];
   activeLinkId?: string | null;
@@ -362,9 +362,13 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
       if (transform && transform !== 'none') {
         const match = transform.match(/^matrix\((.+)\)$/);
         if (match) {
-          const matrixValues = match[1].split(',').map(parseFloat);
-          if (matrixValues.length >= 1) {
-            scaleFactor = matrixValues[0]; // scaleX
+          const matrixPart = match[1];
+          if (matrixPart) {
+            const matrixValues = matrixPart.split(',').map(parseFloat);
+            const scaleX = matrixValues[0];
+            if (scaleX !== undefined) {
+              scaleFactor = scaleX;
+            }
           }
         }
       }
@@ -471,7 +475,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   const handleBookmarkDialogConfirm = useCallback(
     (payload: BookmarkDialogPayload) => {
       const normalizedColor =
-        sanitizeBookmarkColor(payload.color) || pickRandomBookmarkColor();
+        sanitizeBookmarkColor(payload.color) ?? pickRandomBookmarkColor() ?? '#facc15';
 
       if (bookmarkDialogState.mode === 'create') {
         if (noteLinksEnabled && noteLinkOptions?.onCreateLink) {

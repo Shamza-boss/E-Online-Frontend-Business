@@ -22,7 +22,7 @@ import { format } from 'date-fns';
 import type { HomeworkAssignmentDto } from '@/app/_lib/interfaces/types';
 import { getStudentAssignments } from '@/app/_lib/actions/homework';
 import { getStatusChipConfig } from '@/app/_lib/common/functions';
-import type { StudentAssignmentsModalProps } from './interfaces';
+import type { StudentAssignmentsModalProps } from './types';
 import { LoadingContainer } from './elements';
 import { filterAssignmentsByClass, formatStudentTitle, formatScore } from './utils';
 

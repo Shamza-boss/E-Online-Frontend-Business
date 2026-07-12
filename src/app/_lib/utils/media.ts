@@ -1,4 +1,4 @@
-import { FileDto, PdfMeta, VideoLibraryItem, VideoMeta } from '../interfaces/types';
+import { type FileDto, type PdfMeta, type VideoLibraryItem, type VideoMeta } from '../interfaces/types';
 import { extractTextbookName, getFileSizeBytes } from './textbook';
 
 export function fileDtoToPdfMeta(file: FileDto): PdfMeta {

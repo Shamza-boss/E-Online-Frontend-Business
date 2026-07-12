@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Alert, CircularProgress } from '@mui/material';
 import Image from 'next/image';
-import { VideoMeta } from '../../interfaces/types';
+import { type VideoMeta } from '../../interfaces/types';
 import { signPlayback } from '../../actions/stream';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useCreatorAccess } from '@/app/_lib/hooks/useCreatorAccess';
 
-interface Props {
+type Props = {
   video: VideoMeta;
   title?: string;
 }

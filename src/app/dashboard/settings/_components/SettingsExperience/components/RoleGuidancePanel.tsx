@@ -24,11 +24,11 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { RoleChip } from '@/app/_lib/components/role/roleChip';
 import { getRoleChipConfig } from '@/app/_lib/common/functions';
-import { UserRole } from '@/app/_lib/Enums/UserRole';
+import { type UserRole } from '@/app/_lib/Enums/UserRole';
 import { ROLE_GUIDANCE, VIEW_GUIDANCE, MATRIX_ROLES } from '../constants';
 import { getAccessModeMeta } from '../utils';
 
-interface RoleGuidancePanelProps {
+type RoleGuidancePanelProps = {
   activeRole?: UserRole | null;
 }
 

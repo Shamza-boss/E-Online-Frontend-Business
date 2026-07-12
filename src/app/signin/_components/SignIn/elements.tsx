@@ -16,7 +16,7 @@ import KeyIcon from '@mui/icons-material/Key';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Controller, type Control, type FieldErrors } from 'react-hook-form';
 import { SIGN_IN_ORB_CONFIG, SIGN_IN_SUBTITLE, SIGN_IN_TITLE } from './constants';
-import type { SignInForm } from './interfaces';
+import type { SignInForm } from './types';
 
 export function FloatingOrbs() {
   const theme = useTheme();
@@ -98,7 +98,7 @@ export function FloatingOrbs() {
   );
 }
 
-interface SignInFormFieldsProps {
+type SignInFormFieldsProps = {
   control: Control<SignInForm>;
   errors: FieldErrors<SignInForm>;
   busy: boolean;
@@ -189,7 +189,7 @@ export function SignInFormFields({
   );
 }
 
-interface AuthCardShellProps {
+type AuthCardShellProps = {
   children: React.ReactNode;
   icon: React.ReactNode;
   gradientFrom: 'primary' | 'secondary';

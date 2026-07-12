@@ -4,7 +4,7 @@ import { CircularProgress, Grid, Typography } from '@mui/material';
 import LibraryCard from '../LibraryCard';
 import { EMPTY_TITLE, EMPTY_DESCRIPTION } from './constants';
 import { LoadingContainer, EmptyStatePaper } from './elements';
-import type { LibraryGridProps } from './interfaces';
+import type { LibraryGridProps } from './types';
 
 export default function LibraryGrid({
   files,

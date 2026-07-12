@@ -29,7 +29,7 @@ import RocketBackdrop from './components/RocketBackdrop';
 import SettingsPageSkeleton from '@/app/dashboard/_components/_skeletonLoaders/SettingsPageSkeleton';
 import { dashboardSectionSpacing } from '@/app/_lib/layout/dashboardPageLayout';
 
-export interface SettingsExperienceProps {
+export type SettingsExperienceProps = {
   initialSettings: SettingsResponseDto;
 }
 

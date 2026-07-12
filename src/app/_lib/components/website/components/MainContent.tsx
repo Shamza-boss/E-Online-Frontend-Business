@@ -76,6 +76,16 @@ const cardData = [
   },
 ];
 
+type CardEntry = (typeof cardData)[number];
+
+function cardAt(index: number): CardEntry {
+  const card = cardData[index];
+  if (!card) {
+    throw new Error(`Missing marketing card at index ${index}`);
+  }
+  return card;
+}
+
 function Author({ authors }: { authors: { name: string; avatar: string }[] }) {
   return (
     <Box
@@ -247,7 +257,7 @@ export default function MainContent() {
             <CardMedia
               component="img"
               alt="green iguana"
-              image={cardData[0].img}
+              image={cardAt(0).img}
               sx={{
                 aspectRatio: '16 / 9',
                 borderBottom: '1px solid',
@@ -256,20 +266,20 @@ export default function MainContent() {
             />
             <StyledCardContent>
               <Typography gutterBottom variant="caption" component="div">
-                {cardData[0].tag}
+                {cardAt(0).tag}
               </Typography>
               <Typography gutterBottom variant="h6" component="div">
-                {cardData[0].title}
+                {cardAt(0).title}
               </Typography>
               <StyledTypography
                 variant="body2"
                 color="text.secondary"
                 gutterBottom
               >
-                {cardData[0].description}
+                {cardAt(0).description}
               </StyledTypography>
             </StyledCardContent>
-            <Author authors={cardData[0].authors} />
+            <Author authors={cardAt(0).authors} />
           </StyledCard>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -283,26 +293,26 @@ export default function MainContent() {
             <CardMedia
               component="img"
               alt="green iguana"
-              image={cardData[1].img}
+              image={cardAt(1).img}
               aspect-ratio="16 / 9"
               sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
             />
             <StyledCardContent>
               <Typography gutterBottom variant="caption" component="div">
-                {cardData[1].tag}
+                {cardAt(1).tag}
               </Typography>
               <Typography gutterBottom variant="h6" component="div">
-                {cardData[1].title}
+                {cardAt(1).title}
               </Typography>
               <StyledTypography
                 variant="body2"
                 color="text.secondary"
                 gutterBottom
               >
-                {cardData[1].description}
+                {cardAt(1).description}
               </StyledTypography>
             </StyledCardContent>
-            <Author authors={cardData[1].authors} />
+            <Author authors={cardAt(1).authors} />
           </StyledCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
@@ -317,7 +327,7 @@ export default function MainContent() {
             <CardMedia
               component="img"
               alt="green iguana"
-              image={cardData[2].img}
+              image={cardAt(2).img}
               sx={{
                 height: { sm: 'auto', md: '50%' },
                 aspectRatio: { sm: '16 / 9', md: '' },
@@ -325,20 +335,20 @@ export default function MainContent() {
             />
             <StyledCardContent>
               <Typography gutterBottom variant="caption" component="div">
-                {cardData[2].tag}
+                {cardAt(2).tag}
               </Typography>
               <Typography gutterBottom variant="h6" component="div">
-                {cardData[2].title}
+                {cardAt(2).title}
               </Typography>
               <StyledTypography
                 variant="body2"
                 color="text.secondary"
                 gutterBottom
               >
-                {cardData[2].description}
+                {cardAt(2).description}
               </StyledTypography>
             </StyledCardContent>
-            <Author authors={cardData[2].authors} />
+            <Author authors={cardAt(2).authors} />
           </StyledCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
@@ -368,21 +378,21 @@ export default function MainContent() {
               >
                 <div>
                   <Typography gutterBottom variant="caption" component="div">
-                    {cardData[3].tag}
+                    {cardAt(3).tag}
                   </Typography>
                   <Typography gutterBottom variant="h6" component="div">
-                    {cardData[3].title}
+                    {cardAt(3).title}
                   </Typography>
                   <StyledTypography
                     variant="body2"
                     color="text.secondary"
                     gutterBottom
                   >
-                    {cardData[3].description}
+                    {cardAt(3).description}
                   </StyledTypography>
                 </div>
               </StyledCardContent>
-              <Author authors={cardData[3].authors} />
+              <Author authors={cardAt(3).authors} />
             </StyledCard>
             <StyledCard
               variant="outlined"
@@ -402,21 +412,21 @@ export default function MainContent() {
               >
                 <div>
                   <Typography gutterBottom variant="caption" component="div">
-                    {cardData[4].tag}
+                    {cardAt(4).tag}
                   </Typography>
                   <Typography gutterBottom variant="h6" component="div">
-                    {cardData[4].title}
+                    {cardAt(4).title}
                   </Typography>
                   <StyledTypography
                     variant="body2"
                     color="text.secondary"
                     gutterBottom
                   >
-                    {cardData[4].description}
+                    {cardAt(4).description}
                   </StyledTypography>
                 </div>
               </StyledCardContent>
-              <Author authors={cardData[4].authors} />
+              <Author authors={cardAt(4).authors} />
             </StyledCard>
           </Box>
         </Grid>
@@ -432,7 +442,7 @@ export default function MainContent() {
             <CardMedia
               component="img"
               alt="green iguana"
-              image={cardData[5].img}
+              image={cardAt(5).img}
               sx={{
                 height: { sm: 'auto', md: '50%' },
                 aspectRatio: { sm: '16 / 9', md: '' },
@@ -440,20 +450,20 @@ export default function MainContent() {
             />
             <StyledCardContent>
               <Typography gutterBottom variant="caption" component="div">
-                {cardData[5].tag}
+                {cardAt(5).tag}
               </Typography>
               <Typography gutterBottom variant="h6" component="div">
-                {cardData[5].title}
+                {cardAt(5).title}
               </Typography>
               <StyledTypography
                 variant="body2"
                 color="text.secondary"
                 gutterBottom
               >
-                {cardData[5].description}
+                {cardAt(5).description}
               </StyledTypography>
             </StyledCardContent>
-            <Author authors={cardData[5].authors} />
+            <Author authors={cardAt(5).authors} />
           </StyledCard>
         </Grid>
       </Grid>

@@ -44,7 +44,7 @@ const pdfNoteStyles = {
   },
 } as const;
 
-interface ProvidersProps {
+type ProvidersProps = {
   children: React.ReactNode;
   session: Session | null;
 }

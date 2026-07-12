@@ -1,2 +1,2 @@
 export { default } from './FormBuilderModal';
-export type { FormBuilderModalProps } from './interfaces';
+export type { FormBuilderModalProps } from './types';

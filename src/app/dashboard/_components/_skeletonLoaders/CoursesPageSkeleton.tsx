@@ -6,7 +6,7 @@ import Stack from '@mui/material/Stack';
 import { dashboardScrollablePageSx, dashboardSectionSpacing } from '@/app/_lib/layout/dashboardPageLayout';
 import StudentClassCardSkeleton from './StudentClassCardSkeleton';
 
-interface CoursesPageSkeletonProps {
+type CoursesPageSkeletonProps = {
   includeShell?: boolean;
 }
 

@@ -2,12 +2,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pagination, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
-import { GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
+import { type GridPaginationModel, type GridSortModel } from '@mui/x-data-grid';
 import useSWR from 'swr';
 
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
-import { FileDto, LibraryFileDto } from '@/app/_lib/interfaces/types';
+import { type FileDto, type LibraryFileDto } from '@/app/_lib/interfaces/types';
 import { getAllAcademics } from '@/app/_lib/actions/academics';
 
 import {
@@ -44,7 +44,7 @@ import {
   LibraryCardsScrollArea,
   LibraryPaginationBar,
 } from './elements';
-import type { LibraryViewProps } from './interfaces';
+import type { LibraryViewProps } from './types';
 
 export default function LibraryView({ initialAcademics }: LibraryViewProps) {
   const { showAlert } = useAlert();

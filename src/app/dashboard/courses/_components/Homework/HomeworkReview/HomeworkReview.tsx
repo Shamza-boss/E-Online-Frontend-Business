@@ -28,7 +28,7 @@ import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQue
 import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 import { extractPlainText } from '@/app/_lib/utils/textUtils';
-import type { HomeworkReviewProps, PdfPreviewState } from './interfaces';
+import type { HomeworkReviewProps, PdfPreviewState } from './types';
 import { formatFileSize, computeTotalWeight, buildPdfPreview } from './utils';
 import {
     FlexWrapRow,

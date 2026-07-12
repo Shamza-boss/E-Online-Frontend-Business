@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback } from 'react';
+import React, { type ReactNode, useCallback } from 'react';
 import { Tab } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
@@ -9,7 +9,7 @@ import PDFViewer, {
     type PdfNoteLinkOptions,
 } from '@/app/_lib/components/PDFViewer/PDFViewer';
 import type { PdfViewState } from '../../hooks/useClassroomLayout';
-import type { TabsContentProps } from './interfaces';
+import type { TabsContentProps } from './types';
 import { FlexColumnBox, TabHeaderBox } from './elements';
 
 const AssignmentsPanel = ({

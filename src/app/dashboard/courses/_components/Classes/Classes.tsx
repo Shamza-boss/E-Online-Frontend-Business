@@ -1,6 +1,6 @@
 import { getAllUserClassrooms } from '@/app/_lib/actions/classrooms';
 import ClassCard from '@/app/_lib/components/shared-theme/customizations/card';
-import { ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
+import { type ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import { SchoolRounded } from '@mui/icons-material';
 import ErrorLayout from '../../../_components/ErrorLayout';
 import Link from 'next/link';

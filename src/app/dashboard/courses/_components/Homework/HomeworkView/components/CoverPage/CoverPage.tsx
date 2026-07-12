@@ -19,7 +19,7 @@ import {
 } from '../../elements';
 import StatCard from '../StatCard';
 
-export interface CoverPageProps {
+export type CoverPageProps = {
   homework: Homework;
   sortedQuestions: Question[];
   totalQuestions: number;

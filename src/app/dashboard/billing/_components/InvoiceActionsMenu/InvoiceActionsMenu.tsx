@@ -16,7 +16,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CancelIcon from '@mui/icons-material/Cancel';
 import UndoIcon from '@mui/icons-material/Undo';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import type { InvoiceActionsMenuProps } from './interfaces';
+import type { InvoiceActionsMenuProps } from './types';
 import { canSend, canPay, canCancel, canUnpay } from './utils';
 import { CancelMenuItem } from './elements';
 

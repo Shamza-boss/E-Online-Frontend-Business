@@ -1,2 +1,2 @@
 export { default } from './MenuButton';
-export type { MenuButtonProps } from './interfaces';
+export type { MenuButtonProps } from './types';

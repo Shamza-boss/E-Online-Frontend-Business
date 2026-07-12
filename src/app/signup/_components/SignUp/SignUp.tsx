@@ -20,7 +20,7 @@ import {
   FloatingOrbs,
   SignUpFormFields,
 } from './elements';
-import type { SignUpForm } from './interfaces';
+import type { SignUpForm } from './types';
 import { getSignUpErrorMessage, submitSignUp } from './utils';
 
 export default function SignUpPage() {

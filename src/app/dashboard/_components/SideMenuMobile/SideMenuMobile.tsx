@@ -11,7 +11,7 @@ import MenuButton from '../MenuButton';
 import MenuContent from '../MenuContent';
 import { useSession } from 'next-auth/react';
 import useAuthActions from '@/app/_lib/hooks/useAuthActions';
-import type { SideMenuMobileProps } from './interfaces';
+import type { SideMenuMobileProps } from './types';
 import { LOGOUT_LABEL } from './constants';
 import {
   MobileDrawer,

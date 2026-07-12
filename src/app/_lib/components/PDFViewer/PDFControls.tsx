@@ -10,7 +10,7 @@ import BrushIcon from '@mui/icons-material/Brush';
 import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import { MenuButton, MenuControlsContainer, MenuDivider } from 'mui-tiptap';
 
-interface PDFControlsProps {
+type PDFControlsProps = {
   numPages: number;
   pageNumber: number;
   isHighlighting: boolean;

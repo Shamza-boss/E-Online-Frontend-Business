@@ -1,6 +1,6 @@
 import type { InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
 import { featureFlagToPlan } from '@/app/_lib/utils/subscriptions';
-import type { InstitutionGridRow } from './interfaces';
+import type { InstitutionGridRow } from './types';
 
 export function sanitizeOptionalInput(value: unknown): string | undefined {
   if (typeof value !== 'string') {

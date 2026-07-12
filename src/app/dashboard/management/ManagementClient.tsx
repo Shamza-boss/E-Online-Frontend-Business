@@ -24,7 +24,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
-export interface ManagementClientProps {
+export type ManagementClientProps = {
   initialAcademics?: AcademicLevelDto[];
   initialSubjects?: SubjectDto[];
 }

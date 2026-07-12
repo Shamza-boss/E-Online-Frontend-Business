@@ -1,10 +1,10 @@
 'use server';
 
 import {
-  InstitutionBillingDashboardDto,
-  InstitutionTrendsDashboardDto,
-  PlatformOwnerDashboardDto,
-  SystemAdminDashboardDto,
+  type InstitutionBillingDashboardDto,
+  type InstitutionTrendsDashboardDto,
+  type PlatformOwnerDashboardDto,
+  type SystemAdminDashboardDto,
 } from '../interfaces/types';
 import { serverFetch } from '../serverFetch.server';
 

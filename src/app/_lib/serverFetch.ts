@@ -10,11 +10,11 @@ import {
   CONTENT_TYPES,
 } from '@/lib/api';
 
-interface FetchOptions extends RequestInit {
+type FetchOptions = {
   next?: { revalidate?: number; tags?: string[] };
-}
+} & RequestInit
 
-export interface ApiFetchOptions {
+export type ApiFetchOptions = {
   method?: HttpMethod;
   body?: unknown;
   headers?: Record<string, string>;

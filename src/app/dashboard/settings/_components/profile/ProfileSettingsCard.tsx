@@ -14,12 +14,12 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { Theme, alpha } from '@mui/material/styles';
+import { type Theme, alpha } from '@mui/material/styles';
 import { useSession } from 'next-auth/react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { updateProfileAction } from '../../actions';
 
-export interface ProfileSettingsUser {
+export type ProfileSettingsUser = {
     userId: string;
     email: string;
     firstName: string | null;
@@ -28,7 +28,7 @@ export interface ProfileSettingsUser {
     institutionName: string | null;
 }
 
-interface ProfileSettingsCardProps {
+type ProfileSettingsCardProps = {
     user: ProfileSettingsUser;
 }
 
@@ -244,7 +244,7 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
     );
 }
 
-interface DetailBlockProps {
+type DetailBlockProps = {
     label: string;
     value: string;
 }

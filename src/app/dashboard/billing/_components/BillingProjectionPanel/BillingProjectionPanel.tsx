@@ -11,7 +11,7 @@ import {
     Typography,
 } from '@mui/material';
 import { format } from 'date-fns';
-import type { BillingProjectionPanelProps } from './interfaces';
+import type { BillingProjectionPanelProps } from './types';
 import {
     currencyZar,
     currencyUsd,

@@ -1,9 +1,9 @@
 import type { ChipProps } from '@mui/material/Chip';
-import { UserRole } from '@/app/_lib/Enums/UserRole';
+import { type UserRole } from '@/app/_lib/Enums/UserRole';
 
 export type ChipTone = ChipProps['color'];
 
-export interface RoleGuidanceCard {
+export type RoleGuidanceCard = {
   title: string;
   role: UserRole;
   summary: string;
@@ -12,7 +12,7 @@ export interface RoleGuidanceCard {
 
 export type RoleKey = UserRole | 'default';
 
-export interface RoleTheme {
+export type RoleTheme = {
   chipColor: ChipTone;
   accent: string;
   gradient: string;
@@ -22,20 +22,20 @@ export interface RoleTheme {
 
 export type AccessMode = 'govern' | 'create' | 'complete' | 'view' | 'none';
 
-export interface ViewCapability {
+export type ViewCapability = {
   role: UserRole;
   capability: string;
   detail: string;
   mode: AccessMode;
 }
 
-export interface ViewGuidanceEntry {
+export type ViewGuidanceEntry = {
   title: string;
   description: string;
   capabilities: ViewCapability[];
 }
 
-export interface AccessModeMeta {
+export type AccessModeMeta = {
   label: string;
   color: ChipProps['color'];
   variant: ChipProps['variant'];

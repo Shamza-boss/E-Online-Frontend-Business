@@ -2,4 +2,4 @@ export {
   ConfirmConvertQuestionModal,
   default,
 } from './ConfirmConvertQuestionModal';
-export type { ConfirmConvertQuestionModalProps } from './interfaces';
+export type { ConfirmConvertQuestionModalProps } from './types';

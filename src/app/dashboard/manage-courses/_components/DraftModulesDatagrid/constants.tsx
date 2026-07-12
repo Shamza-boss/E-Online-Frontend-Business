@@ -4,8 +4,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import PublishIcon from '@mui/icons-material/Publish';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
-import { GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
-import type { HomeworkRow } from './interfaces';
+import { GridActionsCellItem, type GridColDef } from '@mui/x-data-grid';
+import type { HomeworkRow } from './types';
 import { resolveModuleId } from './utils';
 
 const ACTION_STYLE = {

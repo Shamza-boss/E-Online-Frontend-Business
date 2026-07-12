@@ -7,7 +7,7 @@ import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import DomainAddIcon from '@mui/icons-material/DomainAdd';
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
-import { UserRole } from '@/app/_lib/Enums/UserRole';
+import { type UserRole } from '@/app/_lib/Enums/UserRole';
 import {
   PLATFORM_OWNER_ROLE,
   PLATFORM_ONLY_ROUTES,

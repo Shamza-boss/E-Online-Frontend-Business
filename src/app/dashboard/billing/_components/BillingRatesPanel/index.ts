@@ -1,2 +1,2 @@
 export { default } from './BillingRatesPanel';
-export type { BillingRatesPanelProps } from './interfaces';
+export type { BillingRatesPanelProps } from './types';

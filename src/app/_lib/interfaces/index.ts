@@ -2,7 +2,7 @@
  * Interfaces barrel export
  *
  * Import types with cleaner paths:
- * import type { UserDto, ClassDto, PagedResult } from '@/interfaces';
+ * import type { UserDto, ClassDto, PagedResult } from '@/types';
  */
 
 // Pagination types

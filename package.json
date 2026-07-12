@@ -6,7 +6,7 @@
     "dev": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --fix"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@auth/core": "^0.41.1",
@@ -112,7 +112,8 @@
     "eslint-plugin-prettier": "^5.2.1",
     "prettier": "^3.3.3",
     "prisma": "^6.15.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "typescript-eslint": "^8.54.0"
   },
   "overrides": {
     "@mui/material": "7.3.5",

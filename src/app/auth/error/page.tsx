@@ -5,14 +5,14 @@ import LockPersonIcon from '@mui/icons-material/LockPerson';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import GppBadIcon from '@mui/icons-material/GppBad';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { Metadata } from 'next';
+import { type Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Authentication Error',
 };
 
 type SearchParams = Record<string, string | string[] | undefined>;
-interface ErrorPageProps {
+type ErrorPageProps = {
   searchParams?: Promise<SearchParams>;
 }
 
@@ -21,17 +21,26 @@ function toStringParam(v: string | string[] | undefined): string | undefined {
   return v;
 }
 
-const MESSAGES: Record<
-  string,
-  {
-    title: string;
-    description: string;
-    actionLabel?: string;
-    actionHref?: string;
-    tone?: 'error' | 'warning' | 'info' | 'success';
-    icon: React.ReactNode;
-  }
-> = {
+type AuthErrorMessage = {
+  title: string;
+  description: string;
+  actionLabel?: string;
+  actionHref?: string;
+  tone?: 'error' | 'warning' | 'info' | 'success';
+  icon: React.ReactNode;
+};
+
+const DEFAULT_AUTH_ERROR: AuthErrorMessage = {
+  title: 'Authentication error',
+  description:
+    'Something unexpected happened. Please try again or contact support if the problem persists.',
+  actionLabel: 'Back to Home',
+  actionHref: '/',
+  tone: 'error',
+  icon: <HelpOutlineIcon fontSize="large" />,
+};
+
+const MESSAGES: Record<string, AuthErrorMessage> = {
   AccountAlreadyLinked: {
     title: 'This account is already linked',
     description:
@@ -113,15 +122,7 @@ const MESSAGES: Record<
     tone: 'error',
     icon: <ReportGmailerrorredIcon fontSize="large" />,
   },
-  Default: {
-    title: 'Authentication error',
-    description:
-      'Something unexpected happened. Please try again or contact support if the problem persists.',
-    actionLabel: 'Back to Home',
-    actionHref: '/',
-    tone: 'error',
-    icon: <HelpOutlineIcon fontSize="large" />,
-  },
+  Default: DEFAULT_AUTH_ERROR,
 };
 
 export default async function AuthErrorPage({ searchParams }: ErrorPageProps) {
@@ -130,7 +131,7 @@ export default async function AuthErrorPage({ searchParams }: ErrorPageProps) {
     : undefined;
   const errorParam = toStringParam(sp?.error);
   const code = errorParam && MESSAGES[errorParam] ? errorParam : 'Default';
-  const cfg = MESSAGES[code];
+  const cfg = MESSAGES[code] ?? DEFAULT_AUTH_ERROR;
 
   return (
     <ErrorLayout

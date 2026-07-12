@@ -1,13 +1,13 @@
 'use client';
 
-import { UserRole } from '@/app/_lib/Enums/UserRole';
+import { type UserRole } from '@/app/_lib/Enums/UserRole';
 import type {
   InstitutionTrendsDashboardDto,
   PlatformOwnerDashboardDto,
 } from '@/app/_lib/interfaces/types';
 import MainGrid from './_components/MainGrid';
 
-export interface DashboardClientProps {
+export type DashboardClientProps = {
   role: UserRole;
   initialData: InstitutionTrendsDashboardDto | PlatformOwnerDashboardDto;
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import Editor, {
     type EditorHandle,
 } from '@/app/_lib/components/TipTapEditor/Editor';
-import type { NotesPanelProps } from './interfaces';
+import type { NotesPanelProps } from './types';
 import { FlexOutlinedWrapper } from './elements';
 
 export const NotesPanel: React.FC<NotesPanelProps> = ({

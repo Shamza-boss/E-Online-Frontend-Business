@@ -13,7 +13,7 @@ import { isChoiceType } from '../../questionUtils';
 import { ANTI_ASSIST_ATTRS } from '../constants';
 import BufferedTextField from '../BufferedTextField';
 
-export interface QuestionOptionsEditorProps {
+export type QuestionOptionsEditorProps = {
   target: Question;
   onFieldChange: (questionId: string, key: keyof Question, value: unknown) => void;
   onAddOption: (questionId: string) => void;

@@ -24,16 +24,16 @@ import {
   updateInstitutionWithAdmin,
 } from '@/app/_lib/actions/institutions';
 import {
-  InstitutionWithAdminDto,
-  SubscriptionFeatureFlag,
-  SubscriptionPlan,
+  type InstitutionWithAdminDto,
+  type SubscriptionFeatureFlag,
+  type SubscriptionPlan,
 } from '@/app/_lib/interfaces/types';
 import {
   featureFlagToPlan,
   planToFeatureFlag,
 } from '@/app/_lib/utils/subscriptions';
 
-interface ManageInstitutionModalProps {
+type ManageInstitutionModalProps = {
   open: boolean;
   institutionId: string | null;
   onClose: () => void;

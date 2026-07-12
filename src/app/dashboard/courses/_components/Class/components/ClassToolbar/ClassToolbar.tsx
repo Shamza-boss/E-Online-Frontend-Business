@@ -2,7 +2,7 @@ import React from 'react';
 import { Stack, Button } from '@mui/material';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
-import type { ClassToolbarProps } from './interfaces';
+import type { ClassToolbarProps } from './types';
 
 export const ClassToolbar: React.FC<ClassToolbarProps> = ({
     isFullscreen,

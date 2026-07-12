@@ -14,7 +14,7 @@ import {
   StyledTypography,
 } from '../website/components/styled/StyledComponents';
 
-interface VideoCardThumbnailProps {
+type VideoCardThumbnailProps = {
   mediaUrl?: string;
   mediaAlt?: string;
   metadataLabel?: string;

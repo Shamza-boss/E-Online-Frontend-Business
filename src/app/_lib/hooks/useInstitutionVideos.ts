@@ -2,16 +2,16 @@
 
 import useSWR from 'swr';
 import { useCallback, useMemo } from 'react';
-import { VideoLibraryItem } from '@/app/_lib/interfaces/types';
+import { type VideoLibraryItem } from '@/app/_lib/interfaces/types';
 import {
   getInstitutionVideos,
   type InstitutionVideosParams,
 } from '@/app/_lib/actions/stream';
-import { PagedResult } from '@/app/_lib/interfaces/pagination';
+import { type PagedResult } from '@/app/_lib/interfaces/pagination';
 
-export interface UseInstitutionVideosParams extends InstitutionVideosParams {
+export type UseInstitutionVideosParams = {
   enabled?: boolean;
-}
+} & InstitutionVideosParams
 
 export const useInstitutionVideos = (params: UseInstitutionVideosParams = {}) => {
   const {

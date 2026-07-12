@@ -15,11 +15,11 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {
-  VideoMeta,
-  VideoUploadResponse,
-  VideoMetaResponse,
-  CreateUploadDto,
-  VideoLibraryItem,
+  type VideoMeta,
+  type VideoUploadResponse,
+  type VideoMetaResponse,
+  type CreateUploadDto,
+  type VideoLibraryItem,
 } from '../../interfaces/types';
 import { createDirectUpload, getVideoMeta } from '../../actions/stream';
 import { videoLibraryItemToVideoMeta } from '../../utils/media';
@@ -28,7 +28,7 @@ import VideoCardThumbnail from '@/app/_lib/components/video/VideoCardThumbnail';
 import { useCreatorAccess } from '@/app/_lib/hooks/useCreatorAccess';
 import VideoSourceTabs, { type VideoSource } from './VideoSourceTabs';
 
-interface Props {
+type Props = {
   value?: VideoMeta;
   onChange: (video: VideoMeta | undefined) => void;
   disabled?: boolean;

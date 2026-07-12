@@ -96,7 +96,7 @@ export default function OverdueInvoicesBanner() {
                         {Object.entries(byInstitution).map(([id, invoices]) => (
                             <InstitutionBox key={id}>
                                 <Typography variant="body2" fontWeight={600}>
-                                    {invoices[0].institutionName}
+                                    {invoices[0]?.institutionName ?? 'Institution'}
                                 </Typography>
                                 {invoices.map((inv) => (
                                     <InvoiceCaption key={inv.id} variant="caption" color="text.secondary" pl={2}>

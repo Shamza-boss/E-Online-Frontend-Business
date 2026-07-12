@@ -15,7 +15,7 @@ export const CenteredLoadingBox = styled(Box)(({ theme }) => ({
     justifyContent: 'center',
 }));
 
-interface CreatorToggleStackProps {
+type CreatorToggleStackProps = {
     $enabled: boolean;
 }
 

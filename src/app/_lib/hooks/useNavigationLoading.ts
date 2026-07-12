@@ -36,6 +36,7 @@ export function useNavigationLoading() {
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [pathname, prevPathname]);
 
   return isNavigating;
@@ -77,6 +78,7 @@ export function useMinimumLoading(
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isLoading, loadingStartTime, minDuration]);
 
   return showLoading;

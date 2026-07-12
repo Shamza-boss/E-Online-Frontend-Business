@@ -1,10 +1,10 @@
-import { RichTextEditorRef, RichTextEditor } from 'mui-tiptap';
+import { type RichTextEditorRef, RichTextEditor } from 'mui-tiptap';
 import { useRef, useEffect } from 'react';
 import useExtensions from '../TipTapEditor/useExtensions';
 import HomeWorkMenuControls from './HomeWorkMenuControls';
 import { ExcalidrawNode } from '../../extensions/ExcalidrawNode';
 
-interface RichTextAnswerProps {
+type RichTextAnswerProps = {
   value: string;
   onChange: (newContent: string) => void;
   readOnly?: boolean;

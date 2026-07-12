@@ -4,7 +4,7 @@ import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useTheme } from '@mui/material/styles';
-import type { PageViewsBarChartProps } from './interfaces';
+import type { PageViewsBarChartProps } from './types';
 import {
   CHART_MAX_VALUE,
   CHART_HEIGHT,

@@ -8,6 +8,7 @@ import {
   Checkbox,
 } from '@mui/material';
 import type { Question } from '../../../../../../../_lib/interfaces/types';
+import type { HomeworkAnswersMap, HomeworkAnswerValue } from '../../types';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 import { extractPlainText } from '@/app/_lib/utils/textUtils';
@@ -21,16 +22,16 @@ import {
 } from '../../elements';
 import PdfAttachment from '../PdfAttachment';
 
-export interface QuestionNodeProps {
+export type QuestionNodeProps = {
   node: Question;
   numbering: string;
   depth?: number;
-  answers: Record<string, unknown>;
+  answers: HomeworkAnswersMap;
   readOnly: boolean;
-  onChange: (questionId: string, value: unknown) => void;
+  onChange: (questionId: string, value: HomeworkAnswerValue) => void;
   onMultiSelectToggle: (questionId: string, option: string, checked: boolean) => void;
   onOpenPdf: (title: string, pdf?: Question['pdf']) => void;
-}
+};
 
 export default function QuestionNode({
   node,

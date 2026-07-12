@@ -3,14 +3,14 @@
 'use client';
 
 import React, { forwardRef, useState, useEffect, useMemo } from 'react';
-import { NodeViewWrapper, ReactNodeViewProps } from '@tiptap/react';
+import { NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react';
 import ExcalidrawModal from './ExcaliDrawModal.client';
 import { Box, CircularProgress, IconButton, useTheme } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useRichTextEditorContext } from 'mui-tiptap';
 import { sanitizeExcalidrawElements } from './sanitizeElements';
-import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 
 const normalizeSvgElement = (svgEl: SVGSVGElement) => {
   const viewBox = svgEl.getAttribute('viewBox');

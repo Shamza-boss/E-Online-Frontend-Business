@@ -3,4 +3,4 @@ export { default as BufferedTextField } from './BufferedTextField';
 export type {
   QuestionEditorPanelProps,
   BufferedTextFieldProps,
-} from './interfaces';
+} from './types';

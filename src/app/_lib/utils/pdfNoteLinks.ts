@@ -9,7 +9,7 @@ export const PDF_NOTE_DEFAULT_COLOR = '#2563eb';
 export const PDF_NOTE_PAYLOAD_ATTR = 'data-pdf-payload';
 export const PDF_NOTE_CHECKSUM_ATTR = 'data-pdf-checksum';
 
-export interface PdfNoteLinkSummary {
+export type PdfNoteLinkSummary = {
   id: string;
   pageNumber: number;
   label: string;
@@ -22,7 +22,7 @@ export interface PdfNoteLinkSummary {
   bookmarkColor?: string;
 }
 
-export interface PdfNoteLinkRequest {
+export type PdfNoteLinkRequest = {
   pageNumber: number;
   pageLabel: string;
   outlineTitle?: string | null;
@@ -33,7 +33,7 @@ export interface PdfNoteLinkRequest {
   bookmarkColor?: string;
 }
 
-export interface PdfNoteLinkInsertResult {
+export type PdfNoteLinkInsertResult = {
   id: string;
   html: string;
   summary: PdfNoteLinkSummary;
@@ -62,7 +62,7 @@ export type PdfNoteLinkNodeAttributes = {
   'aria-label': string;
 };
 
-interface PdfNoteLinkEncodedPayload {
+type PdfNoteLinkEncodedPayload = {
   id: string;
   pageNumber: number;
   label: string;
@@ -193,7 +193,7 @@ const lightenHexColor = (hex: string, amount: number) => {
     Math.round(component + (255 - component) * safeAmount)
   );
 
-  return `#${toHex(lightened[0])}${toHex(lightened[1])}${toHex(lightened[2])}`;
+  return `#${toHex(lightened[0] ?? 0)}${toHex(lightened[1] ?? 0)}${toHex(lightened[2] ?? 0)}`;
 };
 
 const darkenHexColor = (hex: string, amount: number) => {
@@ -211,7 +211,7 @@ const darkenHexColor = (hex: string, amount: number) => {
     Math.round(component * (1 - safeAmount))
   );
 
-  return `#${toHex(darkened[0])}${toHex(darkened[1])}${toHex(darkened[2])}`;
+  return `#${toHex(darkened[0] ?? 0)}${toHex(darkened[1] ?? 0)}${toHex(darkened[2] ?? 0)}`;
 };
 
 const hexToRgb = (value: string) => {
@@ -328,7 +328,7 @@ export const extractEncodedPayloadFromSentinelElement = (
   return extractEncodedPayloadFromSentinelText(element.textContent);
 };
 
-export interface DecodedPayloadResult {
+export type DecodedPayloadResult = {
   encoded: string;
   decoded: string;
   payload: PdfNoteLinkEncodedPayload;
@@ -402,7 +402,7 @@ const ensureReadableTextColor = (
   return bestColor;
 };
 
-export interface PdfNoteLinkPalette {
+export type PdfNoteLinkPalette = {
   accent: string;
   muted: string;
   border: string;

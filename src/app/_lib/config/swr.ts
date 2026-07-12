@@ -7,51 +7,49 @@
 
 import type { SWRConfiguration, Fetcher } from 'swr';
 
+type FetchHttpError = Error & {
+  status: number;
+  info?: string;
+};
+
+type ProxyQueryParams = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
+
+function createFetchError(response: Response, info?: string): FetchHttpError {
+  const error = new Error(
+    'An error occurred while fetching the data.',
+  ) as FetchHttpError;
+  error.status = response.status;
+  error.info = info;
+  return error;
+}
+
 /**
  * Default SWR configuration
- *
- * Optimized for performance and user experience:
- * - Reduces unnecessary re-fetches
- * - Maintains smooth UI with previous data
- * - Handles errors gracefully with retries
  */
 export const swrConfig: SWRConfiguration = {
-  // Revalidation settings
   revalidateOnFocus: false,
   revalidateOnReconnect: true,
   revalidateIfStale: true,
   refreshInterval: 0,
-
-  // Deduplication and caching
   dedupingInterval: 2000,
   keepPreviousData: true,
-
-  // Error handling
   errorRetryCount: 3,
   errorRetryInterval: 5000,
   shouldRetryOnError: (error) => {
-    // Don't retry on 4xx errors (client errors)
-    if (error?.status >= 400 && error?.status < 500) {
+    const status = (error as FetchHttpError).status;
+    if (status >= 400 && status < 500) {
       return false;
     }
     return true;
   },
-
-  // Performance
   focusThrottleInterval: 5000,
   loadingTimeout: 3000,
-
-  // Comparison function - uses shallow comparison by default
-  // Override per-hook if deep comparison is needed
   compare: (a, b) => JSON.stringify(a) === JSON.stringify(b),
 };
 
-/**
- * Create a typed fetcher for SWR
- *
- * @example
- * const { data } = useSWR('/api/users', createFetcher<User[]>());
- */
 export function createFetcher<T>(): Fetcher<T, string> {
   return async (url: string): Promise<T> => {
     const response = await fetch(url, {
@@ -62,21 +60,15 @@ export function createFetcher<T>(): Fetcher<T, string> {
     });
 
     if (!response.ok) {
-      const error = new Error('An error occurred while fetching the data.');
-      (error as any).status = response.status;
-      (error as any).info = await response.text();
-      throw error;
+      throw createFetchError(response, await response.text());
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   };
 }
 
-/**
- * Create a fetcher with custom options
- */
 export function createCustomFetcher<T>(
-  options?: RequestInit
+  options?: RequestInit,
 ): Fetcher<T, string> {
   return async (url: string): Promise<T> => {
     const response = await fetch(url, {
@@ -88,24 +80,13 @@ export function createCustomFetcher<T>(
     });
 
     if (!response.ok) {
-      const error = new Error('An error occurred while fetching the data.');
-      (error as any).status = response.status;
-      (error as any).info = await response.text();
-      throw error;
+      throw createFetchError(response, await response.text());
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   };
 }
 
-/**
- * Proxy endpoint fetcher
- *
- * Fetcher that routes through /api/proxy for authenticated requests
- *
- * @example
- * const { data } = useSWR('/classrooms', proxyFetcher<Classroom[]>);
- */
 export const proxyFetcher = async <T>(endpoint: string): Promise<T | null> => {
   const normalized = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   const url = `/api/proxy/${normalized}`;
@@ -115,22 +96,17 @@ export const proxyFetcher = async <T>(endpoint: string): Promise<T | null> => {
   });
 
   if (!response.ok) {
-    const error = new Error('API request failed');
-    (error as any).status = response.status;
-    throw error;
+    throw createFetchError(response);
   }
 
   const text = await response.text();
   return text ? (JSON.parse(text) as T) : null;
 };
 
-/**
- * Create a proxy fetcher with query params
- */
 export function createProxyFetcher<T>(
-  baseEndpoint: string
-): Fetcher<T | null, Record<string, unknown> | undefined> {
-  return async (params?: Record<string, unknown>): Promise<T | null> => {
+  baseEndpoint: string,
+): Fetcher<T | null, ProxyQueryParams | undefined> {
+  return async (params?: ProxyQueryParams): Promise<T | null> => {
     const normalized = baseEndpoint.startsWith('/')
       ? baseEndpoint.slice(1)
       : baseEndpoint;
@@ -152,9 +128,7 @@ export function createProxyFetcher<T>(
     });
 
     if (!response.ok) {
-      const error = new Error('API request failed');
-      (error as any).status = response.status;
-      throw error;
+      throw createFetchError(response);
     }
 
     const text = await response.text();
@@ -162,10 +136,9 @@ export function createProxyFetcher<T>(
   };
 }
 
-// Type for SWR hooks with loading/error states
-export interface SWRState<T> {
+export type SWRState<T> = {
   data: T | undefined;
   error: Error | undefined;
   isLoading: boolean;
   isValidating: boolean;
-}
+};

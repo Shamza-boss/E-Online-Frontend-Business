@@ -8,7 +8,7 @@ const MathJax = dynamic(
   { ssr: false }
 );
 
-interface Props {
+type Props = {
   value: string;
   onChange: (val: string) => void;
 }

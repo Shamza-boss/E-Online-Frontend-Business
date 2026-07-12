@@ -20,7 +20,7 @@ import {
   REPOSITORY_FILES_TITLE,
   UPLOAD_SECTION_TITLE,
 } from './constants';
-import type { ManageDialogProps } from './interfaces';
+import type { ManageDialogProps } from './types';
 
 export default function ManageDialog({
   open,

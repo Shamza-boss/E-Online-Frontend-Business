@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
-import { LibraryFileDto } from '@/app/_lib/interfaces/types';
+import { type LibraryFileDto } from '@/app/_lib/interfaces/types';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
 import {
   extractTextbookName,
@@ -22,7 +22,7 @@ import {
 import { LibrarySizeChip, LibraryVisibilityChip, formatLibraryDate } from '../LibraryChips';
 import { FlexOutlinedWrapper } from '@/app/dashboard/courses/_components/Modals/FullscreenClassroomModal/elements';
 import { buildCourseUrl, getLinkedClassrooms } from './utils';
-import type { PreviewDialogProps } from './interfaces';
+import type { PreviewDialogProps } from './types';
 
 export default function PreviewDialog({
   file,

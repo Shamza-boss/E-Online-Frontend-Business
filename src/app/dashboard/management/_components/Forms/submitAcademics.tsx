@@ -1,12 +1,20 @@
 'use server';
 
 import { createAcademics } from '@/app/_lib/actions/academics';
-import { AcademicLevelDto } from '@/app/_lib/interfaces/types';
+import { type AcademicLevelDto } from '@/app/_lib/interfaces/types';
 import { academicsSchema } from '@/app/_lib/schemas/management';
+import {
+  type FormActionPrevState,
+  type FormActionState,
+} from '@/app/_lib/types/actionState';
 import { getCurrentUser } from '@/app/_lib/utils/currentUser';
+import { getErrorMessage } from '@/lib/api';
 import { parseWithZod } from '@conform-to/zod';
 
-export async function SubmitAcademics(prevState: unknown, formData: FormData) {
+export async function SubmitAcademics(
+  _prev: FormActionPrevState<AcademicLevelDto>,
+  formData: FormData,
+): Promise<FormActionState<AcademicLevelDto>> {
   const submission = parseWithZod(formData, { schema: academicsSchema });
 
   if (submission.status !== 'success') {
@@ -29,8 +37,8 @@ export async function SubmitAcademics(prevState: unknown, formData: FormData) {
       ...newAcademics,
       institutionId: currentUser.institutionId,
     });
-    return (created as AcademicLevelDto) ?? newAcademics;
-  } catch (error: any) {
-    return error;
+    return { status: 'success', data: created };
+  } catch (error: unknown) {
+    return { status: 'error', message: getErrorMessage(error) };
   }
 }

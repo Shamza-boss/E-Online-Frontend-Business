@@ -3,7 +3,7 @@
 import { Button } from '@mui/material';
 import { ToolbarActionsBox } from '../elements';
 
-interface FormBuilderToolbarProps {
+type FormBuilderToolbarProps = {
   isEditing: boolean;
   onReset: () => void;
   onSaveDraft: () => void;

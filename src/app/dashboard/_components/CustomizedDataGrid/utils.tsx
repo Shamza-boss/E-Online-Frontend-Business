@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GridColDef } from '@mui/x-data-grid';
+import { type GridColDef } from '@mui/x-data-grid';
 import { Chip } from '@mui/material';
 import { format } from 'date-fns';
 import { getPercentageColor } from '@/app/_lib/utils/gradeCalculator';

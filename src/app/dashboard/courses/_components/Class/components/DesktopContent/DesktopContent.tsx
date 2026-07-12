@@ -1,6 +1,6 @@
 import React from 'react';
 import Splitter from '@devbookhq/splitter';
-import type { DesktopContentProps } from './interfaces';
+import type { DesktopContentProps } from './types';
 import { FlexOutlinedWrapper } from './elements';
 
 export const DesktopContent: React.FC<DesktopContentProps> = ({

@@ -1,6 +1,6 @@
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 
-export interface HomeworkDialogsProps {
+export type HomeworkDialogsProps = {
   showSubmitConfirm: boolean;
   showBackWarning: boolean;
   answeredCount: number;

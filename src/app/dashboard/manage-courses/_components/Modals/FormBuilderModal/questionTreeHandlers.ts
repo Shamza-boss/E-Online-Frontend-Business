@@ -281,6 +281,7 @@ export function createQuestionTreeHandlers(
       const { updated, changed } = updateQuestionTree(prev, parentId, (q) => {
         const subs = [...(q.subquestions ?? [])];
         const [moved] = subs.splice(fromIdx, 1);
+        if (!moved) return q;
         subs.splice(toIdx, 0, moved);
         return { ...q, subquestions: subs };
       });

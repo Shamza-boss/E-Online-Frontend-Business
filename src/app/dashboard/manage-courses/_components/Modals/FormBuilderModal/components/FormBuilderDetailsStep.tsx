@@ -16,7 +16,7 @@ import { HOMEWORK_DRAFT_IDLE_MS } from '../constants';
 import { getTodayDate } from '../utils';
 import { StepPaper, DetailsGrid } from '../elements';
 
-export interface FormBuilderDetailsStepProps {
+export type FormBuilderDetailsStepProps = {
   formTitle: string;
   description: string;
   dueDate: string;

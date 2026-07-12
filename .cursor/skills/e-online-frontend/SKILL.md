@@ -43,13 +43,13 @@ Slug format for courses: `{classroomName}~{classroomId}` (URL-encoded).
 | Client proxy fetch | `src/app/_lib/services/clientFetch.ts` |
 | BFF proxy route | `src/app/api/proxy/[...proxy]/route.ts` |
 | Auth (NextAuth + API JWT) | `src/auth.ts` |
-| RBAC middleware (intended) | `src/proxy.ts` — **not wired** (no `middleware.ts`) |
+| RBAC proxy (Next.js 16) | `src/proxy.ts` — active; redirects to `/signin` |
 | Dashboard shell | `dashboard/_components/Dashboard/`, `layout.tsx` |
 | Side nav + RBAC menu | `dashboard/_components/MenuContent/` |
 | Layout tokens (padding/scroll) | `src/app/_lib/layout/dashboardPageLayout.ts` |
 | Types | `src/app/_lib/interfaces/types.ts` |
 | User roles | `src/app/_lib/Enums/UserRole.ts` |
-| Engineering standards | `docs/DATA_FETCHING_STANDARDS.md`, `docs/COMPONENT_STANDARDS.md` |
+| Engineering standards | `docs/TYPE_STANDARDS.md`, `docs/DATA_FETCHING_STANDARDS.md`, `docs/COMPONENT_STANDARDS.md` |
 
 ## Data-fetch decision tree
 
@@ -88,7 +88,7 @@ FeatureName/
 ├── constants.ts
 ├── utils.ts
 ├── elements.tsx      # styled MUI
-├── interfaces.ts
+├── types.ts
 ├── index.ts
 └── components/       # optional nested
 ```
@@ -136,12 +136,13 @@ Role enum alignment: frontend `UserRole` must match backend `UserRole` integers.
 3. Add `loading.tsx` using a skeleton from `dashboard/_components/_skeletonLoaders/`
 4. Use `dashboardScrollablePageSx` or `dashboardPageRootSx` per content type
 5. Add menu entry in `MenuContent/` with `hasRouteAccess` rule
-6. Add RBAC rule to `src/proxy.ts` **and** wire `middleware.ts` (see improvements)
+6. Add RBAC rule to `src/proxy.ts` if route is role-restricted
 
 ### Add a mutation
 
 1. Add function to `_lib/actions/{domain}.ts` with `'use server'`
 2. Use `serverFetch.server` for the HTTP call
+3. Declare explicit return type (`Promise<void>` or concrete DTO) — see `docs/TYPE_STANDARDS.md`
 3. Call `revalidatePath` or `revalidateTag` after success
 4. Invoke from client via form action, `useTransition`, or SWR `mutate`
 

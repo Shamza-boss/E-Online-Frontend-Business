@@ -6,10 +6,10 @@ import {
   getInstitutionBillingDashboard,
 } from '../actions/dashboard';
 import {
-  SystemAdminDashboardDto,
-  InstitutionTrendsDashboardDto,
-  PlatformOwnerDashboardDto,
-  InstitutionBillingDashboardDto,
+  type SystemAdminDashboardDto,
+  type InstitutionTrendsDashboardDto,
+  type PlatformOwnerDashboardDto,
+  type InstitutionBillingDashboardDto,
 } from '../interfaces/types';
 
 export function useSystemDashboard() {

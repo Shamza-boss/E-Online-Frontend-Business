@@ -32,7 +32,7 @@ import {
   readStoredPage,
   writeStoredPage,
 } from './utils';
-import type { LibraryReaderFullscreenModalProps } from './interfaces';
+import type { LibraryReaderFullscreenModalProps } from './types';
 
 export default function LibraryReaderFullscreenModal({
   file,

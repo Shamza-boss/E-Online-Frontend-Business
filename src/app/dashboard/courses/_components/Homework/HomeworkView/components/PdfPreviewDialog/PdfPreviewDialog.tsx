@@ -6,10 +6,10 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
-import type { PdfPreviewState } from '../../interfaces';
+import type { PdfPreviewState } from '../../types';
 import { PdfViewerBox } from '../../elements';
 
-export interface PdfPreviewDialogProps {
+export type PdfPreviewDialogProps = {
   preview: PdfPreviewState | null;
   onClose: () => void;
 }

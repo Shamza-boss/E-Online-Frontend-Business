@@ -10,7 +10,7 @@ import {
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SchoolIcon from '@mui/icons-material/School';
 import SearchIcon from '@mui/icons-material/Search';
-import type { ManagementHeaderProps } from './interfaces';
+import type { ManagementHeaderProps } from './types';
 import {
   TAB_COURSES,
   TAB_USERS,

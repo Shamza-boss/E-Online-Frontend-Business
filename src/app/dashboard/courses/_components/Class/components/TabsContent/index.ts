@@ -1,2 +1,2 @@
 export { TabsContent } from './TabsContent';
-export type { TabsContentProps } from './interfaces';
+export type { TabsContentProps } from './types';

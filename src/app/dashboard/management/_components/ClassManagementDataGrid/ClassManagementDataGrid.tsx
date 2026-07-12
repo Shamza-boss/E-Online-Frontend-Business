@@ -3,21 +3,21 @@
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   GridActionsCellItem,
-  GridColDef,
-  GridPaginationModel,
-  GridRowParams,
-  GridSortModel,
+  type GridColDef,
+  type GridPaginationModel,
+  type GridRowParams,
+  type GridSortModel,
 } from '@mui/x-data-grid';
 import { Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import useSWR from 'swr';
 import {
-  ClassDto,
-  AcademicLevelDto,
-  ClassroomDetailsDto,
-  SubjectDto,
-  UserDto,
+  type ClassDto,
+  type AcademicLevelDto,
+  type ClassroomDetailsDto,
+  type SubjectDto,
+  type UserDto,
 } from '@/app/_lib/interfaces/types';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
 import {
@@ -30,11 +30,11 @@ import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { useSession } from 'next-auth/react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
-import { PagedResult } from '@/app/_lib/interfaces/pagination';
+import { type PagedResult } from '@/app/_lib/interfaces/pagination';
 import { getUsers } from '@/app/_lib/actions/users';
 import { getAllAcademics } from '@/app/_lib/actions/academics';
 import { getAllSubjects } from '@/app/_lib/actions/subjects';
-import type { ClassManagementDataGridProps } from './interfaces';
+import type { ClassManagementDataGridProps } from './types';
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZE_OPTIONS,

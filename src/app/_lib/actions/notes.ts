@@ -1,10 +1,10 @@
 'use server';
 import { redirect } from 'next/navigation';
-import { NoteDto } from '../interfaces/types';
+import { type NoteDto } from '../interfaces/types';
 import { serverFetch } from '../serverFetch.server';
 import { auth } from '@/auth';
 
-export interface UpdateNotePayload {
+export type UpdateNotePayload = {
   title?: string;
   content?: string;
 }

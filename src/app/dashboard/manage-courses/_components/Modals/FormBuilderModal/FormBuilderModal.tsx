@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { NextPage } from 'next';
+import { type NextPage } from 'next';
 import {
   Dialog,
   AppBar,
@@ -12,7 +12,7 @@ import {
   Slide,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { TransitionProps } from '@mui/material/transitions';
+import { type TransitionProps } from '@mui/material/transitions';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import type {
   Homework,
@@ -33,7 +33,7 @@ import {
   removeHomeworkDraft,
   migrateLocalStorageDrafts,
 } from '@/app/_lib/utils/homeworkDraftStore';
-import type { FormBuilderModalProps } from './interfaces';
+import type { FormBuilderModalProps } from './types';
 import {
   QUESTION_TYPES,
   FORM_STORAGE_KEY,
@@ -370,8 +370,8 @@ const FormBuilderModal: NextPage<FormBuilderModalProps> = ({
         title: isDraft ? 'Cannot save draft yet' : 'Cannot publish yet',
         message:
           errors.length === 1
-            ? errors[0]
-            : `${errors[0]} (+${remainingErrors} more validation ${issueLabel})`,
+            ? (errors[0] ?? 'Validation failed')
+            : `${errors[0] ?? 'Validation failed'} (+${remainingErrors} more validation ${issueLabel})`,
         details: errors,
         persistent: true,
         duration: 0,

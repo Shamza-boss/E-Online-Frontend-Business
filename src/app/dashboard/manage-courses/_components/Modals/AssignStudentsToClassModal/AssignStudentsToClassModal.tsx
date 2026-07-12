@@ -14,7 +14,7 @@ import {
     DialogActions,
 } from '@mui/material';
 import StudentManagementTable from '../../Tables/StudentManagementTable';
-import type { AssignStudentsToClassModalProps, EnrollmentState } from './interfaces';
+import type { AssignStudentsToClassModalProps, EnrollmentState } from './types';
 import { ToolbarActions, ModalContent } from './elements';
 
 const AssignStudentsToClassModal: React.FC<AssignStudentsToClassModalProps> = ({

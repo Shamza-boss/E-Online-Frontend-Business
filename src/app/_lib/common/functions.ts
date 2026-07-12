@@ -1,6 +1,6 @@
 import { UserRole } from '../Enums/UserRole';
-import { UserDto } from '../interfaces/types';
-import { ChipProps } from '@mui/material/Chip';
+import { type UserDto } from '../interfaces/types';
+import { type ChipProps } from '@mui/material/Chip';
 
 export const roleMap: Record<UserRole, string> = {
   [UserRole.Admin]: 'Admin',
@@ -35,7 +35,7 @@ export function getAllowedRoles(editorRole: UserRole, targetRow: UserDto) {
   return [];
 }
 
-interface RoleChipConfig {
+type RoleChipConfig = {
   label: string;
   color: ChipProps['color']; // e.g. 'primary', 'error', etc.
 }
@@ -56,7 +56,7 @@ export function getRoleChipConfig(role: UserRole): RoleChipConfig {
   }
 }
 
-interface StatusChipConfig {
+type StatusChipConfig = {
   label: string;
   color: ChipProps['color']; // e.g., 'primary', 'error', etc.
 }

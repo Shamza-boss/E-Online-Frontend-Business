@@ -3,7 +3,7 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import type { Question } from '../../../../../../../_lib/interfaces/types';
 import { formatFileSize } from '../../utils';
 
-export interface PdfAttachmentProps {
+export type PdfAttachmentProps = {
   title: string;
   pdf?: Question['pdf'];
   compact?: boolean;

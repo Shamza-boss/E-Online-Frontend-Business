@@ -1,20 +1,20 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import {
-  ClassDto,
-  ClassroomDetailsDto,
-  EnrollStudentsDto,
-  UpdateClassroomDto,
-  UserDto,
+  type ClassDto,
+  type ClassroomDetailsDto,
+  type EnrollStudentsDto,
+  type UpdateClassroomDto,
+  type UserDto,
 } from '../interfaces/types';
 import { redirect } from 'next/navigation';
 import { serverFetch } from '../serverFetch.server';
 import { auth } from '@/auth';
-import { PagedResult, PaginationParams } from '../interfaces/pagination';
+import { type PagedResult, type PaginationParams } from '../interfaces/pagination';
 import { fetchPaginatedResource } from '../services/paginationService';
 
-export async function createClassroom(classroom: ClassDto): Promise<unknown> {
-  const result = await serverFetch('/classrooms', {
+export async function createClassroom(classroom: ClassDto): Promise<ClassDto> {
+  const result = await serverFetch<ClassDto>('/classrooms', {
     method: 'POST',
     body: classroom,
   });
@@ -23,24 +23,24 @@ export async function createClassroom(classroom: ClassDto): Promise<unknown> {
 }
 
 export async function EnrollStudents(
-  newStudents: EnrollStudentsDto
-): Promise<any> {
+  newStudents: EnrollStudentsDto,
+): Promise<void> {
   const session = await auth();
   if (!session) redirect('/signin');
 
-  return serverFetch('/classrooms/EnrollStudents', {
+  return serverFetch<void>('/classrooms/EnrollStudents', {
     method: 'POST',
     body: newStudents,
   });
 }
 
 export async function UnenrollStudents(
-  studentsToRemove: EnrollStudentsDto
-): Promise<any> {
+  studentsToRemove: EnrollStudentsDto,
+): Promise<void> {
   const session = await auth();
   if (!session) redirect('/signin');
 
-  return serverFetch('/classrooms/UnenrollStudents', {
+  return serverFetch<void>('/classrooms/UnenrollStudents', {
     method: 'POST',
     body: studentsToRemove,
   });

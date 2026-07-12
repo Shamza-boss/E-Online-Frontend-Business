@@ -23,7 +23,7 @@ import {
   ALL_GRADES_LABEL,
   UNLINKED_FILTER_TOOLTIP,
 } from './constants';
-import type { LibraryToolbarProps, LibraryViewMode } from './interfaces';
+import type { LibraryToolbarProps, LibraryViewMode } from './types';
 
 export type { LibraryViewMode };
 

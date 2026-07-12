@@ -9,10 +9,10 @@ import {
   Button,
   DialogActions,
 } from '@mui/material';
-import { UserDto } from '@/app/_lib/interfaces/types';
+import { type UserDto } from '@/app/_lib/interfaces/types';
 import EditUserForm from '../Forms/editUserForm';
 
-interface EditUserModalProps {
+type EditUserModalProps = {
   open: boolean;
   user: UserDto | null;
   isAdmin: boolean;

@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { NextPage } from 'next';
+import { type NextPage } from 'next';
 import { Close } from '@mui/icons-material';
 import {
   Dialog,
@@ -12,10 +12,10 @@ import {
   Button,
 } from '@mui/material';
 import CreateSubjectsForm from '../Forms/createSubjectsForm';
-import { SubjectDto } from '@/app/_lib/interfaces/types';
+import { type SubjectDto } from '@/app/_lib/interfaces/types';
 import { ProcessingButton } from '../Forms/ProcessingButton';
 
-interface CreateSubjectModalProps {
+type CreateSubjectModalProps = {
   open: boolean;
   handleClose: () => void;
   onCreated?: (subject: SubjectDto) => void;

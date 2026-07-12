@@ -5,7 +5,7 @@ import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 
-interface DataGridSkeletonProps {
+type DataGridSkeletonProps = {
   rows?: number;
   columns?: number[];
   showToolbar?: boolean;

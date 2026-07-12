@@ -235,9 +235,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.email = t.email || session.user.email || '';
         if (t.firstName) session.user.firstName = t.firstName;
         if (t.lastName) session.user.lastName = t.lastName;
-        // Only assign role when it's not null/undefined to satisfy the strict UserRole type
-        if (t.role != null)
-          session.user.role = t.role as Session['user']['role'];
+        session.user.role = t.role ?? null;
         if (t.institutionId) session.user.institutionId = t.institutionId;
         if (t.institutionName) session.user.institutionName = t.institutionName;
         if (t.isInstitutionActive !== undefined) {
@@ -260,7 +258,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if ('creatorEnabled' in t) {
         session.user.creatorEnabled = t.creatorEnabled ?? false;
       }
-      return session as Session;
+      return session;
     },
   },
 });

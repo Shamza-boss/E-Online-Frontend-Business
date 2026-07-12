@@ -7,7 +7,7 @@ import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import { SparkLineChart } from '@mui/x-charts/SparkLineChart';
 import { areaElementClasses } from '@mui/x-charts/LineChart';
-import type { StatCardProps } from './interfaces';
+import type { StatCardProps } from './types';
 import { LABEL_COLORS } from './constants';
 import {
   getLast30DaysLabels,

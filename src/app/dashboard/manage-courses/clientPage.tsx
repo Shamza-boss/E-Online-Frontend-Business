@@ -4,11 +4,11 @@ import React, { useState, useCallback } from 'react';
 import { Box, Button, Stack, Tooltip, Typography } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { dashboardScrollablePageSx, dashboardSectionSpacing } from '@/app/_lib/layout/dashboardPageLayout';
-import { ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
+import { type ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import AssignStudentsToClassModal from './_components/Modals/AssignStudentsToClassModal';
 import StudentClassesCards from './_components/Classes';
 
-interface Props {
+type Props = {
   fallbackClasses: ClassroomDetailsDto[];
 }
 

@@ -1,7 +1,7 @@
 'use server';
-import { InstitutionDto, InstitutionWithAdminDto } from '../interfaces/types';
+import { type InstitutionDto, type InstitutionWithAdminDto } from '../interfaces/types';
 import { serverFetch } from '../serverFetch.server';
-import { PagedResult, PaginationParams } from '../interfaces/pagination';
+import { type PagedResult, type PaginationParams } from '../interfaces/pagination';
 import {
   DEFAULT_PAGE_SIZE,
   fetchPaginatedResource,

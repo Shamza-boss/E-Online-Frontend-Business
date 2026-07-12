@@ -3,10 +3,10 @@
 import React from 'react';
 import {
   GridActionsCellItem,
-  GridColDef,
-  GridRowParams,
-  GridPaginationModel,
-  GridSortModel,
+  type GridColDef,
+  type GridRowParams,
+  type GridPaginationModel,
+  type GridSortModel,
 } from '@mui/x-data-grid';
 import { Tooltip } from '@mui/material';
 import { useSession } from 'next-auth/react';
@@ -16,16 +16,16 @@ import useSWR from 'swr';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { RoleChip } from '@/app/_lib/components/role/roleChip';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
-import { UserDto } from '@/app/_lib/interfaces/types';
+import { type UserDto } from '@/app/_lib/interfaces/types';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
 import {
-  PagedResult,
-  PaginationParams,
+  type PagedResult,
+  type PaginationParams,
 } from '@/app/_lib/interfaces/pagination';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 import EditUserModal from '../Modals/EditUserModal';
 import { deleteUser, getUsers } from '@/app/_lib/actions';
-import type { UserManagementDataGridProps } from './interfaces';
+import type { UserManagementDataGridProps } from './types';
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZE_OPTIONS,

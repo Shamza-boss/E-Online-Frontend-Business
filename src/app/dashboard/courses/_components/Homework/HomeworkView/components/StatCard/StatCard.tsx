@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { StatCardPaper, StatIconCircle } from '../../elements';
 
-export interface StatCardProps {
+export type StatCardProps = {
   icon: React.ReactNode;
   label: string;
   value: string;

@@ -5,8 +5,8 @@ import {
   getInstitutionProjection,
 } from '../actions/subscriptions';
 import {
-  BillingProjectionDto,
-  BillingSummaryDto,
+  type BillingProjectionDto,
+  type BillingSummaryDto,
 } from '../interfaces/types';
 
 export function useInstitutionBilling(institutionId?: string) {

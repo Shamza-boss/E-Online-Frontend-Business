@@ -1,16 +1,16 @@
 /**
- * Middleware Proxy
+ * Next.js 16 Proxy (replaces middleware.ts)
  *
  * Handles authentication and role-based access control for protected routes.
- * This runs on every matched request before the route handler.
- *
- * @see https://nextjs.org/docs/app/building-your-application/routing/middleware
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/proxy
  */
 
 import { NextResponse } from 'next/server';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { auth } from '@/auth';
 import type { NextRequest } from 'next/server';
+
+const SIGN_IN_PATH = '/signin';
 
 // Route access rules - maps paths to allowed roles
 const ACCESS_RULES: Readonly<Record<string, readonly UserRole[]>> = {
@@ -30,7 +30,9 @@ const PROTECTED_ERROR_PAGES = ['/error/forbidden', '/error/server-error'];
  *
  * Handles both number and string representations of roles
  */
-function parseUserRole(rawRole: unknown): UserRole | null {
+function parseUserRole(
+  rawRole: UserRole | string | number | null | undefined,
+): UserRole | null {
   if (typeof rawRole === 'number') {
     return rawRole as UserRole;
   }
@@ -44,6 +46,14 @@ function parseUserRole(rawRole: unknown): UserRole | null {
   }
 
   return null;
+}
+
+function redirectToSignIn(request: NextRequest, callbackPath?: string) {
+  const signInUrl = new URL(SIGN_IN_PATH, request.url);
+  if (callbackPath && callbackPath !== SIGN_IN_PATH) {
+    signInUrl.searchParams.set('callbackUrl', callbackPath);
+  }
+  return NextResponse.redirect(signInUrl);
 }
 
 /**
@@ -80,14 +90,13 @@ export async function proxy(request: NextRequest) {
   // Authenticate
   const session = await auth();
   if (!session) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return redirectToSignIn(request, pathname);
   }
 
   // Parse and validate role
   const userRole = parseUserRole(session.user?.role);
   if (userRole === null) {
-    // Force re-login if role is invalid
-    return NextResponse.redirect(new URL('/', request.url));
+    return redirectToSignIn(request, pathname);
   }
 
   // Authorize
@@ -99,5 +108,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/error/:path*'],
+  matcher: ['/dashboard', '/dashboard/:path*', '/error/:path*'],
 };

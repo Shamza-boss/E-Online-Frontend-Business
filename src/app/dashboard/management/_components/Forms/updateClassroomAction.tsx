@@ -1,13 +1,20 @@
 'use server';
 import { updateClassroom } from '@/app/_lib/actions/classrooms';
-import { UpdateClassroomDto } from '@/app/_lib/interfaces/types';
+import { type UpdateClassroomDto } from '@/app/_lib/interfaces/types';
 import { classroomSchema } from '@/app/_lib/schemas/management';
+import {
+  type FormActionPrevState,
+  type FormActionState,
+} from '@/app/_lib/types/actionState';
+import { getErrorMessage } from '@/lib/api';
 import { parseWithZod } from '@conform-to/zod';
 
+type ClassroomUpdateSuccess = { name: string };
+
 export async function UpdateClassroomAction(
-  prevState: unknown,
-  formData: FormData
-) {
+  _prev: FormActionPrevState<ClassroomUpdateSuccess>,
+  formData: FormData,
+): Promise<FormActionState<ClassroomUpdateSuccess>> {
   const submission = parseWithZod(formData, { schema: classroomSchema });
 
   if (submission.status !== 'success') {
@@ -20,14 +27,18 @@ export async function UpdateClassroomAction(
   const textbookHash = (formData.get('textbookHash') as string)?.trim();
   const textbookUrl = (formData.get('textbookUrl') as string)?.trim();
   const textbookFileName = (formData.get('textbookFileName') as string)?.trim();
-  const textbookFileSizeBytesRaw =
-    (formData.get('textbookFileSizeBytes') as string)?.trim();
-  const textbookPreviewImageKey =
-    (formData.get('textbookPreviewImageKey') as string)?.trim();
-  const textbookUploadedAt =
-    (formData.get('textbookUploadedAt') as string)?.trim();
-  const textbookUploadedByUserId =
-    (formData.get('textbookUploadedByUserId') as string)?.trim();
+  const textbookFileSizeBytesRaw = (
+    formData.get('textbookFileSizeBytes') as string
+  )?.trim();
+  const textbookPreviewImageKey = (
+    formData.get('textbookPreviewImageKey') as string
+  )?.trim();
+  const textbookUploadedAt = (
+    formData.get('textbookUploadedAt') as string
+  )?.trim();
+  const textbookUploadedByUserId = (
+    formData.get('textbookUploadedByUserId') as string
+  )?.trim();
 
   if (!isAdmin) {
     throw new Error('Only administrators can update courses');
@@ -63,8 +74,8 @@ export async function UpdateClassroomAction(
 
   try {
     await updateClassroom(updatedClassroom);
-    return { name: submission.value.name };
-  } catch (error: any) {
-    return error;
+    return { status: 'success', data: { name: submission.value.name } };
+  } catch (error: unknown) {
+    return { status: 'error', message: getErrorMessage(error) };
   }
 }

@@ -8,7 +8,7 @@ import type { TypographyProps } from '@mui/material/Typography';
 import type { SxProps, Theme } from '@mui/material/styles';
 import useExtensions from './useExtensions';
 
-interface QuestionTextDisplayProps {
+type QuestionTextDisplayProps = {
   content?: string | null;
   fallback?: string;
   variant?: TypographyProps['variant'];

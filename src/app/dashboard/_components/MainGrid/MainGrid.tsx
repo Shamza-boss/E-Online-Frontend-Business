@@ -20,7 +20,7 @@ import {
 import { buildStatCard, formatTrendAverage } from './utils';
 import { DashboardGrid, HeaderBox, DescriptionText } from './elements';
 
-export interface MainGridProps {
+export type MainGridProps = {
   role: UserRole;
   initialData: InstitutionTrendsDashboardDto | PlatformOwnerDashboardDto;
 }
@@ -39,7 +39,7 @@ export default function MainGrid({ role, initialData }: MainGridProps) {
   );
 }
 
-interface InstitutionMainGridProps {
+type InstitutionMainGridProps = {
   initialData: InstitutionTrendsDashboardDto;
 }
 

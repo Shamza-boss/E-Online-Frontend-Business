@@ -13,7 +13,7 @@ import type {
 } from '@/app/_lib/interfaces/types';
 import type { PagedResult } from '@/app/_lib/interfaces/pagination';
 
-interface ClassroomLookups {
+type ClassroomLookups = {
   subjectOptions: SubjectDto[];
   subjectsLoading: boolean;
   upsertSubject: (subject: SubjectDto) => void;
@@ -26,7 +26,7 @@ interface ClassroomLookups {
   usersLoading: boolean;
 }
 
-interface ClassroomLookupsOptions {
+type ClassroomLookupsOptions = {
   initialAcademics?: AcademicLevelDto[];
   initialSubjects?: SubjectDto[];
 }

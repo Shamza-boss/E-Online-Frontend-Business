@@ -17,7 +17,7 @@ import {
 } from '../elements';
 import { QUESTION_TYPES } from '../constants';
 
-export interface FormBuilderBuilderStepProps {
+export type FormBuilderBuilderStepProps = {
   questions: Question[];
   currentQuestionIndex: number;
   splitSizes: number[] | undefined;

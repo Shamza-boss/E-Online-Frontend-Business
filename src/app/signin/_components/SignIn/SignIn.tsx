@@ -21,7 +21,7 @@ import {
   SignInFormFields,
   SignInIcon,
 } from './elements';
-import type { SignInForm } from './interfaces';
+import type { SignInForm } from './types';
 import { submitSignIn } from './utils';
 
 export default function SignIn() {

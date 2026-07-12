@@ -2,14 +2,14 @@
 
 import useSWR from 'swr';
 import { useCallback, useMemo } from 'react';
-import { FileDto, LibraryFileDto } from '@/app/_lib/interfaces/types';
+import { type FileDto, type LibraryFileDto } from '@/app/_lib/interfaces/types';
 import {
   getRepositoryFiles,
   getRepositoryFilesPaged,
   toggleRepositoryFileVisibility,
   type LibraryQueryParams,
 } from '@/app/_lib/actions/storage';
-import { PagedResult } from '@/app/_lib/interfaces/pagination';
+import { type PagedResult } from '@/app/_lib/interfaces/pagination';
 
 export const useLibraryFiles = () => {
   const { data, isLoading, isValidating, mutate } = useSWR<FileDto[]>(
@@ -28,9 +28,9 @@ export const useLibraryFiles = () => {
   };
 };
 
-export interface UseLibraryFilesPagedParams extends LibraryQueryParams {
+export type UseLibraryFilesPagedParams = {
   enabled?: boolean;
-}
+} & LibraryQueryParams
 
 export const useLibraryFilesPaged = (params: UseLibraryFilesPagedParams) => {
   const {

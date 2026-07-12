@@ -5,7 +5,7 @@ import {
   getNotesForClassroom,
   getOrCreateNoteByClassroomId,
   updateNoteById,
-  UpdateNotePayload,
+  type UpdateNotePayload,
 } from '../actions/notes';
 import type { NoteDto } from '../interfaces/types';
 

@@ -14,10 +14,11 @@ import { parseWithZod } from '@conform-to/zod';
 import { useActionState, useEffect, useRef } from 'react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { classroomSchema } from '@/app/_lib/schemas/management';
-import { ClassroomDetailsDto, UserDto, AcademicLevelDto, SubjectDto } from '@/app/_lib/interfaces/types';
+import { type ClassroomDetailsDto, type UserDto, type AcademicLevelDto, type SubjectDto } from '@/app/_lib/interfaces/types';
 import { UpdateClassroomAction } from './updateClassroomAction';
+import { isFormActionSuccess } from '@/app/_lib/types/actionState';
 
-interface EditClassroomFormProps {
+type EditClassroomFormProps = {
   classroom: ClassroomDetailsDto | null;
   isAdmin: boolean;
   handleClose: () => void;
@@ -41,7 +42,7 @@ export default function EditClassroomForm({
   }
   
   const { showAlert } = useAlert();
-  const [lastResult, action, pending] = useActionState(UpdateClassroomAction, false);
+  const [lastResult, action, pending] = useActionState(UpdateClassroomAction, null);
   const isMountedRef = useRef(true);
   
   // Find IDs by matching names since the classroom object only has names, not IDs
@@ -76,10 +77,10 @@ export default function EditClassroomForm({
   }, []);
 
   useEffect(() => {
-    if (lastResult && isMountedRef.current) {
+    if (isFormActionSuccess(lastResult) && isMountedRef.current) {
       showAlert(
         'success',
-        `${lastResult.name} updated successfully🚀!`
+        `${lastResult.data.name} updated successfully🚀!`,
       );
       
       // Call onSuccess to refresh data
@@ -96,8 +97,7 @@ export default function EditClassroomForm({
       
       return () => clearTimeout(timer);
     }
-    console.log('lastResult', lastResult);
-    console.log('classroom', classroom);
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResult]);
 

@@ -3,4 +3,4 @@ export type {
   QuestionPreviewPanelProps,
   PreviewTone,
   ToneStyle,
-} from './interfaces';
+} from './types';

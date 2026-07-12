@@ -16,7 +16,7 @@ import {
     Box,
 } from '@mui/material';
 import { format } from 'date-fns';
-import type { BillingSummaryTableProps } from './interfaces';
+import type { BillingSummaryTableProps } from './types';
 import { statusColors } from './constants';
 import { formatBillingMonth, formatCurrency } from './utils';
 import InvoiceActionsMenu from '../InvoiceActionsMenu';

@@ -4,7 +4,7 @@ import { Step, StepLabel, Stepper } from '@mui/material';
 import { BUILDER_STEPS } from '../constants';
 import { StepperContainer } from '../elements';
 
-interface FormBuilderStepperProps {
+type FormBuilderStepperProps = {
   activeStep: number;
 }
 

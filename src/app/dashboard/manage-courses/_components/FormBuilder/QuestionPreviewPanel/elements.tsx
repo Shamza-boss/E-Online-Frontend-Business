@@ -7,7 +7,7 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import type { PreviewTone } from './interfaces';
+import type { PreviewTone } from './types';
 import { getToneStyle } from './utils';
 
 export const EmptyPreviewPaper = styled(Paper)(({ theme }) => ({

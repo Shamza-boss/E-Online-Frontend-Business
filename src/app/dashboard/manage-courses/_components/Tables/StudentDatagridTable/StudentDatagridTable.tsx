@@ -3,9 +3,9 @@
 import React, { useMemo, useState } from 'react';
 import {
     GridActionsCellItem,
-    GridColDef,
-    GridRowModesModel,
-    GridRowModel,
+    type GridColDef,
+    type GridRowModesModel,
+    type GridRowModel,
 } from '@mui/x-data-grid';
 import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
@@ -17,7 +17,7 @@ import {
 import { RoleChip } from '@/app/_lib/components/role/roleChip';
 import EDataGrid from '../../../../_components/EDataGrid';
 import { useSession } from 'next-auth/react';
-import type { ManagementDataGridProps } from './interfaces';
+import type { ManagementDataGridProps } from './types';
 import { processRowUpdate } from './utils';
 
 export default function StudentDatagridTable({

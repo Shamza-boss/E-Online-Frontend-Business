@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 
-interface CreatorAccess {
+type CreatorAccess = {
   creatorEnabled: boolean;
   loading: boolean;
   institutionName?: string | null;

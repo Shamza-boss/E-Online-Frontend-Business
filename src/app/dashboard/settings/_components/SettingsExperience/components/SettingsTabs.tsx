@@ -7,7 +7,7 @@ import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import { TAB_ITEMS } from '../constants';
 
-interface SettingsTabsProps {
+type SettingsTabsProps = {
   value: string;
   onChange: (value: string) => void;
 }

@@ -5,7 +5,7 @@ import ProfileSettingsCard, {
 } from '../../profile/ProfileSettingsCard';
 import SubscriptionSettingsPanel from '../../subscription/SubscriptionSettingsPanel';
 
-interface ProfilePanelProps {
+type ProfilePanelProps = {
   user: ProfileSettingsUser;
 }
 

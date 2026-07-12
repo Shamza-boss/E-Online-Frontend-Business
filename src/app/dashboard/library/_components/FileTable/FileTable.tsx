@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { extractName } from './utils';
-import type { FileTableProps } from './interfaces';
+import type { FileTableProps } from './types';
 
 export default function FileTable({
   files,

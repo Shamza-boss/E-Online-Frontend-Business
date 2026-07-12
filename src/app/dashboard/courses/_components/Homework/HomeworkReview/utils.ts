@@ -1,5 +1,5 @@
 import type { Question } from '../../../../../_lib/interfaces/types';
-import type { PdfPreviewState } from './interfaces';
+import type { PdfPreviewState } from './types';
 
 /** Format byte count to a human-readable size string */
 export const formatFileSize = (bytes?: number | null): string | null => {

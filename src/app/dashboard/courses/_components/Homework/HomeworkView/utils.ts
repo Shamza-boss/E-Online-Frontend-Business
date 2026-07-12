@@ -1,9 +1,12 @@
 import type {
   Question,
-  SubmittedHomework,
   Homework,
 } from '../../../../../_lib/interfaces/types';
-import type { PdfPreviewState } from './interfaces';
+import type {
+  HomeworkAnswerValue,
+  HomeworkAnswersMap,
+  PdfPreviewState,
+} from './types';
 import { COVER_PAGE } from './constants';
 
 /** Format byte count to a human-readable size string */
@@ -27,7 +30,7 @@ export const computeTotalWeight = (node: Question): number => {
 /** Build a PdfPreviewState from a question's PDF attachment */
 export const buildPdfPreview = (
   fallbackTitle: string,
-  pdf?: Question['pdf']
+  pdf?: Question['pdf'],
 ): PdfPreviewState | null => {
   if (!pdf?.url) return null;
   return {
@@ -38,16 +41,17 @@ export const buildPdfPreview = (
 };
 
 /** Check if a value constitutes an answered question */
-export const isAnsweredValue = (value: unknown): boolean => {
+export const isAnsweredValue = (value: HomeworkAnswerValue | undefined): boolean => {
   if (Array.isArray(value)) return value.length > 0;
   if (typeof value === 'string') return value.trim().length > 0;
-  return value !== undefined && value !== null;
+  if (typeof value === 'boolean') return value;
+  return value !== null && value !== undefined;
 };
 
 /** Check if a question node (and all sub-nodes) are completed */
 export const isNodeCompleted = (
   node: Question,
-  answers: Record<string, any>
+  answers: HomeworkAnswersMap,
 ): boolean => {
   if (node.subquestions && node.subquestions.length > 0) {
     return node.subquestions.every((sub) => isNodeCompleted(sub, answers));
@@ -57,24 +61,23 @@ export const isNodeCompleted = (
 
 /** Update an answer in the answers map (returns new map) */
 export const updateAnswer = (
-  prev: Record<string, any>,
+  prev: HomeworkAnswersMap,
   questionId: string,
-  value: any
-): Record<string, any> => ({
+  value: HomeworkAnswerValue,
+): HomeworkAnswersMap => ({
   ...prev,
   [questionId]: value,
 });
 
 /** Toggle a multi-select option */
 export const toggleMultiSelectOption = (
-  currentAnswers: Record<string, any>,
+  currentAnswers: HomeworkAnswersMap,
   questionId: string,
   option: string,
-  checked: boolean
-): Record<string, any> => {
-  const prev = Array.isArray(currentAnswers[questionId])
-    ? (currentAnswers[questionId] as string[])
-    : [];
+  checked: boolean,
+): HomeworkAnswersMap => {
+  const existing = currentAnswers[questionId];
+  const prev = Array.isArray(existing) ? existing : [];
   const next = checked
     ? [...prev, option]
     : prev.filter((item) => item !== option);
@@ -83,17 +86,17 @@ export const toggleMultiSelectOption = (
 
 /** Determine if the user has started the assessment */
 export const hasAssessmentStarted = (
-  answers: Record<string, any>,
-  currentPage: number
+  answers: HomeworkAnswersMap,
+  currentPage: number,
 ): boolean => Object.keys(answers).length > 0 || currentPage !== COVER_PAGE;
 
 /** Compute completion stats */
 export const computeCompletionStats = (
   sortedQuestions: Question[],
-  answers: Record<string, any>
+  answers: HomeworkAnswersMap,
 ): { answeredCount: number; completionPercent: number } => {
   const answeredCount = sortedQuestions.filter((q) =>
-    isNodeCompleted(q, answers)
+    isNodeCompleted(q, answers),
   ).length;
   const total = sortedQuestions.length;
   const completionPercent =

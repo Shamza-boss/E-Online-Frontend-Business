@@ -1,6 +1,6 @@
 import Badge, { badgeClasses } from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
-import type { MenuButtonProps } from './interfaces';
+import type { MenuButtonProps } from './types';
 
 export default function MenuButton({
   showBadge = false,

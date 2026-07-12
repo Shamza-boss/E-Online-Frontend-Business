@@ -1,6 +1,6 @@
 import { signIn } from 'next-auth/webauthn';
 import { Messages } from '@/app/_lib/interfaces/Auth/Messages';
-import type { ShowAlertFn } from './interfaces';
+import type { ShowAlertFn } from './types';
 import { SIGN_UP_CALLBACK_URL } from './constants';
 
 export const normalizeEmail = (email: string): string =>

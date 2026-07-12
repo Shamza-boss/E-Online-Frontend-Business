@@ -3,6 +3,7 @@ import { alpha } from '@mui/material/styles';
 import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded';
 import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 import type { Question } from '../../../../../../../_lib/interfaces/types';
+import type { HomeworkAnswersMap } from '../../types';
 import { COVER_PAGE } from '../../constants';
 import { isNodeCompleted } from '../../utils';
 import {
@@ -12,9 +13,9 @@ import {
   StepPill,
 } from '../../elements';
 
-export interface HomeworkFooterProps {
+export type HomeworkFooterProps = {
   sortedQuestions: Question[];
-  answers: Record<string, unknown>;
+  answers: HomeworkAnswersMap;
   currentPage: number;
   safeIndex: number;
   totalQuestions: number;
@@ -23,7 +24,7 @@ export interface HomeworkFooterProps {
   readOnly: boolean;
   onPageChange: (page: number) => void;
   onSubmit: (e?: React.FormEvent) => void;
-}
+};
 
 export default function HomeworkFooter({
   sortedQuestions,

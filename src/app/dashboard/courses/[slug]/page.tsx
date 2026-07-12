@@ -1,9 +1,10 @@
 import React from 'react';
-import { Metadata } from 'next';
+import { type Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { ClassComponent } from '../_components/Class';
 import { getClassroomById } from '@/app/_lib/actions/classrooms';
 
-interface PageProps {
+type PageProps = {
   params: Promise<{ slug: string }>;
 }
 // Optional: set dynamic title using className if passed
@@ -12,7 +13,7 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const decoded = decodeURIComponent(slug);
-  const [name] = decoded.split('~');
+  const name = decoded.split('~')[0] ?? 'Course';
 
   return {
     title: name,
@@ -22,7 +23,10 @@ export async function generateMetadata({
 const Lectures = async ({ params }: PageProps) => {
   const { slug } = await params;
   const decoded = decodeURIComponent(slug);
-  const [, classId] = decoded.split('~');
+  const classId = decoded.split('~')[1];
+  if (!classId) {
+    notFound();
+  }
   const classroom = await getClassroomById(classId);
   return (
     <ClassComponent classId={classId} textbookUrl={classroom.textbookUrl} />

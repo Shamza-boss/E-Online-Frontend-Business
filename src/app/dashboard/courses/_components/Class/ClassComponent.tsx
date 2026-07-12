@@ -22,7 +22,7 @@ import {
     type PdfNoteLinkSummary,
 } from '@/app/_lib/utils/pdfNoteLinks';
 import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/PDFViewer';
-import type { ClassComponentProps } from './interfaces';
+import type { ClassComponentProps } from './types';
 import { ClassShell, ToolbarRow, ContentArea, InnerColumn } from './elements';
 import {
     focusNoteChip as focusNoteChipUtil,

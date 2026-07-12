@@ -1,5 +1,5 @@
 import type { Theme } from '@mui/material/styles';
-import type { DisplayValue, TrendValue } from './interfaces';
+import type { DisplayValue, TrendValue } from './types';
 
 export function getDaysInMonth(month: number, year: number): string[] {
   const date = new Date(year, month, 0);

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useMediaQuery, useTheme } from '@mui/material';
-import type { EDataGridProps } from './interfaces';
+import type { EDataGridProps } from './types';
 import { DEFAULT_DENSITY } from './constants';
 import { mergeSlotProps } from './utils';
 import { GridContainer, BaseDataGrid } from './elements';

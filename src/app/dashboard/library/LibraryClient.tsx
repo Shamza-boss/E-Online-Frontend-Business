@@ -3,7 +3,7 @@
 import type { AcademicLevelDto } from '@/app/_lib/interfaces/types';
 import LibraryView from './_components/LibraryView';
 
-export interface LibraryClientProps {
+export type LibraryClientProps = {
   initialAcademics: AcademicLevelDto[];
 }
 

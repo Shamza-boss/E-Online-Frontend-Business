@@ -1,4 +1,4 @@
-import { HomeworkPayload, Question } from '@/app/_lib/interfaces/types';
+import { type HomeworkPayload, type Question } from '@/app/_lib/interfaces/types';
 
 export const validateHomeworkPayload = (payload: HomeworkPayload): string | null => {
   if (!payload.title?.trim()) {
@@ -12,7 +12,9 @@ export const validateHomeworkPayload = (payload: HomeworkPayload): string | null
   }
 
   for (let i = 0; i < payload.questions.length; i++) {
-    const error = validateQuestion(payload.questions[i], `Question ${i + 1}`);
+    const question = payload.questions[i];
+    if (!question) continue;
+    const error = validateQuestion(question, `Question ${i + 1}`);
     if (error) return error;
   }
 
@@ -31,6 +33,7 @@ const validateQuestion = (question: Question, path: string): string | null => {
     if (question.subquestions && question.subquestions.length > 0) {
       for (let i = 0; i < question.subquestions.length; i++) {
         const sub = question.subquestions[i];
+        if (!sub) continue;
         const subPath = `${path}.${i + 1}`;
         const subError = validateQuestion(sub, subPath);
         if (subError) return subError;
@@ -47,6 +50,7 @@ const validateQuestion = (question: Question, path: string): string | null => {
     if (question.subquestions && question.subquestions.length > 0) {
       for (let i = 0; i < question.subquestions.length; i++) {
         const sub = question.subquestions[i];
+        if (!sub) continue;
         const subPath = `${path}.${i + 1}`;
 
         if (sub.type === 'video' || sub.type === 'pdf') {

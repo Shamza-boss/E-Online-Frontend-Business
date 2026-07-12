@@ -8,7 +8,10 @@ export function formatBreadcrumbLabel(part: string): string {
   }
 
   if (part.includes('~')) {
-    const [namePart] = decodeURIComponent(part).split('~');
+    const namePart = decodeURIComponent(part).split('~')[0];
+    if (!namePart) {
+      return part;
+    }
     return namePart.replace(/-/g, ' ');
   }
 

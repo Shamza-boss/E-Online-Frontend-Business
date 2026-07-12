@@ -44,7 +44,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 // Types
 // ============================================================================
 
-export interface AlertOptions {
+export type AlertOptions = {
   /** Alert title (optional, will use default based on type) */
   title?: string;
   /** Main message to display */
@@ -66,9 +66,9 @@ export interface AlertOptions {
   persistent?: boolean;
 }
 
-interface AlertMessage extends AlertOptions {
+type AlertMessage = {
   id: string;
-}
+} & AlertOptions
 
 /**
  * Legacy showAlert signature for backward compatibility
@@ -81,7 +81,7 @@ type LegacyShowAlert = (type: AlertColor, message: string) => void;
  */
 type NewShowAlert = (options: AlertOptions) => void;
 
-interface AlertContextValue {
+type AlertContextValue = {
   /**
    * Show an alert - supports both legacy and new signatures
    * Legacy: showAlert('success', 'Message')
@@ -139,7 +139,7 @@ function SlideTransition(props: SlideProps) {
 // Alert Component
 // ============================================================================
 
-interface AlertContentProps {
+type AlertContentProps = {
   alert: AlertMessage;
   onClose: () => void;
 }
@@ -379,8 +379,11 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
   // Process queue
   React.useEffect(() => {
     if (!current && queue.length > 0) {
-      setCurrent(queue[0]);
-      setQueue((prev) => prev.slice(1));
+      const next = queue[0];
+      if (next) {
+        setCurrent(next);
+        setQueue((prev) => prev.slice(1));
+      }
     }
   }, [queue, current]);
 

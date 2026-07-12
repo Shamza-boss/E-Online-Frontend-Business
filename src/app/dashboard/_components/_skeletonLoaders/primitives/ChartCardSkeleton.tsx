@@ -5,7 +5,7 @@ import CardContent from '@mui/material/CardContent';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 
-interface ChartCardSkeletonProps {
+type ChartCardSkeletonProps = {
   chartHeight?: number;
 }
 

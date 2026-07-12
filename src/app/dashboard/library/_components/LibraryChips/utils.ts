@@ -2,7 +2,7 @@ import { alpha } from '@mui/material/styles';
 import { format } from 'date-fns';
 import { formatTextbookFileSize } from '@/app/_lib/utils/textbook';
 import { BIG_PDF_THRESHOLD_BYTES } from './constants';
-import type { PdfSizeChipStyle } from './interfaces';
+import type { PdfSizeChipStyle } from './types';
 
 export function formatLibraryDate(value?: string | null): string {
   if (!value) return '—';

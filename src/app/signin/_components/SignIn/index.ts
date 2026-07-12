@@ -1,2 +1,2 @@
 export { default } from './SignIn';
-export type { SignInForm } from './interfaces';
+export type { SignInForm } from './types';

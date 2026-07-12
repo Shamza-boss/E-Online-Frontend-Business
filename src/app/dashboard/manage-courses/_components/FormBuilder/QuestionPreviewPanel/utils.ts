@@ -1,6 +1,6 @@
 import { alpha, type Theme } from '@mui/material/styles';
 import type { Question } from '@/app/_lib/interfaces/types';
-import type { PreviewTone, ToneStyle } from './interfaces';
+import type { PreviewTone, ToneStyle } from './types';
 
 export const getPreviewTone = (
   type: Question['type'],

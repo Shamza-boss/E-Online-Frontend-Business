@@ -15,7 +15,8 @@ export function buildPlatformStats(
   data: PlatformDashboardData,
   isLoading: boolean,
 ): StatCardProps[] {
-  return PLATFORM_STAT_LABELS.map((title, index) =>
-    buildStatCard(title, data?.[METRIC_KEYS[index]], isLoading),
-  );
+  return PLATFORM_STAT_LABELS.map((title, index) => {
+    const metricKey = METRIC_KEYS[index];
+    return buildStatCard(title, metricKey ? data?.[metricKey] : undefined, isLoading);
+  });
 }

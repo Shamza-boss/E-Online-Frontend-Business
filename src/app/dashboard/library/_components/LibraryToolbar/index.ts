@@ -1,2 +1,2 @@
 export { default } from './LibraryToolbar';
-export type { LibraryViewMode } from './interfaces';
+export type { LibraryViewMode } from './types';

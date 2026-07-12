@@ -12,13 +12,13 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { FileDto, PdfMeta } from '../../interfaces/types';
+import { type FileDto, type PdfMeta } from '../../interfaces/types';
 import { uploadPdfAsset } from '../../services/storageUpload';
 import { fileDtoToPdfMeta } from '../../utils/media';
 import PDFViewer from '../PDFViewer/PDFViewer';
 import PdfSourceTabs, { type PdfSource } from './PdfSourceTabs';
 
-interface PdfUploadFieldProps {
+type PdfUploadFieldProps = {
   value?: PdfMeta;
   onChange: (pdf: PdfMeta | undefined) => void;
   disabled?: boolean;

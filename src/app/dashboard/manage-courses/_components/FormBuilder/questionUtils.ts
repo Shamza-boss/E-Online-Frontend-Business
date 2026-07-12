@@ -1,4 +1,4 @@
-import { HomeworkPayload, Question } from '../../../../_lib/interfaces/types';
+import { type HomeworkPayload, type Question } from '../../../../_lib/interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const SUBQUESTION_DND_MIME = 'application/x-eonline-subquestion-move';
@@ -37,7 +37,7 @@ export const IsValidChild = (
 export const isChoiceType = (type: Question['type']) =>
   type === 'single-select' || type === 'multi-select';
 
-export interface QuestionMeta {
+export type QuestionMeta = {
   question: Question;
   depth: number;
   parent: Question | null;

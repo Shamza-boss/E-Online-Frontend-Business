@@ -1,5 +1,5 @@
 import { signIn as passkeySignIn } from 'next-auth/webauthn';
-import type { ResolvedUser, ShowAlertFn } from './interfaces';
+import type { ResolvedUser, ShowAlertFn } from './types';
 import { SIGN_IN_CALLBACK_URL } from './constants';
 
 export const normalizeEmail = (email: string): string =>

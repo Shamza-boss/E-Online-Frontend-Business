@@ -20,7 +20,7 @@ import {
 } from './constants';
 import { buildPlatformStats } from './utils';
 
-export interface PlatformOwnerDashboardProps {
+export type PlatformOwnerDashboardProps = {
   initialData: PlatformOwnerDashboardDto;
 }
 

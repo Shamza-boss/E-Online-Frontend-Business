@@ -1,7 +1,12 @@
 'use server';
 import { createClassroom } from '@/app/_lib/actions/classrooms';
-import { ClassDto } from '@/app/_lib/interfaces/types';
+import { type ClassDto } from '@/app/_lib/interfaces/types';
 import { classroomSchema } from '@/app/_lib/schemas/management';
+import {
+  type FormActionPrevState,
+  type FormActionState,
+} from '@/app/_lib/types/actionState';
+import { getErrorMessage } from '@/lib/api';
 import { parseWithZod } from '@conform-to/zod';
 
 function parseTextbookFields(formData: FormData) {
@@ -42,7 +47,10 @@ function parseTextbookFields(formData: FormData) {
   };
 }
 
-export async function SubmitClassroom(prevState: unknown, formData: FormData) {
+export async function SubmitClassroom(
+  _prev: FormActionPrevState<ClassDto>,
+  formData: FormData,
+): Promise<FormActionState<ClassDto>> {
   const submission = parseWithZod(formData, { schema: classroomSchema });
   if (submission.status !== 'success') {
     return submission.reply();
@@ -60,8 +68,8 @@ export async function SubmitClassroom(prevState: unknown, formData: FormData) {
 
   try {
     await createClassroom(newClassroom);
-    return newClassroom;
-  } catch (error: any) {
-    return error;
+    return { status: 'success', data: newClassroom };
+  } catch (error: unknown) {
+    return { status: 'error', message: getErrorMessage(error) };
   }
 }

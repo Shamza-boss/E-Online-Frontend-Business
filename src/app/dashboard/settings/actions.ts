@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { updateUser } from '@/app/_lib/actions/users';
 import { getCurrentUser } from '@/app/_lib/utils/currentUser';
 
-export interface UpdateProfilePayload {
+export type UpdateProfilePayload = {
   firstName: string;
   lastName: string;
 }

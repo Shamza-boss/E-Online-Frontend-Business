@@ -42,7 +42,7 @@ import {
     unpayInvoice as unpayInvoiceAction,
 } from '@/app/_lib/actions/invoices';
 import type { InstitutionWithAdminDto, InvoiceDto } from '@/app/_lib/interfaces/types';
-import type { BillingExperienceProps } from './interfaces';
+import type { BillingExperienceProps } from './types';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { setCreatorAddon } from '@/app/_lib/actions/subscriptions';
 import { normalizeRole, buildInstitutionOptions } from './utils';
@@ -99,7 +99,10 @@ export default function BillingExperience({
 
     useEffect(() => {
         if (!selectedInstitutionId && institutionOptions.length > 0) {
-            setSelectedInstitutionId(institutionOptions[0].id);
+            const first = institutionOptions[0];
+            if (first) {
+                setSelectedInstitutionId(first.id);
+            }
         }
     }, [institutionOptions, selectedInstitutionId]);
 

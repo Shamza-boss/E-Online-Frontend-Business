@@ -120,7 +120,7 @@ Client island uses `initialData` directly; optional SWR with `fallbackData` for 
 3. Frontend mints API JWT with `userId`, `role`, `institutionId`
 4. All backend calls use `Authorization: Bearer {apiAccessToken}`
 
-**RBAC:** Intended in `src/proxy.ts` (per-route role allowlists). Menu hiding in `MenuContent`. **Gap:** `middleware.ts` not wired — see IMPROVEMENTS.md.
+**RBAC:** Enforced in `src/proxy.ts` (Next.js 16 proxy convention) with per-route role allowlists. Menu hiding in `MenuContent`. Unauthenticated users redirect to `/signin` with `callbackUrl`.
 
 ### 5. Component architecture
 

@@ -1,4 +1,4 @@
-export interface PaginationParams {
+export type PaginationParams = {
   pageNumber?: number;
   pageSize?: number;
   searchTerm?: string;
@@ -6,7 +6,7 @@ export interface PaginationParams {
   sortDirection?: 'asc' | 'desc';
 }
 
-export interface PagedResult<T> {
+export type PagedResult<T> = {
   items: T[];
   pageNumber: number;
   pageSize: number;

@@ -16,7 +16,7 @@ import {
   LinearProgress,
   MenuItem,
   Select,
-  SelectChangeEvent,
+  type SelectChangeEvent,
   Stack,
   TextField,
   Typography,
@@ -28,8 +28,8 @@ import { useActionState } from 'react';
 
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import {
-  AcademicLevelDto,
-  SubjectDto,
+  type AcademicLevelDto,
+  type SubjectDto,
 } from '@/app/_lib/interfaces/types';
 import { classroomSchema } from '@/app/_lib/schemas/management';
 import { SubmitClassroom } from '../Forms/submitClassroom';
@@ -46,7 +46,8 @@ import {
   type TextbookSelection,
 } from '@/app/_lib/utils/textbook';
 import TextbookPreviewPanel from '@/app/_lib/components/textbook/TextbookPreviewPanel';
-import type { ClassroomCreationFormProps } from './interfaces';
+import type { ClassroomCreationFormProps } from './types';
+import { isFormActionSuccess } from '@/app/_lib/types/actionState';
 import {
   DEFAULT_FORM_ID,
   ADD_SUBJECT,
@@ -89,11 +90,11 @@ export default function ClassroomCreationForm({
 
   const [createResult, createAction, createPending] = useActionState(
     SubmitClassroom,
-    false
+    null,
   );
   const [updateResult, updateAction, updatePending] = useActionState(
     UpdateClassroomAction,
-    false
+    null,
   );
   const lastResult = isEditMode ? updateResult : createResult;
   const action = isEditMode ? updateAction : createAction;
@@ -147,11 +148,11 @@ export default function ClassroomCreationForm({
   }, [initialClassroom]);
 
   useEffect(() => {
-    if (lastResult && (lastResult as { name?: string })?.name) {
+    if (isFormActionSuccess(lastResult)) {
       const actionVerb = isEditMode ? 'updated' : 'created';
       showAlert(
         'success',
-        `The ${(lastResult as { name: string }).name} classroom was successfully ${actionVerb} 🚀!`
+        `The ${lastResult.data.name} classroom was successfully ${actionVerb} 🚀!`,
       );
       onSuccess?.();
     }

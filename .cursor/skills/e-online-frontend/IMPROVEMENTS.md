@@ -2,18 +2,19 @@
 
 Prioritized opportunities based on current codebase state (mid RSC migration).
 
-## P0 — Security & correctness
+## P0 — Security & correctness ✅ (done)
 
-| Item | Why | Where |
-|------|-----|-------|
-| **Wire middleware** | `src/proxy.ts` has RBAC but no `middleware.ts` exports it — dashboard routes lack server-side auth gate | Create `src/middleware.ts` re-exporting `proxy` |
-| **Align redirect targets** | Middleware sends unauthenticated users to `/`; fetch layers redirect to `/signin` | `src/proxy.ts`, `serverFetch.server.ts` |
-| **Fix NextAuth types** | `session.accessToken` in types vs `apiAccessToken` at runtime | `next-auth.d.ts`, `auth.ts` |
+| Item | Status | Notes |
+|------|--------|-------|
+| ~~**Wire middleware**~~ | ✅ Done | Next.js 16 uses `src/proxy.ts` (exports `proxy` + `config.matcher`) — build shows `ƒ Proxy (Middleware)` |
+| ~~**Align redirect targets**~~ | ✅ Done | `proxy.ts` now redirects unauthenticated/invalid-role users to `/signin` with `callbackUrl` (matches `serverFetch.server.ts`) |
+| ~~**Fix NextAuth types**~~ | ✅ Done | Removed duplicate `interfaces/Auth/next-auth.d.ts` (`accessToken`); canonical types in root `next-auth.d.ts` (`apiAccessToken`) |
 
 ## P1 — Architecture completion
 
 | Item | Why | Where |
 |------|-----|-------|
+| ~~**Type standards rollout**~~ | ✅ Done | `docs/TYPE_STANDARDS.md`, `tsconfig` + ESLint, `actionState.ts`, `interfaces.ts` → `types.ts`, hotspot cleanup |
 | **Finish RSC migration** | `/dashboard/courses` still client-fetches; inconsistent with dashboard/settings | `courses/page.tsx`, `Classes.tsx` |
 | **Deduplicate data/actions** | `getAllAcademics` etc. exist in both `_lib/data` and `_lib/actions` | Merge reads into `data/`, actions call data or revalidate only |
 | **Remove dead fetch modules** | `serverFetch.ts` (isomorphic) has zero consumers | Delete or document as deprecated |
@@ -58,7 +59,6 @@ Prioritized opportunities based on current codebase state (mid RSC migration).
 
 ## Suggested next PRs
 
-1. Wire `middleware.ts` + unify auth redirects
-2. RSC-migrate `/dashboard/courses` + dedupe academics/subjects data layer
-3. Dynamic-import Excalidraw/PDF on course detail routes
-4. ESLint rule: no `_lib/data` imports from `'use client'` files
+1. RSC-migrate `/dashboard/courses` + dedupe academics/subjects data layer
+2. Dynamic-import Excalidraw/PDF on course detail routes
+3. ESLint rule: no `_lib/data` imports from `'use client'` files

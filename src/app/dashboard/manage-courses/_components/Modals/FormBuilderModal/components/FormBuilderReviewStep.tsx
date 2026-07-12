@@ -22,7 +22,7 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import type { Question } from '@/app/_lib/interfaces/types';
 import { ReviewPaper } from '../elements';
 
-export interface FormBuilderReviewStepProps {
+export type FormBuilderReviewStepProps = {
   formTitle: string;
   description: string;
   dueDate: string;
@@ -274,7 +274,7 @@ export default function FormBuilderReviewStep({
   );
 }
 
-interface ReviewStatCardProps {
+type ReviewStatCardProps = {
   icon: React.ReactNode;
   paletteKey: 'primary' | 'warning' | 'info' | 'success';
   label: string;

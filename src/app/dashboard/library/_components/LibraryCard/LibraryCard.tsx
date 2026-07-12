@@ -24,7 +24,7 @@ import {
 } from '@/app/_lib/utils/textbook';
 import { LibrarySizeChip, LibraryVisibilityChip } from '../LibraryChips';
 import { LIBRARY_ACCENT } from './constants';
-import type { LibraryCardProps } from './interfaces';
+import type { LibraryCardProps } from './types';
 
 function LibraryCard({ file, onRead }: LibraryCardProps) {
   const { ref, thumbnail, isLoading } = useLazyCardThumbnail(file);

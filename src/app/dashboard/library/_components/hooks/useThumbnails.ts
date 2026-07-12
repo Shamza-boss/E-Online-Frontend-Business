@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FileDto } from '@/app/_lib/interfaces/types';
+import { type FileDto } from '@/app/_lib/interfaces/types';
 import { generatePdfThumbnail } from '@/app/_lib/utils/pdfThumbnail';
 
 const extractName = (fileKey: string) => {

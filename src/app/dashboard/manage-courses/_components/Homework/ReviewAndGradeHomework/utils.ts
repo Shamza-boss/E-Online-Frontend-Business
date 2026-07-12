@@ -1,5 +1,5 @@
 import type { Question } from '@/app/_lib/interfaces/types';
-import type { GradingData, GradingEntry } from './interfaces';
+import type { GradingData, GradingEntry } from './types';
 
 export const getGradeBorder = (award: number, max: number): string => {
   if (award === 0) return 'red';

@@ -48,6 +48,10 @@ After any change to `_lib/actions`, `_lib/data`, or `serverFetch*`:
 2. Grep: client files (`'use client'`) must not import `_lib/data` or `serverFetch.server`
 3. Every `actions/*.ts` imported from a client file must start with `'use server'`
 
+## Mutations
+
+Mutations live in `_lib/actions/*.ts` with `'use server'`. Return explicit types — never `Promise<unknown>`. Form actions use discriminated unions from `_lib/types/actionState.ts`. See [TypeScript Standards](./TYPE_STANDARDS.md).
+
 ## Layer responsibilities
 
 | Layer | Path | Role |

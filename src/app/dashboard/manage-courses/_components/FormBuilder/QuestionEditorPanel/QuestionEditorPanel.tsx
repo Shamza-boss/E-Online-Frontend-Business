@@ -16,7 +16,7 @@ import { VideoUploadField } from '@/app/_lib/components/video/VideoUploadField';
 import { PdfUploadField } from '@/app/_lib/components/pdf/PdfUploadField';
 import { isChoiceType, IsValidChild, NEW_QUESTION_DND_MIME } from '../questionUtils';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
-import type { QuestionEditorPanelProps } from './interfaces';
+import type { QuestionEditorPanelProps } from './types';
 import { SUBQUESTION_DND_MIME } from './constants';
 import {
     isSectionType,

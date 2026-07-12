@@ -3,10 +3,10 @@
 import React from 'react';
 import {
   GridActionsCellItem,
-  GridColDef,
-  GridPaginationModel,
-  GridRowId,
-  GridRowParams,
+  type GridColDef,
+  type GridPaginationModel,
+  type GridRowId,
+  type GridRowParams,
 } from '@mui/x-data-grid';
 import { useSession } from 'next-auth/react';
 import EditIcon from '@mui/icons-material/Edit';
@@ -15,7 +15,7 @@ import Switch from '@mui/material/Switch';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
-import { InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
+import { type InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
 import EDataGrid from '@/app/dashboard/_components/EDataGrid';
 import {
   activateInstitution,
@@ -26,11 +26,11 @@ import { format } from 'date-fns';
 import { Chip, FormControlLabel } from '@mui/material';
 import ManageInstitutionModal from '../Modals/ManageInstitutionModal';
 import {
-  PagedResult,
-  PaginationParams,
+  type PagedResult,
+  type PaginationParams,
 } from '@/app/_lib/interfaces/pagination';
 import { useRegisterSearch } from '@/app/_lib/context/SearchContext';
-import type { InstitutionGridRow, InstitutionUserDataGridProps } from './interfaces';
+import type { InstitutionGridRow, InstitutionUserDataGridProps } from './types';
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZE_OPTIONS,

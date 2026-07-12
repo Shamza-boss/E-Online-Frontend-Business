@@ -34,7 +34,10 @@ export {
   hasErrorCode,
   getTrackingId,
   formatErrorForLog,
+  getErrorMessage,
 } from './errors';
+
+export type { JsonPrimitive, JsonValue, JsonObject } from './json';
 
 // User-friendly error messages
 export {

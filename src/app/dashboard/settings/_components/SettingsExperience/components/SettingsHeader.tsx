@@ -9,7 +9,7 @@ import type { RoleTheme } from '../types';
 import { SETTINGS_DESCRIPTION, SETTINGS_TITLE } from '../constants';
 import { SettingsDescription, SettingsHeaderBox } from '../elements';
 
-interface SettingsHeaderProps {
+type SettingsHeaderProps = {
   roleTheme: RoleTheme;
 }
 

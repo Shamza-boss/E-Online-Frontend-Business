@@ -21,7 +21,7 @@ import {
   SIGN_UP_SUBTITLE,
   SIGN_UP_TITLE,
 } from './constants';
-import type { SignUpForm } from './interfaces';
+import type { SignUpForm } from './types';
 
 export function FloatingOrbs() {
   const theme = useTheme();
@@ -103,7 +103,7 @@ export function FloatingOrbs() {
   );
 }
 
-interface SignUpFormFieldsProps {
+type SignUpFormFieldsProps = {
   control: Control<SignUpForm>;
   errors: FieldErrors<SignUpForm>;
   loading: boolean;

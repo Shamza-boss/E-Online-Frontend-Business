@@ -1,4 +1,4 @@
-import type { SubjectSeriesItem, AreaGradientProps } from './interfaces';
+import type { SubjectSeriesItem, AreaGradientProps } from './types';
 import { MAX_TICK_COUNT } from './constants';
 
 export function normalizeSubjectSeries(series: SubjectSeriesItem[]): SubjectSeriesItem[] {
