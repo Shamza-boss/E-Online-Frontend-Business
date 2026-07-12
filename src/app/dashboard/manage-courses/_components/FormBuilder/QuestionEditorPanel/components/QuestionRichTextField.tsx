@@ -2,7 +2,12 @@
 
 import React, { useEffect, useId, useRef } from 'react';
 import Typography from '@mui/material/Typography';
-import { RichTextEditor, type RichTextEditorRef } from 'mui-tiptap';
+import {
+  LinkBubbleMenu,
+  RichTextEditor,
+  TableBubbleMenu,
+  type RichTextEditorRef,
+} from 'mui-tiptap';
 import useExtensions from '@/app/_lib/components/TipTapEditor/useExtensions';
 import EditorMenuControls from '@/app/_lib/components/TipTapEditor/EditorMenuControls';
 import type { QuestionRichTextFieldProps } from '../types';
@@ -101,7 +106,14 @@ export default function QuestionRichTextField({
             },
           },
         }}
-      />
+      >
+        {() => (
+          <>
+            <LinkBubbleMenu />
+            <TableBubbleMenu />
+          </>
+        )}
+      </RichTextEditor>
     </RichTextWrapper>
   );
 }

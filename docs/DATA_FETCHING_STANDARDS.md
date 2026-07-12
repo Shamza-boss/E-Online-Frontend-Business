@@ -136,3 +136,7 @@ Avoid duplicate route handlers when a Server Action already covers the mutation.
 ## Global SWR config
 
 `swrConfig` from `_lib/config/swr.ts` is wired in `providers.tsx` via `<SWRConfig>`.
+
+## API types from OpenAPI
+
+Optional generated types from backend Swagger — see [OpenAPI client](./OPENAPI_CLIENT.md) (`npm run generate:api-types`). Use at `_lib/data` / action boundaries; do not replace fetch wrappers wholesale.

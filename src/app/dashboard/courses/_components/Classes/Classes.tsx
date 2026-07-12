@@ -3,7 +3,6 @@ import ClassCard from '@/app/_lib/components/shared-theme/customizations/card';
 import { type ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import { SchoolRounded } from '@mui/icons-material';
 import ErrorLayout from '../../../_components/ErrorLayout';
-import Link from 'next/link';
 import type { Route } from 'next';
 import { ClassesGrid, CardWrapper } from './elements';
 
@@ -50,14 +49,13 @@ export default async function ClassroomClasses() {
     <ClassesGrid>
       {classes.map((classItem) => (
         <CardWrapper key={classItem.classroomId}>
-          <Link style={{ textDecoration: 'none' }} href={courseHref(classItem)}>
-            <ClassCard
-              className={classItem.classroomName}
-              teacherNameAbb={`${classItem.teacherLastName} ${classItem.teacherFirstName.charAt(0)}`}
-              subjectName={classItem.subjectName}
-              academicLevelName={classItem.academicLevelName}
-            />
-          </Link>
+          <ClassCard
+            href={courseHref(classItem)}
+            className={classItem.classroomName}
+            teacherNameAbb={`${classItem.teacherLastName} ${classItem.teacherFirstName.charAt(0)}`}
+            subjectName={classItem.subjectName}
+            academicLevelName={classItem.academicLevelName}
+          />
         </CardWrapper>
       ))}
     </ClassesGrid>

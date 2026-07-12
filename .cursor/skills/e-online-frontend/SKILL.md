@@ -49,7 +49,7 @@ Slug format for courses: `{classroomName}~{classroomId}` (URL-encoded).
 | Layout tokens (padding/scroll) | `src/app/_lib/layout/dashboardPageLayout.ts` |
 | Types | `src/app/_lib/interfaces/types.ts` |
 | User roles | `src/app/_lib/Enums/UserRole.ts` |
-| Engineering standards | `docs/TYPE_STANDARDS.md`, `docs/DATA_FETCHING_STANDARDS.md`, `docs/COMPONENT_STANDARDS.md` |
+| Engineering standards | `docs/TYPE_STANDARDS.md`, `docs/DATA_FETCHING_STANDARDS.md`, `docs/COMPONENT_STANDARDS.md`, `docs/OPENAPI_CLIENT.md` |
 
 ## Data-fetch decision tree
 

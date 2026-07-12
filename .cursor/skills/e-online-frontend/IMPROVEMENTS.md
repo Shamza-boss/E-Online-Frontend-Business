@@ -31,11 +31,11 @@ Prioritized opportunities based on current codebase state (mid RSC migration).
 | ~~**Double theme wrap**~~ | ✅ Done | Root `providers` owns `AppTheme` + MUI X; Dashboard shell no longer nests another |
 | ~~**Segment error boundaries**~~ | ✅ Done | Shared `SegmentError` + `error.tsx` on courses, manage-courses, management, institutions, billing, library |
 
-## P3 — Component standards rollout
+## P3 — Component standards rollout ✅ (done)
 
 | Item | Why | Where |
 |------|-----|-------|
-| ~~**Folder pattern migration**~~ | ✅ Partial | FormBuilderModal draft/state extracted to `useFormBuilderDraft` (~622 → ~405 lines); remaining: deeper FormBuilder/question editor splits |
+| ~~**Folder pattern migration**~~ | ✅ Done | FormBuilderModal → `useFormBuilderDraft`; QuestionEditorPanel DnD → `useQuestionEditorDnD` (~851 → ~534 lines) |
 | ~~**Dead template cleanup**~~ | ✅ Done | Removed unused scaffold: `CardAlert`, `ChartUserByCountry`, `CustomDatePicker`, `CustomizedTreeView`, `HighlightedCard`, `SelectContent`, `internals/` |
 | ~~**Skeleton parity**~~ | ✅ Done | All main dashboard segments already have `loading.tsx` |
 
@@ -48,17 +48,17 @@ Prioritized opportunities based on current codebase state (mid RSC migration).
 | ~~**Bundle size**~~ | ✅ Done | PDF via `next/dynamic` barrel; Excalidraw CSS moved off root layout into Excalidraw components |
 | ~~**SWR deduping**~~ | ✅ Done | Canonical `swrKeys` in `_lib/config/swrKeys.ts`; academics/subjects shared across library + management |
 
-## P5 — Developer experience
+## P5 — Developer experience ✅ (done)
 
 | Item | Why | Where |
 |------|-----|-------|
 | ~~**ESLint boundary rule**~~ | ✅ Done | `no-restricted-imports` blocks `_lib/data` from hooks/components/client modules |
-| **API type generation** | Manual DTO sync with backend | OpenAPI client from backend Swagger |
-| **E2E smoke tests** | No automated route coverage | Playwright for auth + dashboard load |
+| ~~**API type generation**~~ | ✅ Spike done | `docs/OPENAPI_CLIENT.md` + `npm run generate:api-types` (`openapi-typescript` → `_lib/api/generated/`) |
+| ~~**E2E smoke tests**~~ | ✅ Done | Playwright: `e2e/smoke.spec.ts` (signin load + unauth `/dashboard` → `/signin`); `npm run test:e2e` |
 | ~~**Rename dashboard typos**~~ | ✅ Done | `getSystemAdminDashboard` / `getInstitutionDashboard` (removed `DashBoard` casing) |
 
 ## Suggested next PRs
 
-1. Further FormBuilder / QuestionEditorPanel splits (still large composition files)
-2. OpenAPI client generation from backend Swagger
-3. Playwright smoke: auth + dashboard load
+1. Wire generated OpenAPI types into hot `_lib/data` endpoints (incremental; see `docs/OPENAPI_CLIENT.md`)
+2. Optional CI job for Playwright smoke against preview
+3. Further leaf splits in FormBuilder review/tree handlers if those files grow again
