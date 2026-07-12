@@ -32,6 +32,7 @@ import OverdueInvoicesBanner from '../OverdueInvoicesBanner';
 import SendInvoiceDialog from '../SendInvoiceDialog';
 import MarkPaidDialog from '../MarkPaidDialog';
 import InvoiceDetailPanel from '../InvoiceDetailPanel';
+import PageIntro from '@/app/_lib/components/PageIntro';
 import { getAllInstitutions, deactivateInstitution, activateInstitution } from '@/app/_lib/actions/institutions';
 import {
     generateInvoice,
@@ -256,14 +257,11 @@ export default function BillingExperience({
     return (
         <>
             <PageStack spacing={3}>
-                <Box>
-                    <Typography variant="h4" fontWeight={700} gutterBottom>
-                        Billing & Invoicing
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Generate invoices, track payments, manage institution billing status, and enforce payment policies.
-                    </Typography>
-                </Box>
+                <PageIntro
+                    title="Billing & Invoicing"
+                    description="Generate invoices, track payments, manage institution billing status, and enforce payment policies."
+                    infoAriaLabel="About billing"
+                />
 
                 {/* Overdue banner */}
                 <OverdueInvoicesBanner />

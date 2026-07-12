@@ -89,6 +89,27 @@ When building dashboard pages with flex:
 - Stack toolbars/actions vertically below `sm` (`direction={{ xs: 'column', sm: 'row' }}`)
 - Scroll inside one container (`ChildrenContainer` / `dashboardScrollRegionSx`), not nested `overflow: hidden` chains
 
+## Data grids (mobile)
+
+All grids should go through [`EDataGrid`](../src/app/dashboard/_components/EDataGrid/):
+
+- Parent chain: `dashboardPageRootSx` → flex body → `OutlinedWrapper` (`flex: 1`, `minHeight: 0`, `overflow: hidden`) → `EDataGrid`
+- **Do not** put `overflow: auto` on ancestors of `EDataGrid` — the grid virtual scroller owns vertical (and horizontal) overflow
+- On `md` and below, `EDataGrid` keeps a minimum height so rows remain scrollable even if a parent is loose
+- Use `mobileHiddenFields` to drop secondary columns on `sm` and below
+
+Reference: library table view, management, institutions, manage-courses modules.
+
+## Page intros (mobile)
+
+Use shared [`PageIntro`](../src/app/_lib/components/PageIntro/) for page titles and help copy:
+
+- **md and up:** show title, description, and optional legend/extra content
+- **Below md:** hide that reference content; keep action buttons visible; show an info icon that opens a popover with the same content
+- Prefer breadcrumbs for the route name on small screens — do not duplicate a large in-page `h4` when space is tight (library cards, course grids)
+
+Reference: `LibraryHeader`, `SettingsHeader`, billing/courses/manage-courses/management intros.
+
 
 - [ ] Folder with `index.ts` barrel
 - [ ] No magic strings in JSX

@@ -2,7 +2,6 @@
 
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import {
   getDashboardPagePadding,
 } from '@/app/_lib/layout/dashboardPageLayout';
@@ -27,14 +26,6 @@ export const SettingsHeaderBox = styled(Box)(({ theme }) => ({
   },
 }));
 
-export const SettingsDescription = styled(Typography)(({ theme }) => ({
-  maxWidth: 720,
-  lineHeight: 1.6,
-  [theme.breakpoints.down('sm')]: {
-    maxWidth: '100%',
-  },
-}));
-
 export const SettingsBody = styled(Box)({
   flex: '1 1 0%',
   display: 'flex',
@@ -53,6 +44,10 @@ export const TabContentArea = styled(Box)(({ theme }) => ({
   overflowY: 'auto',
   overflowX: 'hidden',
   WebkitOverflowScrolling: 'touch',
+  paddingTop: theme.spacing(2),
   paddingRight: theme.spacing(0.5),
   paddingBottom: theme.spacing(1),
+  [theme.breakpoints.up('sm')]: {
+    paddingTop: theme.spacing(2.5),
+  },
 }));

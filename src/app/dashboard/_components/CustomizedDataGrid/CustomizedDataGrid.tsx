@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Box from '@mui/material/Box';
 import type { CustomizedDataGridProps } from './types';
 import {
   DEFAULT_PAGE_SIZE,
@@ -6,7 +7,7 @@ import {
   FILTER_PANEL_SLOT_PROPS,
 } from './constants';
 import { getColumnDefinitions, getRowClassName } from './utils';
-import { StyledDataGrid } from './elements';
+import EDataGrid from '../EDataGrid';
 
 export default function CustomizedDataGrid({
   rows,
@@ -23,17 +24,31 @@ export default function CustomizedDataGrid({
   }
 
   return (
-    <StyledDataGrid
-      checkboxSelection={false}
-      rows={rows}
-      columns={getColumnDefinitions()}
-      getRowClassName={(params) => getRowClassName(params.indexRelativeToCurrentPage)}
-      initialState={{
-        pagination: { paginationModel: { pageSize: DEFAULT_PAGE_SIZE } },
+    <Box
+      sx={{
+        width: '100%',
+        height: { xs: 360, md: 420 },
+        minHeight: { xs: 360, md: 420 },
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}
-      pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
-      loading={isLoading}
-      slotProps={FILTER_PANEL_SLOT_PROPS}
-    />
+    >
+      <EDataGrid
+        checkboxSelection={false}
+        rows={rows}
+        columns={getColumnDefinitions()}
+        getRowClassName={(params) =>
+          getRowClassName(params.indexRelativeToCurrentPage)
+        }
+        initialState={{
+          pagination: { paginationModel: { pageSize: DEFAULT_PAGE_SIZE } },
+        }}
+        pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
+        loading={isLoading}
+        slotProps={FILTER_PANEL_SLOT_PROPS}
+        disableRowSelectionOnClick
+      />
+    </Box>
   );
 }

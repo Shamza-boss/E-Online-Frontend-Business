@@ -5,7 +5,11 @@ import Box from '@mui/material/Box';
 
 export const TabContentBox = styled(Box)(({ theme }) => ({
     padding: theme.spacing(2),
+    flex: 1,
+    minHeight: 0,
     height: '100%',
     maxHeight: '100%',
-    overflow: 'auto',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
 }));

@@ -16,7 +16,8 @@ import {
   TAB_USERS,
 } from './constants';
 import { getSearchPlaceholder, getNoPermissionTooltip } from './utils';
-import { HeaderContainer, HelpText } from './elements';
+import { HeaderContainer } from './elements';
+import PageIntro from '@/app/_lib/components/PageIntro';
 
 export default function ManagementHeader({
   activeTab,
@@ -146,20 +147,22 @@ export default function ManagementHeader({
         />
       </Stack>
 
-      <HelpText variant="body2" color="text.secondary">
-        {activeTab === TAB_USERS && (
-          <>
-            Use the <strong>Actions</strong> column to edit or remove users. Click a
-            row&apos;s edit icon to modify details inline.
-          </>
-        )}
-        {activeTab === TAB_COURSES && (
-          <>
-            Manage your courses here. Use <strong>Actions</strong> to edit or delete.
-            Click Subjects or Academic Levels using the buttons above.
-          </>
-        )}
-      </HelpText>
+      <PageIntro
+        infoAriaLabel="About this management view"
+        description={
+          activeTab === TAB_USERS ? (
+            <>
+              Use the <strong>Actions</strong> column to edit or remove users. Click a row&apos;s
+              edit icon to modify details inline.
+            </>
+          ) : (
+            <>
+              Manage your courses here. Use <strong>Actions</strong> to edit or delete. Click
+              Subjects or Academic Levels using the buttons above.
+            </>
+          )
+        }
+      />
     </HeaderContainer>
   );
 }

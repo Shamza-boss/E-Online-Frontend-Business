@@ -78,11 +78,23 @@ export default function LibraryView({ initialAcademics }: LibraryViewProps) {
   }, []);
 
   const debouncedSearch = useDebouncedValue(searchTerm, SEARCH_DEBOUNCE_MS);
+  // Grade (and other filters) must debounce like search — each Select change was
+  // firing a full paged repository query and stacking until the API timed out.
+  const debouncedAcademicLevelId = useDebouncedValue(
+    academicLevelId,
+    SEARCH_DEBOUNCE_MS,
+  );
+  const debouncedUnlinkedOnly = useDebouncedValue(
+    unlinkedOnly,
+    SEARCH_DEBOUNCE_MS,
+  );
 
   useEffect(() => {
-    setCardPagination((prev) => ({ ...prev, page: 0 }));
-    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-  }, [debouncedSearch, academicLevelId, unlinkedOnly]);
+    setCardPagination((prev) => (prev.page === 0 ? prev : { ...prev, page: 0 }));
+    setPaginationModel((prev) =>
+      prev.page === 0 ? prev : { ...prev, page: 0 },
+    );
+  }, [debouncedSearch, debouncedAcademicLevelId, debouncedUnlinkedOnly]);
 
   const sortField = sortModel[0]?.field ?? 'uploadedAt';
   const sortDirection = sortModel[0]?.sort ?? 'desc';
@@ -98,12 +110,12 @@ export default function LibraryView({ initialAcademics }: LibraryViewProps) {
     searchTerm: debouncedSearch || undefined,
     sortBy: sortField,
     sortDirection: sortDirection === 'asc' ? 'asc' : 'desc',
-    academicLevelId: academicLevelId || undefined,
-    unlinkedOnly: unlinkedOnly || undefined,
+    academicLevelId: debouncedAcademicLevelId || undefined,
+    unlinkedOnly: debouncedUnlinkedOnly || undefined,
   });
 
-  const { files: manageFiles, mutate: mutateManageFiles } = useLibraryFiles();
-
+  const { files: manageFiles, mutate: mutateManageFiles } =
+    useLibraryFiles(manageOpen);
   const { data: academicOptions = [] } = useSWR(librarySwrKeys.academics, getAllAcademics, {
     fallbackData: initialAcademics,
   });

@@ -2,21 +2,25 @@ import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import { DataGrid } from '@mui/x-data-grid';
 
-type GridContainerProps = {
-  $isMobile: boolean;
-}
-
-export const GridContainer = styled(Box, {
-  shouldForwardProp: (prop) => prop !== '$isMobile',
-})<GridContainerProps>(({ $isMobile }) => ({
+/**
+ * Fills the parent flex shell and scrolls rows inside the virtual scroller.
+ * Same behavior on mobile and desktop (library table pattern).
+ */
+export const GridContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  flex: $isMobile ? 'none' : 1,
+  flex: 1,
   boxSizing: 'border-box',
+  width: '100%',
   height: '100%',
-  width: $isMobile ? '100%' : 'auto',
-  minHeight: $isMobile ? 'auto' : 0,
+  minWidth: 0,
+  minHeight: 0,
   overflow: 'hidden',
+  // When an ancestor doesn't constrain height (e.g. scrollable dashboard cards),
+  // keep a usable vertical scroll viewport on small screens.
+  [theme.breakpoints.down('md')]: {
+    minHeight: theme.spacing(45),
+  },
 }));
 
 export const BaseDataGrid = styled(DataGrid)(({ theme }) => ({
@@ -25,7 +29,10 @@ export const BaseDataGrid = styled(DataGrid)(({ theme }) => ({
   flex: 1,
   display: 'flex',
   flexDirection: 'column',
+  width: '100%',
+  height: '100%',
   minHeight: 0,
+  minWidth: 0,
   '& .MuiDataGrid-main': {
     flex: 1,
     minHeight: 0,
@@ -42,6 +49,8 @@ export const BaseDataGrid = styled(DataGrid)(({ theme }) => ({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
   },
   '& .MuiDataGrid-footerContainer': {
     flexShrink: 0,

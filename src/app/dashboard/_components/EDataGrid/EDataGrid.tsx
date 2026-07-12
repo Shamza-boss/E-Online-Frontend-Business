@@ -43,7 +43,7 @@ export default function EDataGrid(props: EDataGridProps) {
   }, [columnVisibilityModel, isMobile, mobileHiddenFields]);
 
   return (
-    <GridContainer $isMobile={isMobile}>
+    <GridContainer>
       <BaseDataGrid
         {...rest}
         sx={sx}

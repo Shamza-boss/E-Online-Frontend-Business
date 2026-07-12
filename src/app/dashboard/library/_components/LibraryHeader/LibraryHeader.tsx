@@ -1,9 +1,10 @@
 'use client';
 
-import { Stack, Typography, Button, Box } from '@mui/material';
+import { Stack, Typography, Button } from '@mui/material';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import PublishIcon from '@mui/icons-material/Publish';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import PageIntro from '@/app/_lib/components/PageIntro';
 import { LibraryVisibilityChip } from '../LibraryChips';
 import {
   LIBRARY_TITLE,
@@ -20,23 +21,16 @@ export default function LibraryHeader({
   onPublishClick,
 }: LibraryHeaderProps) {
   return (
-    <Box sx={{ mb: 4 }}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        sx={{ mb: 2 }}
-      >
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <LibraryBooksIcon color="primary" />
-          <Typography variant="h4" fontWeight={600}>
-            {LIBRARY_TITLE}
-          </Typography>
-        </Stack>
-        <Stack direction="row" spacing={1.5}>
+    <PageIntro
+      title={LIBRARY_TITLE}
+      description={LIBRARY_DESCRIPTION}
+      icon={<LibraryBooksIcon color="primary" />}
+      infoAriaLabel="About the library"
+      actions={
+        <>
           <Button
             variant="outlined"
+            size="small"
             startIcon={<RefreshIcon />}
             onClick={onRefresh}
             disabled={isFetching}
@@ -46,19 +40,16 @@ export default function LibraryHeader({
           {canManage && (
             <Button
               variant="contained"
+              size="small"
               startIcon={<PublishIcon />}
               onClick={onPublishClick}
             >
               Publish books
             </Button>
           )}
-        </Stack>
-      </Stack>
-
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: 'max-content' }}>
-        {LIBRARY_DESCRIPTION}
-      </Typography>
-
+        </>
+      }
+    >
       <Stack direction="row" spacing={3} flexWrap="wrap" sx={{ gap: 1 }}>
         <Stack direction="row" spacing={1} alignItems="center">
           <LibraryVisibilityChip isPublic />
@@ -73,6 +64,6 @@ export default function LibraryHeader({
           </Typography>
         </Stack>
       </Stack>
-    </Box>
+    </PageIntro>
   );
 }

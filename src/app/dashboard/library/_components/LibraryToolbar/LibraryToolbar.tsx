@@ -62,14 +62,32 @@ export default function LibraryToolbar({
         }}
       />
 
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
-        <FormControl size="small" sx={{ minWidth: { md: 180 } }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        alignItems="center"
+        sx={{ flexShrink: 0, width: { xs: '100%', md: 'auto' } }}
+      >
+        <FormControl
+          size="small"
+          sx={{
+            flex: { xs: 1, md: 'none' },
+            minWidth: { xs: 148, md: 180 },
+          }}
+        >
           <InputLabel id="library-grade-filter">{GRADE_FILTER_LABEL}</InputLabel>
           <Select
             labelId="library-grade-filter"
             label={GRADE_FILTER_LABEL}
             value={academicLevelId}
             onChange={(e) => onAcademicLevelChange(e.target.value)}
+            sx={{
+              '& .MuiSelect-select': {
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              },
+            }}
           >
             <MenuItem value="">{ALL_GRADES_LABEL}</MenuItem>
             {academicOptions.map((level) => (
@@ -93,6 +111,7 @@ export default function LibraryToolbar({
               borderRadius: 1,
               width: 40,
               height: 40,
+              flexShrink: 0,
             }}
           >
             <FilterAltIcon fontSize="small" />
