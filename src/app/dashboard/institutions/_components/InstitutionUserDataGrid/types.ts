@@ -11,6 +11,7 @@ export type InstitutionGridRow = {
   adminEmail: string;
   isActive: boolean;
   updatedAt?: string | null;
+  lastActiveAt?: string | null;
   adminFirstName?: string;
   adminLastName?: string;
   adminName: string;

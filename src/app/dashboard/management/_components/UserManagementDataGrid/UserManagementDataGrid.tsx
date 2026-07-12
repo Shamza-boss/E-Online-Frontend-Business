@@ -8,11 +8,12 @@ import {
   type GridPaginationModel,
   type GridSortModel,
 } from '@mui/x-data-grid';
-import { Tooltip } from '@mui/material';
+import { Tooltip, Chip } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import useSWR from 'swr';
+import { formatDistanceToNow, differenceInDays } from 'date-fns';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { RoleChip } from '@/app/_lib/components/role/roleChip';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
@@ -37,6 +38,26 @@ import {
   getDeleteDialogTitle,
   getRowClassName,
 } from './utils';
+
+function activityBadge(lastSeenAt: string | null | undefined): {
+  label: string;
+  color: 'success' | 'warning' | 'default';
+} {
+  if (!lastSeenAt) return { label: 'Never', color: 'default' };
+  const days = differenceInDays(new Date(), new Date(lastSeenAt));
+  if (days <= 7) return { label: 'Active', color: 'success' };
+  if (days <= 30) return { label: 'Idle', color: 'warning' };
+  return { label: 'Inactive', color: 'default' };
+}
+
+function formatPresence(value: string | null | undefined): string {
+  if (!value) return '—';
+  try {
+    return formatDistanceToNow(new Date(value), { addSuffix: true });
+  } catch {
+    return '—';
+  }
+}
 
 export default function UserManagementDataGrid({
   active,
@@ -189,6 +210,33 @@ export default function UserManagementDataGrid({
       flex: 1,
       minWidth: 120,
       renderCell: (params) => <RoleChip role={params.value} />,
+    },
+    {
+      field: 'lastSeenAt',
+      headerName: 'Last seen',
+      flex: 1,
+      minWidth: 140,
+      renderCell: (params) => formatPresence(params.row.lastSeenAt),
+    },
+    {
+      field: 'firstLoginAt',
+      headerName: 'First login',
+      flex: 1,
+      minWidth: 140,
+      renderCell: (params) => formatPresence(params.row.firstLoginAt),
+    },
+    {
+      field: 'activity',
+      headerName: 'Activity',
+      flex: 0.8,
+      minWidth: 110,
+      sortable: false,
+      renderCell: (params) => {
+        const badge = activityBadge(params.row.lastSeenAt);
+        return (
+          <Chip size="small" color={badge.color} label={badge.label} variant="filled" />
+        );
+      },
     },
     {
       field: 'actions',

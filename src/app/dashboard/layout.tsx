@@ -14,6 +14,7 @@ import type { Route } from 'next';
 import DashboardComponent from './_components/Dashboard';
 import { AUTH_NOTICE_QUERY_KEY } from '@/app/_lib/utils/alreadySignedInNotice';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
+import { useAuthHeartbeat } from '@/app/_lib/hooks/useAuthHeartbeat';
 
 const layoutStyles = {
   container: {
@@ -39,6 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { showAlert } = useAlert();
   const noticeParam = searchParams.get(AUTH_NOTICE_QUERY_KEY);
   const searchParamString = searchParams.toString();
+  useAuthHeartbeat();
 
   useEffect(() => {
     if (!noticeParam) return;

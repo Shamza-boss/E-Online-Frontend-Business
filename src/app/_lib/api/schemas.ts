@@ -48,3 +48,5 @@ export type MostActiveInstitutionSeriesDto =
 export type InstitutionActivitySeries = AppDto<'InstitutionActivitySeries'>;
 export type SubjectSeries = AppDto<'SubjectSeries'>;
 export type RecentHomeworkStatDto = AppDto<'RecentHomeworkStatDto'>;
+export type EngagementStatDto = AppDto<'EngagementStatDto'>;
+export type InactiveUserSummaryDto = AppDto<'InactiveUserSummaryDto'>;

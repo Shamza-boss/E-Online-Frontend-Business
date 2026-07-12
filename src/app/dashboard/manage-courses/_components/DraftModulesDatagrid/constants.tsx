@@ -40,6 +40,24 @@ export const buildColumns = (
             row.dueDate ? `${format(new Date(row.dueDate), 'MMM d, yyyy')}` : '—',
     },
     {
+        field: 'createdAt',
+        headerName: 'Created',
+        width: 140,
+        renderCell: ({ row }) =>
+            row.createdAt
+                ? `${format(new Date(row.createdAt), 'MMM d, yyyy HH:mm')}`
+                : '—',
+    },
+    {
+        field: 'updatedAt',
+        headerName: 'Updated',
+        width: 140,
+        renderCell: ({ row }) =>
+            row.updatedAt
+                ? `${format(new Date(row.updatedAt), 'MMM d, yyyy HH:mm')}`
+                : '—',
+    },
+    {
         field: 'expiryDate',
         headerName: 'Expiry',
         width: 140,

@@ -271,6 +271,8 @@ export type Homework = {
   isExam?: boolean;
   scheduledAt?: string | null; // ISO 8601 DateTimeOffset — when the exam becomes accessible
   allowReset?: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
   questions: Question[];
 }
 
@@ -450,6 +452,9 @@ export type UserDto = {
   subscriptionLabel?: string | null;
   subscriptionPlan?: SubscriptionPlan | null;
   creatorEnabled?: boolean;
+  firstLoginAt?: string | null;
+  lastSeenAt?: string | null;
+  loginCountLast30Days?: number;
 }
 
 export type AssignmentDetailsDto = {
@@ -489,6 +494,7 @@ export type InstitutionDto = {
   isActive: boolean;
   plan: SubscriptionFeatureFlag;
   creatorEnabled: boolean;
+  lastActiveAt?: string | null;
   billingStatus?: string | null;
   lastPaymentDate?: string | null;
   nextInvoiceDate?: string | null;
@@ -504,10 +510,12 @@ export type NewAdminDto = {
 // Dashboard / billing DTOs — sourced from OpenAPI (`_lib/api/schemas.ts`)
 export type {
   BillingUsageMetricsDto,
+  EngagementStatDto,
   GradePerfomanceDto,
   GradePerformanceDto,
   GradePerformanceLableTrendDto,
   HourlyLoginStat,
+  InactiveUserSummaryDto,
   InstitutionActivitySeries,
   InstitutionBillingDashboardDto,
   InstitutionTrendDashboardDto,
@@ -520,13 +528,6 @@ export type {
   SystemAdminDashboardDto,
   TrendMetricDto,
 } from '../api/schemas';
-
-/** Not present in OpenAPI yet — keep until backend exposes it. */
-export type EngagementStatDto = {
-  submissionRate: number;
-  avgNotePerStudent: number;
-  avgHomeworkAssigned: number;
-}
 
 // Settings / Profile insights
 export type SettingsResponseDto = {

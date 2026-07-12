@@ -31,6 +31,12 @@ export default function PlatformOwnerDashboard({
 
   const platformStats = buildPlatformStats(platformData, isLoading);
   const profitTrend = platformData?.profitMarginTrends;
+  const peakHours = platformData?.peakUsageHours ?? [];
+  const topPeak = [...peakHours].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))[0];
+  const peakHourLabel =
+    topPeak?.hour != null
+      ? `${String(topPeak.hour).padStart(2, '0')}:00 UTC (${topPeak.count ?? 0} events)`
+      : 'No login data yet';
 
   return (
     <DashboardGrid container spacing={{ xs: 1.5, sm: 2 }} columns={12}>
@@ -50,6 +56,17 @@ export default function PlatformOwnerDashboard({
           <StatCard {...card} />
         </Grid>
       ))}
+
+      <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+        <StatCard
+          title="Peak usage hour"
+          value={peakHourLabel}
+          interval="Last 30 days"
+          trend="neutral"
+          data={peakHours.map((h) => h.count ?? 0)}
+          loading={isLoading}
+        />
+      </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
         <ActiveSubjectsChart

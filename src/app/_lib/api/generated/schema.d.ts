@@ -101,6 +101,22 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthHeartbeat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/classrooms": {
         parameters: {
             query?: never;
@@ -1460,6 +1476,14 @@ export type components = {
             /** Format: int64 */
             size?: number | null;
         };
+        EngagementStatDto: {
+            /** Format: double */
+            submissionRate?: number;
+            /** Format: double */
+            avgNotePerStudent?: number;
+            /** Format: double */
+            avgHomeworkAssigned?: number;
+        };
         EnrollStudentsDto: {
             /** Format: uuid */
             classroomId: string;
@@ -1569,6 +1593,10 @@ export type components = {
             completions?: number | null;
             /** Format: int32 */
             totalStudents?: number | null;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
             /** Format: double */
             studentScore?: number | null;
             /** Format: double */
@@ -1582,6 +1610,16 @@ export type components = {
             hour?: number;
             /** Format: int32 */
             count?: number;
+        };
+        InactiveUserSummaryDto: {
+            /** Format: uuid */
+            userId?: string;
+            firstName?: string | null;
+            lastName?: string | null;
+            email?: string | null;
+            role?: components["schemas"]["UserRole"];
+            /** Format: date-time */
+            lastSeenAt?: string | null;
         };
         InstitutionActivitySeries: {
             id?: string | null;
@@ -1622,6 +1660,11 @@ export type components = {
             isActive?: boolean;
             plan?: components["schemas"]["SubscriptionFeatures"];
             creatorEnabled?: boolean;
+            /**
+             * Format: date-time
+             * @description Max LastSeenAt among institution users (presence).
+             */
+            lastActiveAt?: string | null;
         };
         InstitutionTrendDashboardDto: {
             teachers?: components["schemas"]["TrendMetricDto"];
@@ -1633,6 +1676,18 @@ export type components = {
             gradePerformanceTrends?: components["schemas"]["GradePerformanceLableTrendDto"];
             mostActiveSubjects?: components["schemas"]["MostActiveClassSubjectSeriesDto"];
             recentHomeworkStats?: components["schemas"]["RecentHomeworkStatDto"][] | null;
+            /** Format: int32 */
+            activeUsersLast7Days?: number;
+            /** Format: int32 */
+            activeUsersLast30Days?: number;
+            /** Format: int32 */
+            neverLoggedInCount?: number;
+            /** Format: int32 */
+            activeInstructorsLast30Days?: number;
+            /** Format: int32 */
+            activeTraineesLast30Days?: number;
+            engagement?: components["schemas"]["EngagementStatDto"];
+            inactiveUsers?: components["schemas"]["InactiveUserSummaryDto"][] | null;
         };
         InstitutionWithAdminDto: {
             institution: components["schemas"]["InstitutionDto"];
@@ -1864,6 +1919,8 @@ export type components = {
             profitMarginPerformance?: components["schemas"]["GradePerformanceDto"][] | null;
             profitMarginMonths?: string[] | null;
             profitMarginTrends?: components["schemas"]["GradePerformanceLableTrendDto"];
+            /** @description Login/session events by UTC hour over the last 30 days. */
+            peakUsageHours?: components["schemas"]["HourlyLoginStat"][] | null;
         };
         ProblemDetails: {
             type?: string | null;
@@ -2054,6 +2111,10 @@ export type components = {
             passkeyEnrolledAt?: string | null;
             /** Format: date-time */
             firstLoginAt?: string | null;
+            /** Format: date-time */
+            lastSeenAt?: string | null;
+            /** Format: int32 */
+            loginCountLast30Days?: number;
             /** Format: date-time */
             enrollmentCompletedAt?: string | null;
             /** Format: date-time */
@@ -2345,6 +2406,24 @@ export interface operations {
         };
     };
     MarkPasskeyEnrolled: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthHeartbeat: {
         parameters: {
             query?: never;
             header?: never;

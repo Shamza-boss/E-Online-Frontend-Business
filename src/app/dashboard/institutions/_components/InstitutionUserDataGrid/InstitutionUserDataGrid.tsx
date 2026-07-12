@@ -330,6 +330,22 @@ export default function InstitutionUserDataGrid({
       },
     },
     {
+      field: 'lastActiveAt',
+      headerName: 'Last active',
+      flex: 1,
+      minWidth: 140,
+      editable: false,
+      renderCell: (params) => {
+        const value = params.row.lastActiveAt;
+        if (!value) return '—';
+        try {
+          return format(new Date(value), 'MMM d, yyyy HH:mm');
+        } catch {
+          return '—';
+        }
+      },
+    },
+    {
       field: 'updatedAt',
       headerName: 'Last Updated',
       flex: 1,

@@ -249,6 +249,19 @@
         }
       }
     },
+    "/api/auth/heartbeat": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "operationId": "AuthHeartbeat",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/classrooms": {
       "get": {
         "tags": [
@@ -3968,6 +3981,24 @@
         },
         "additionalProperties": false
       },
+      "EngagementStatDto": {
+        "type": "object",
+        "properties": {
+          "submissionRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "avgNotePerStudent": {
+            "type": "number",
+            "format": "double"
+          },
+          "avgHomeworkAssigned": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "EnrollStudentsDto": {
         "required": [
           "classroomId",
@@ -4285,6 +4316,14 @@
             "format": "int32",
             "nullable": true
           },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
           "studentScore": {
             "type": "number",
             "format": "double",
@@ -4320,6 +4359,36 @@
           "count": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InactiveUserSummaryDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4429,6 +4498,12 @@
           },
           "creatorEnabled": {
             "type": "boolean"
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "description": "Max LastSeenAt among institution users (presence).",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4472,6 +4547,36 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RecentHomeworkStatDto"
+            },
+            "nullable": true
+          },
+          "activeUsersLast7Days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeUsersLast30Days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "neverLoggedInCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeInstructorsLast30Days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeTraineesLast30Days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "engagement": {
+            "$ref": "#/components/schemas/EngagementStatDto"
+          },
+          "inactiveUsers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InactiveUserSummaryDto"
             },
             "nullable": true
           }
@@ -5071,6 +5176,14 @@
           },
           "profitMarginTrends": {
             "$ref": "#/components/schemas/GradePerformanceLableTrendDto"
+          },
+          "peakUsageHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HourlyLoginStat"
+            },
+            "description": "Login/session events by UTC hour over the last 30 days.",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -5643,6 +5756,15 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "loginCountLast30Days": {
+            "type": "integer",
+            "format": "int32"
           },
           "enrollmentCompletedAt": {
             "type": "string",

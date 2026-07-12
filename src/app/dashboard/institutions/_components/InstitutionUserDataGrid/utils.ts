@@ -51,6 +51,7 @@ export function mapInstitutionsToRows(
         adminName,
         isActive: Boolean(institution.isActive),
         updatedAt: institution.updatedAt,
+        lastActiveAt: institution.lastActiveAt ?? null,
         adminFirstName: admin?.firstName ?? '',
         adminLastName: admin?.lastName ?? '',
         plan: normalizedPlan,

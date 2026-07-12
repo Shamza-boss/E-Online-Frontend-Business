@@ -74,6 +74,47 @@ function InstitutionMainGrid({ initialData }: InstitutionMainGridProps) {
         </Grid>
       ))}
 
+      <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+        <StatCard
+          title="Active (7 days)"
+          value={`${institutionData?.activeUsersLast7Days ?? 0}`}
+          interval="Presence"
+          trend="neutral"
+          data={[]}
+          loading={isLoading}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+        <StatCard
+          title="Active (30 days)"
+          value={`${institutionData?.activeUsersLast30Days ?? 0}`}
+          interval="Presence"
+          trend="neutral"
+          data={[]}
+          loading={isLoading}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+        <StatCard
+          title="Never logged in"
+          value={`${institutionData?.neverLoggedInCount ?? 0}`}
+          interval="Presence"
+          trend="neutral"
+          data={[]}
+          loading={isLoading}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+        <StatCard
+          title="Instructors active"
+          value={`${institutionData?.activeInstructorsLast30Days ?? 0}`}
+          interval="Last 30 days"
+          trend="neutral"
+          data={[]}
+          loading={isLoading}
+        />
+      </Grid>
+
       <Grid size={{ xs: 12, md: 6 }}>
         <ActiveSubjectsChart
           isLoading={isLoading}
