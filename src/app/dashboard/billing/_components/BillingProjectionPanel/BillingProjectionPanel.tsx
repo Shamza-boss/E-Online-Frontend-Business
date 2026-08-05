@@ -87,11 +87,11 @@ export default function BillingProjectionPanel({
             <Stack spacing={3}>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
                     <Box>
-                        <Typography variant="subtitle2" color="text.secondary" textTransform="uppercase">
-                            Usage & margin projection
-                        </Typography>
                         <Typography variant="h5" fontWeight={700}>
                             {projectionMonth}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Projected charge, infra cost, and margin
                         </Typography>
                     </Box>
                     <Tooltip title="Refresh projection">

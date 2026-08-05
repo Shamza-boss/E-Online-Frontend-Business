@@ -8,7 +8,6 @@ import { SparkLineChart } from '@mui/x-charts/SparkLineChart';
 import RoleHomeShell from '../RoleHomeShell';
 import { miniChartMargin, miniChartSx } from '../RoleHomeShell/miniChart';
 import {
-  dashboardChartColor,
   dashboardCompareColors,
   seriesAverage,
   seriesLatest,
@@ -40,12 +39,19 @@ import {
 } from './utils';
 import type { AdminDashboardHomeProps } from './utils';
 import AdminInsightDetail from './details/AdminInsightDetail';
+import {
+  toneHex,
+  urgencyFromActiveShare,
+  urgencyFromAttentionCount,
+  urgencyFromGrade,
+  urgencyFromRate,
+  urgencyPaletteKey,
+} from './urgency';
 
 export default function AdminDashboardHome({
   initialData,
 }: AdminDashboardHomeProps) {
   const theme = useTheme();
-  const chartColor = dashboardChartColor(theme);
   const compare = dashboardCompareColors(theme);
   const { data, isLoading } = useInstitutionDashboard(initialData);
   const [activeInsight, setActiveInsight] = useState<AdminInsightId | null>(null);
@@ -78,6 +84,44 @@ export default function AdminDashboardHome({
   const remoteFailed =
     needsRemote && !detailLoading && remoteDetail == null;
 
+  const peopleTotal =
+    (data?.teachers?.total ?? 0) + (data?.students?.total ?? 0);
+  const active30 = data?.activeUsersLast30Days ?? 0;
+  const neverIn = data?.neverLoggedInCount ?? 0;
+
+  const peopleTone = urgencyFromActiveShare(active30, peopleTotal);
+  const followUpTone = urgencyFromAttentionCount(inactive.length);
+  const presenceTone = urgencyFromAttentionCount(neverIn);
+  const engagementTone = urgencyFromRate(data?.engagement?.submissionRate);
+  const contentTone =
+    seriesTotal(contentSpark) <= 0
+      ? ('soon' as const)
+      : seriesTotal(contentSpark) >= 20
+        ? ('time' as const)
+        : ('calm' as const);
+  const subjectsTone =
+    seriesLatest(subjectsSpark) <= 0 ? ('soon' as const) : ('calm' as const);
+  const gradesTone = urgencyFromGrade(seriesAverage(gradesSpark));
+  const modulesTone = urgencyFromRate(modulesAvgRate);
+
+  const peopleColor = urgencyPaletteKey(peopleTone);
+  const followUpColor = urgencyPaletteKey(followUpTone);
+  const presenceColor = urgencyPaletteKey(presenceTone);
+  const contentColor = urgencyPaletteKey(contentTone);
+  const engagementColor = urgencyPaletteKey(engagementTone);
+  const subjectsColor = urgencyPaletteKey(subjectsTone);
+  const gradesColor = urgencyPaletteKey(gradesTone);
+  const modulesColor = urgencyPaletteKey(modulesTone);
+
+  const presenceChartColor = toneHex(theme, presenceTone);
+  const contentChartColor = toneHex(theme, contentTone);
+  const engagementChartColor = toneHex(theme, engagementTone);
+  const subjectsChartColor = toneHex(theme, subjectsTone);
+  const gradesChartColor = toneHex(theme, gradesTone);
+  const modulesAssignedColor =
+    modulesTone === 'urgent' ? theme.palette.error.main : compare.neutral;
+  const modulesSubmittedColor = toneHex(theme, modulesTone);
+
   const open = (id: AdminInsightId) => () => setActiveInsight(id);
   const close = () => setActiveInsight(null);
 
@@ -89,23 +133,27 @@ export default function AdminDashboardHome({
         heroes={[
           {
             label: 'People',
-            value: `${(data?.teachers?.total ?? 0) + (data?.students?.total ?? 0)}`,
+            value: `${peopleTotal}`,
             hint: `${data?.teachers?.total ?? 0} instructors · ${data?.students?.total ?? 0} trainees`,
+            valueColor: peopleColor,
             onOpen: open('presence'),
           },
           {
             label: 'Follow-ups',
             value: `${inactive.length}`,
             hint: inactive.length ? 'Tap to review' : 'All clear',
+            valueColor: inactive.length > 0 ? followUpColor : 'primary.main',
             onOpen: open('followUps'),
           },
         ]}
       >
         <InsightSummaryCard
           title={INSIGHT_TITLES.presence}
-          value={data?.activeUsersLast30Days ?? 0}
+          value={active30}
           valueHint="active 30d"
+          valueColor={presenceColor}
           onOpen={open('presence')}
+          hoverTooltip={`Active 30d: ${active30}. Never logged in: ${neverIn}. Red = activation gaps, green = healthy presence, blue = steady.`}
         >
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
@@ -123,7 +171,7 @@ export default function AdminDashboardHome({
               series={[
                 {
                   data: presence.map((p) => p.value),
-                  color: chartColor,
+                  color: presenceChartColor,
                 },
               ]}
               margin={miniChartMargin}
@@ -137,7 +185,9 @@ export default function AdminDashboardHome({
           title={INSIGHT_TITLES.content}
           value={seriesTotal(contentSpark)}
           valueHint="notes (period)"
+          valueColor={contentColor}
           onOpen={open('content')}
+          hoverTooltip="Note activity for the period. Green when content is flowing; orange when quiet."
         >
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
@@ -145,7 +195,7 @@ export default function AdminDashboardHome({
             <SparkLineChart
               data={contentSpark.length ? contentSpark : [0]}
               height={100}
-              color={chartColor}
+              color={contentChartColor}
               curve="natural"
               area
             />
@@ -156,7 +206,9 @@ export default function AdminDashboardHome({
           title={INSIGHT_TITLES.engagement}
           value={formatPercent(data?.engagement?.submissionRate)}
           valueHint="submission rate"
+          valueColor={engagementColor}
           onOpen={open('engagement')}
+          hoverTooltip={`Submission ${formatPercent(data?.engagement?.submissionRate)}. Blue = steady, green = strong intake, red = class lagging.`}
         >
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
@@ -164,7 +216,7 @@ export default function AdminDashboardHome({
             <SparkLineChart
               data={engagement.values.length ? engagement.values : [0]}
               height={100}
-              color={chartColor}
+              color={engagementChartColor}
               curve="natural"
               area
             />
@@ -175,7 +227,9 @@ export default function AdminDashboardHome({
           title={INSIGHT_TITLES.subjects}
           value={seriesLatest(subjectsSpark)}
           valueHint="top subject pulse"
+          valueColor={subjectsColor}
           onOpen={open('subjects')}
+          hoverTooltip="Latest pulse on the most active subject series."
         >
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
@@ -183,7 +237,7 @@ export default function AdminDashboardHome({
             <SparkLineChart
               data={subjectsSpark.length ? subjectsSpark : [0]}
               height={100}
-              color={chartColor}
+              color={subjectsChartColor}
               curve="natural"
               area
             />
@@ -194,7 +248,9 @@ export default function AdminDashboardHome({
           title={INSIGHT_TITLES.grades}
           value={seriesAverage(gradesSpark)}
           valueHint="avg band"
+          valueColor={gradesColor}
           onOpen={open('grades')}
+          hoverTooltip="Average grade-band signal. Red below 50, blue mid range, green at 75+."
         >
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
@@ -202,7 +258,7 @@ export default function AdminDashboardHome({
             <SparkLineChart
               data={gradesSpark.length ? gradesSpark : [0]}
               height={100}
-              color={chartColor}
+              color={gradesChartColor}
               curve="natural"
               area
             />
@@ -213,7 +269,9 @@ export default function AdminDashboardHome({
           title={INSIGHT_TITLES.modules}
           value={modulesCount}
           valueHint={`${formatPercent(modulesAvgRate)} avg · ${modulesSubmissions} submits`}
+          valueColor={modulesColor}
           onOpen={open('modules')}
+          hoverTooltip={`Recent modules: ${modulesCount}. Avg submission ${formatPercent(modulesAvgRate)}.`}
         >
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
@@ -232,12 +290,12 @@ export default function AdminDashboardHome({
                 {
                   data: moduleBars.assigned,
                   label: 'Assigned',
-                  color: compare.neutral,
+                  color: modulesAssignedColor,
                 },
                 {
                   data: moduleBars.submitted,
                   label: 'Submitted',
-                  color: compare.primary,
+                  color: modulesSubmittedColor,
                 },
               ]}
               margin={miniChartMargin}

@@ -13,7 +13,6 @@ import {
     TableRow,
     Tooltip,
     Typography,
-    Box,
 } from '@mui/material';
 import { format } from 'date-fns';
 import type { BillingSummaryTableProps } from './types';
@@ -55,14 +54,8 @@ export default function BillingSummaryTable({
 
     return (
         <TablePaper>
-            <HeaderStack direction="row" alignItems="center" justifyContent="space-between">
-                <Box>
-                    <Typography variant="h6">Invoice History</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Review previously generated invoices for {institutionName ?? 'this institution'}.
-                    </Typography>
-                </Box>
-                <Tooltip title="Refresh">
+            <HeaderStack direction="row" alignItems="center" justifyContent="flex-end">
+                <Tooltip title="Refresh invoices">
                     <span>
                         <IconButton onClick={onRefresh} disabled={loading} aria-label="Refresh billing data">
                             {loading ? <CircularProgress size={20} /> : <RefreshIcon />}
@@ -78,7 +71,8 @@ export default function BillingSummaryTable({
             ) : isEmpty ? (
                 <EmptyStateBox>
                     <Typography color="text.secondary" align="center">
-                        No invoices found yet. Generate an invoice for this institution to get started.
+                        No invoices yet
+                        {institutionName ? ` for ${institutionName}` : ''}. Generate one above to get started.
                     </Typography>
                 </EmptyStateBox>
             ) : (
