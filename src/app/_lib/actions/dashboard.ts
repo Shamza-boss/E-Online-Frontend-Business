@@ -14,7 +14,9 @@ import { serverFetch } from '../serverFetch.server';
 import {
   ACTIVE_TRAINEE_ACTIVITY_INSIGHT,
   ACTIVE_TRAINEE_HOME_DASHBOARD,
+  BUSY_INSTRUCTOR_HEAVY_LOAD_INSIGHT,
   BUSY_INSTRUCTOR_HOME_DASHBOARD,
+  BUSY_INSTRUCTOR_UNASSIGNED_INSIGHT,
   BUSY_INSTRUCTOR_WORKLOAD_INSIGHT,
   HEALTHY_PLATFORM_OWNER_DASHBOARD,
   HIGH_PERFORMING_INSTITUTION_DASHBOARD,
@@ -80,8 +82,12 @@ export async function getAdminInsight(insight: string): Promise<unknown | null> 
 export async function getInstructorInsight(
   insight: string,
 ): Promise<unknown | null> {
-  if (isMockDashboardEnabled() && insight === 'workload') {
-    return BUSY_INSTRUCTOR_WORKLOAD_INSIGHT;
+  if (isMockDashboardEnabled()) {
+    if (insight === 'workload') return BUSY_INSTRUCTOR_WORKLOAD_INSIGHT;
+    if (insight === 'unassigned') return BUSY_INSTRUCTOR_UNASSIGNED_INSIGHT;
+    if (insight === 'heavyLoad' || insight === 'heavyload') {
+      return BUSY_INSTRUCTOR_HEAVY_LOAD_INSIGHT;
+    }
   }
   return fetchInsightOrNull(
     `/Dashboard/insights/instructor/${encodeURIComponent(insight)}`,

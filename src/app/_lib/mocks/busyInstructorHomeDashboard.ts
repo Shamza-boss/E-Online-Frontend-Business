@@ -1,160 +1,262 @@
-import type { InstructorHomeDashboardDto } from '@/app/_lib/types/dashboardHome';
-import type { InstructorWorkloadInsightDto } from '@/app/_lib/types/dashboardInsights';
+import type {
+  HeavyLoadStudentDto,
+  InstructorHomeDashboardDto,
+  TeacherModuleActionDto,
+  UnassignedStudentDto,
+} from '@/app/_lib/types/dashboardHome';
+import type {
+  InstructorHeavyLoadInsightDto,
+  InstructorUnassignedInsightDto,
+  InstructorWorkloadInsightDto,
+} from '@/app/_lib/types/dashboardInsights';
 import { daysAgoIso, daysFromNowIso, uuid } from './mockHelpers';
 
-/**
- * Busy but healthy instructor class load:
- * meaningful grading queue, strong class submission, a short at-risk list.
- */
+const action = (
+  partial: Omit<TeacherModuleActionDto, 'homeworkId'> & { homeworkId?: string },
+): TeacherModuleActionDto => ({
+  homeworkId: partial.homeworkId ?? uuid(Math.floor(Math.random() * 900) + 100),
+  title: partial.title,
+  classroomId: partial.classroomId ?? uuid(501),
+  classroomName: partial.classroomName ?? 'Carryless course',
+  status: partial.status,
+  relevantAt: partial.relevantAt,
+  isExam: partial.isExam ?? false,
+});
+
+const unassignedStudents: UnassignedStudentDto[] = [
+  {
+    userId: uuid(401),
+    firstName: 'Maya',
+    lastName: 'Chen',
+    email: 'maya.chen@crestview.edu',
+    lastSeenAt: daysAgoIso(2),
+  },
+  {
+    userId: uuid(402),
+    firstName: 'Omar',
+    lastName: 'Hassan',
+    email: 'omar.hassan@crestview.edu',
+    lastSeenAt: null,
+  },
+  {
+    userId: uuid(403),
+    firstName: 'Priya',
+    lastName: 'Nair',
+    email: 'priya.nair@crestview.edu',
+    lastSeenAt: daysAgoIso(12),
+  },
+  {
+    userId: uuid(404),
+    firstName: 'Leo',
+    lastName: 'Martinez',
+    email: 'leo.martinez@crestview.edu',
+    lastSeenAt: daysAgoIso(5),
+  },
+];
+
+const heavyLoadStudents: HeavyLoadStudentDto[] = [
+  {
+    userId: uuid(201),
+    firstName: 'Lebo',
+    lastName: 'Maseko',
+    email: 'lebo.maseko@crestview.edu',
+    peakDueCount: 6,
+    classCount: 4,
+    peakWindowStart: daysFromNowIso(1),
+    peakWindowEnd: daysFromNowIso(6),
+    reason: '6 dues in 7 days across 4 class(es)',
+  },
+  {
+    userId: uuid(202),
+    firstName: 'Anika',
+    lastName: 'Pillay',
+    email: 'anika.pillay@crestview.edu',
+    peakDueCount: 5,
+    classCount: 3,
+    peakWindowStart: daysFromNowIso(2),
+    peakWindowEnd: daysFromNowIso(7),
+    reason: '5 dues in 7 days across 3 class(es)',
+  },
+  {
+    userId: uuid(203),
+    firstName: 'Chris',
+    lastName: 'Vogel',
+    email: 'chris.vogel@crestview.edu',
+    peakDueCount: 4,
+    classCount: 4,
+    peakWindowStart: daysFromNowIso(0),
+    peakWindowEnd: daysFromNowIso(5),
+    reason: '4 dues in 7 days across 4 class(es)',
+  },
+  {
+    userId: uuid(208),
+    firstName: 'Hana',
+    lastName: 'Singh',
+    email: 'hana.singh@crestview.edu',
+    peakDueCount: 4,
+    classCount: 2,
+    peakWindowStart: daysFromNowIso(3),
+    peakWindowEnd: daysFromNowIso(8),
+    reason: '4 dues in 7 days across 2 class(es)',
+  },
+];
+
 export const BUSY_INSTRUCTOR_HOME_DASHBOARD: InstructorHomeDashboardDto = {
-  pendingToGradeCount: 27,
+  draftCount: 5,
+  expiredDraftCount: 2,
+  scheduledExamCount: 3,
+  expiringSoonCount: 2,
   mySubmissionRate: 0.84,
   activeTraineesLast7Days: 118,
-  upcomingDueCount: 14,
+  unassignedStudentCount: unassignedStudents.length,
+  heavyLoadStudentCount: heavyLoadStudents.length,
+  actionItems: [
+    action({
+      homeworkId: uuid(301),
+      title: 'Algebra review pack',
+      status: 'ExpiredDraft',
+      relevantAt: daysAgoIso(3),
+    }),
+    action({
+      homeworkId: uuid(302),
+      title: 'Mechanics practice set',
+      status: 'ExpiredDraft',
+      relevantAt: daysAgoIso(1),
+    }),
+    action({
+      homeworkId: uuid(303),
+      title: 'Electricity quiz window',
+      status: 'ExpiringSoon',
+      relevantAt: daysFromNowIso(1),
+    }),
+    action({
+      homeworkId: uuid(304),
+      title: 'Genetics case study',
+      status: 'ExpiringSoon',
+      relevantAt: daysFromNowIso(4),
+    }),
+    action({
+      homeworkId: uuid(305),
+      title: 'Mathematics mid-term',
+      status: 'ScheduledExam',
+      relevantAt: daysFromNowIso(2),
+      isExam: true,
+    }),
+    action({
+      homeworkId: uuid(306),
+      title: 'Lit Paper 2 timed response',
+      status: 'ScheduledExam',
+      relevantAt: daysFromNowIso(6),
+      isExam: true,
+    }),
+    action({
+      homeworkId: uuid(307),
+      title: 'Python loops sprint (draft)',
+      status: 'Draft',
+      relevantAt: daysAgoIso(2),
+    }),
+    action({
+      homeworkId: uuid(308),
+      title: 'Cash flow workshop draft',
+      status: 'Draft',
+      relevantAt: daysAgoIso(8),
+    }),
+  ],
   atRiskTrainees: [
     {
-      userId: uuid(201),
-      firstName: 'Lebo',
-      lastName: 'Maseko',
-      email: 'lebo.maseko@crestview.edu',
-      reason: 'No submission in 14 days',
-      lastSeenAt: daysAgoIso(16),
-    },
-    {
-      userId: uuid(202),
-      firstName: 'Anika',
-      lastName: 'Pillay',
-      email: 'anika.pillay@crestview.edu',
-      reason: 'Missed 2 consecutive modules',
-      lastSeenAt: daysAgoIso(9),
-    },
-    {
-      userId: uuid(203),
-      firstName: 'Chris',
-      lastName: 'Vogel',
-      email: 'chris.vogel@crestview.edu',
-      reason: 'Average grade dropped 18%',
-      lastSeenAt: daysAgoIso(3),
-    },
-    {
-      userId: uuid(204),
+      userId: uuid(211),
       firstName: 'Nandi',
       lastName: 'Zulu',
       email: 'nandi.zulu@crestview.edu',
-      reason: 'Inactive for 21 days',
+      reason: 'No activity in 7 days',
       lastSeenAt: daysAgoIso(22),
     },
     {
-      userId: uuid(205),
+      userId: uuid(212),
       firstName: 'James',
       lastName: 'Okello',
       email: 'james.okello@crestview.edu',
-      reason: 'Overdue exam prep module',
+      reason: 'Overdue unsubmitted work',
       lastSeenAt: daysAgoIso(5),
     },
     {
-      userId: uuid(206),
+      userId: uuid(213),
       firstName: 'Sara',
       lastName: 'Bennet',
       email: 'sara.bennet@crestview.edu',
-      reason: 'Low note activity + late streak',
-      lastSeenAt: daysAgoIso(11),
+      reason: 'Never logged in',
+      lastSeenAt: null,
     },
     {
-      userId: uuid(207),
+      userId: uuid(214),
       firstName: 'Tumi',
       lastName: 'Radebe',
       email: 'tumi.radebe@crestview.edu',
-      reason: 'Never opened current textbook',
-      lastSeenAt: daysAgoIso(28),
+      reason: 'No activity in 7 days',
+      lastSeenAt: daysAgoIso(11),
     },
-    {
-      userId: uuid(208),
-      firstName: 'Hana',
-      lastName: 'Singh',
-      email: 'hana.singh@crestview.edu',
-      reason: '2 overdue assignments',
-      lastSeenAt: daysAgoIso(7),
-    },
+  ],
+  unassignedStudents,
+  heavyLoadStudents,
+};
+
+export const BUSY_INSTRUCTOR_WORKLOAD_INSIGHT: InstructorWorkloadInsightDto = {
+  expiredDrafts: BUSY_INSTRUCTOR_HOME_DASHBOARD.actionItems.filter(
+    (i) => i.status === 'ExpiredDraft',
+  ),
+  expiringSoon: BUSY_INSTRUCTOR_HOME_DASHBOARD.actionItems.filter(
+    (i) => i.status === 'ExpiringSoon',
+  ),
+  scheduledExams: [
+    ...BUSY_INSTRUCTOR_HOME_DASHBOARD.actionItems.filter(
+      (i) => i.status === 'ScheduledExam',
+    ),
+    action({
+      homeworkId: uuid(309),
+      title: 'Chemistry practical window',
+      status: 'ScheduledExam',
+      relevantAt: daysFromNowIso(12),
+      isExam: true,
+    }),
+  ],
+  drafts: [
+    ...BUSY_INSTRUCTOR_HOME_DASHBOARD.actionItems.filter((i) => i.status === 'Draft'),
+    action({
+      homeworkId: uuid(310),
+      title: 'Ecology journal outline',
+      status: 'Draft',
+      relevantAt: daysAgoIso(14),
+    }),
+    action({
+      homeworkId: uuid(311),
+      title: 'Trig identities pack',
+      status: 'Draft',
+      relevantAt: daysAgoIso(1),
+    }),
+    action({
+      homeworkId: uuid(312),
+      title: 'Accounting trial balance',
+      status: 'Draft',
+      relevantAt: daysAgoIso(5),
+    }),
   ],
 };
 
-/** Remote workload insight fixture (pending queue + upcoming due). */
-export const BUSY_INSTRUCTOR_WORKLOAD_INSIGHT: InstructorWorkloadInsightDto = {
-  pendingGradeQueue: [
-    {
-      assignmentId: uuid(301),
-      moduleTitle: 'Calculus checkpoint — derivatives',
-      traineeName: 'Lebo Maseko',
-      submittedAt: daysAgoIso(1, 14),
-    },
-    {
-      assignmentId: uuid(302),
-      moduleTitle: 'Mechanics lab write-up',
-      traineeName: 'Anika Pillay',
-      submittedAt: daysAgoIso(1, 11),
-    },
-    {
-      assignmentId: uuid(303),
-      moduleTitle: 'Persuasive essay draft',
-      traineeName: 'Chris Vogel',
-      submittedAt: daysAgoIso(2, 16),
-    },
-    {
-      assignmentId: uuid(304),
-      moduleTitle: 'Genetics case study',
-      traineeName: 'Nandi Zulu',
-      submittedAt: daysAgoIso(2, 9),
-    },
-    {
-      assignmentId: uuid(305),
-      moduleTitle: 'Python loops & lists sprint',
-      traineeName: 'James Okello',
-      submittedAt: daysAgoIso(3, 18),
-    },
-    {
-      assignmentId: uuid(306),
-      moduleTitle: 'Trial balance practice set',
-      traineeName: 'Sara Bennet',
-      submittedAt: daysAgoIso(3, 10),
-    },
-    {
-      assignmentId: uuid(307),
-      moduleTitle: 'Ecology field journal',
-      traineeName: 'Hana Singh',
-      submittedAt: daysAgoIso(4, 15),
-    },
-    {
-      assignmentId: uuid(308),
-      moduleTitle: 'Trigonometric identities pack',
-      traineeName: 'Tumi Radebe',
-      submittedAt: daysAgoIso(5, 12),
-    },
-  ],
-  upcomingDue: [
-    {
-      homeworkId: uuid(401),
-      title: 'Electricity tutorial quiz',
-      dueDate: daysFromNowIso(2),
-      isExam: false,
-    },
-    {
-      homeworkId: uuid(402),
-      title: 'Mathematics mid-term',
-      dueDate: daysFromNowIso(8, 9),
-      isExam: true,
-    },
-    {
-      homeworkId: uuid(403),
-      title: 'Lit Paper 2 timed response',
-      dueDate: daysFromNowIso(5),
-      isExam: true,
-    },
-    {
-      homeworkId: uuid(404),
-      title: 'Cash flow statement workshop',
-      dueDate: daysFromNowIso(11),
-      isExam: false,
-    },
-  ],
-};
+export const BUSY_INSTRUCTOR_UNASSIGNED_INSIGHT: InstructorUnassignedInsightDto =
+  {
+    students: [
+      ...unassignedStudents,
+      {
+        userId: uuid(405),
+        firstName: 'Noah',
+        lastName: 'Kim',
+        email: 'noah.kim@crestview.edu',
+        lastSeenAt: daysAgoIso(1),
+      },
+    ],
+  };
+
+export const BUSY_INSTRUCTOR_HEAVY_LOAD_INSIGHT: InstructorHeavyLoadInsightDto =
+  {
+    students: heavyLoadStudents,
+  };

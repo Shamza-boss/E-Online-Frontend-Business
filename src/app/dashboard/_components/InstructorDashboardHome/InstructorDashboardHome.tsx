@@ -3,13 +3,9 @@
 import { useState } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import { useTheme } from '@mui/material/styles';
-import { Gauge, gaugeClasses } from '@mui/x-charts/Gauge';
 import { PieChart } from '@mui/x-charts/PieChart';
 import RoleHomeShell from '../RoleHomeShell';
-import {
-  dashboardChartColor,
-  dashboardSeriesColors,
-} from '../RoleHomeShell/chartTheme';
+import { dashboardSeriesColors } from '../RoleHomeShell/chartTheme';
 import InsightSummaryCard, { InsightListPreview } from '../InsightSummaryCard';
 import DashboardDetailModal from '../DashboardDetailModal';
 import {
@@ -18,25 +14,39 @@ import {
 } from '@/app/_lib/hooks/useDashboard';
 import type { InstructorInsightId } from '@/app/_lib/types/dashboardInsights';
 import {
+  ACTIONS_EMPTY,
   AT_RISK_EMPTY,
   DESCRIPTION,
   DETAIL_LOAD_ERROR,
+  HEAVY_LOAD_EMPTY,
   INSIGHT_SUBTITLES,
   INSIGHT_TITLES,
   TITLE,
+  UNASSIGNED_EMPTY,
 } from './constants';
-import { buildWorkloadSeries, formatRate, toPercent } from './utils';
+import { actionItemCount, buildActionSeries, formatRate } from './utils';
 import type { InstructorDashboardHomeProps } from './utils';
 import InstructorInsightDetail from './details/InstructorInsightDetail';
+import {
+  courseHrefFromAction,
+  formatActionWhen,
+  statusLabel,
+  urgencyFromAction,
+  urgencyFromSubmissionRate,
+  urgencyPaletteKey,
+  worstUrgency,
+} from './urgency';
 
-/** Workload queue is the only piece missing from the home payload. */
-const REMOTE: ReadonlySet<InstructorInsightId> = new Set(['workload']);
+const REMOTE: ReadonlySet<InstructorInsightId> = new Set([
+  'workload',
+  'unassigned',
+  'heavyLoad',
+]);
 
 export default function InstructorDashboardHome({
   initialData,
 }: InstructorDashboardHomeProps) {
   const theme = useTheme();
-  const chartColor = dashboardChartColor(theme);
   const { data, isLoading } = useInstructorHomeDashboard(initialData);
   const [activeInsight, setActiveInsight] = useState<InstructorInsightId | null>(
     null,
@@ -50,17 +60,127 @@ export default function InstructorDashboardHome({
   const remoteFailed = needsRemote && !detailLoading && remoteDetail == null;
 
   const atRisk = data?.atRiskTrainees ?? [];
-  const workload = buildWorkloadSeries(data);
-  const submissionPct = toPercent(data?.mySubmissionRate);
-  const pendingToGrade = data?.pendingToGradeCount ?? 0;
+  const unassigned = data?.unassignedStudents ?? [];
+  const heavyLoad = data?.heavyLoadStudents ?? [];
+  const unassignedCount = data?.unassignedStudentCount ?? unassigned.length;
+  const heavyLoadCount = data?.heavyLoadStudentCount ?? heavyLoad.length;
+  const actions = data?.actionItems ?? [];
+  const actionCount = actionItemCount(data);
+  const workload = buildActionSeries(data);
   const sliceColors = dashboardSeriesColors(theme, workload.length);
 
-  const atRiskPreview = atRisk.slice(0, 4).map((trainee) => ({
-    id: trainee.userId,
-    primary: `${trainee.firstName} ${trainee.lastName}`.trim() || trainee.email,
-    secondary: trainee.reason || 'At risk',
-    tone: 'warning' as const,
+  const submissionTone = urgencyFromSubmissionRate(data?.mySubmissionRate ?? 0);
+  const submissionColor = urgencyPaletteKey(submissionTone);
+  const actionTone = actions.length
+    ? worstUrgency(actions.map((item) => urgencyFromAction(item)))
+    : actionCount > 0
+      ? 'soon'
+      : 'calm';
+  const actionColor = urgencyPaletteKey(actionTone);
+  const atRiskColor = urgencyPaletteKey(atRisk.length > 0 ? 'urgent' : 'calm');
+  const unassignedColor = urgencyPaletteKey(
+    unassignedCount > 0 ? 'soon' : 'calm',
+  );
+  const heavyLoadColor = urgencyPaletteKey(
+    heavyLoadCount > 0 ? 'urgent' : 'calm',
+  );
+
+  const workloadColors = workload.map((item) => {
+    if (item.label === 'Expired') return theme.palette.error.main;
+    if (item.label === 'Expiring') return theme.palette.warning.main;
+    if (item.label === 'Exams') return theme.palette.success.main;
+    if (item.label === 'Drafts') return theme.palette.primary.main;
+    return theme.palette.primary.main;
+  });
+
+  const actionPreview = actions.slice(0, 4).map((item) => {
+    const tone = urgencyFromAction(item);
+    const href = courseHrefFromAction(item);
+    return {
+      id: item.homeworkId,
+      primary: item.title,
+      secondary: `${statusLabel(item.status)} · ${formatActionWhen(item.relevantAt)}`,
+      tone,
+      href,
+      tooltip: [
+        item.title,
+        statusLabel(item.status),
+        item.classroomName ? `Course: ${item.classroomName}` : null,
+        href ? 'Click to open the course' : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    };
+  });
+
+  const atRiskPreview = atRisk.slice(0, 4).map((trainee) => {
+    const inactiveDays = trainee.lastSeenAt
+      ? Math.ceil(
+          (Date.now() - new Date(trainee.lastSeenAt).getTime()) /
+            (1000 * 60 * 60 * 24),
+        )
+      : 99;
+    const tone =
+      !trainee.lastSeenAt || inactiveDays >= 14
+        ? ('urgent' as const)
+        : inactiveDays >= 7
+          ? ('soon' as const)
+          : ('time' as const);
+    return {
+      id: trainee.userId,
+      primary: `${trainee.firstName} ${trainee.lastName}`.trim() || trainee.email,
+      secondary: trainee.reason || 'At risk',
+      tone,
+      tooltip: [
+        `${trainee.firstName} ${trainee.lastName}`.trim(),
+        trainee.email,
+        trainee.reason,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    };
+  });
+
+  const unassignedPreview = unassigned.slice(0, 4).map((student) => ({
+    id: student.userId,
+    primary: `${student.firstName} ${student.lastName}`.trim() || student.email,
+    secondary: student.lastSeenAt
+      ? `Seen ${formatActionWhen(student.lastSeenAt)}`
+      : 'Never logged in',
+    tone: 'soon' as const,
+    tooltip: [
+      `${student.firstName} ${student.lastName}`.trim(),
+      student.email,
+      'Not enrolled in any class',
+    ]
+      .filter(Boolean)
+      .join(' · '),
   }));
+
+  const heavyPreview = heavyLoad.slice(0, 4).map((student) => {
+    const tone =
+      student.peakDueCount >= 6
+        ? ('urgent' as const)
+        : ('soon' as const);
+    return {
+      id: student.userId,
+      primary: `${student.firstName} ${student.lastName}`.trim() || student.email,
+      secondary: student.reason,
+      tone,
+      tooltip: [
+        `${student.firstName} ${student.lastName}`.trim(),
+        student.email,
+        student.reason,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    };
+  });
+
+  const canExpandWorkload = actionCount > 0;
+  const canExpandAtRisk = atRisk.length > 0;
+  const canExpandUnassigned = unassignedCount > 0;
+  const canExpandHeavyLoad = heavyLoadCount > 0;
 
   const open = (id: InstructorInsightId) => () => setActiveInsight(id);
   const close = () => setActiveInsight(null);
@@ -70,63 +190,28 @@ export default function InstructorDashboardHome({
       <RoleHomeShell
         title={TITLE}
         description={DESCRIPTION}
-        columns={3}
+        columns={2}
         heroes={[
-          {
-            label: 'To grade',
-            value: `${pendingToGrade}`,
-            hint: 'Submitted, waiting on you',
-            onOpen: open('workload'),
-          },
           {
             label: 'Submission rate',
             value: formatRate(data?.mySubmissionRate),
-            hint: 'Across your classes',
-            onOpen: open('submission'),
-          },
-          {
-            label: 'At risk',
-            value: `${atRisk.length}`,
-            hint: atRisk.length ? 'Tap to review' : 'Looking healthy',
-            onOpen: open('atRisk'),
+            hint: `${data?.activeTraineesLast7Days ?? 0} active trainees (7d)`,
+            valueColor: submissionColor,
           },
         ]}
       >
         <InsightSummaryCard
-          title={INSIGHT_TITLES.submission}
-          value={`${submissionPct}%`}
-          valueHint="class submission"
-          onOpen={open('submission')}
-        >
-          {isLoading ? (
-            <Skeleton variant="circular" width={100} height={100} sx={{ mx: 'auto' }} />
-          ) : (
-            <Gauge
-              value={submissionPct}
-              startAngle={-110}
-              endAngle={110}
-              height={110}
-              cornerRadius="50%"
-              sx={{
-                [`& .${gaugeClasses.valueText}`]: { fontSize: 0 },
-                [`& .${gaugeClasses.valueArc}`]: { fill: chartColor },
-                [`& .${gaugeClasses.referenceArc}`]: {
-                  fill: theme.palette.action.hover,
-                },
-              }}
-              text={() => ''}
-            />
-          )}
-        </InsightSummaryCard>
-
-        <InsightSummaryCard
           title={INSIGHT_TITLES.workload}
-          value={pendingToGrade}
-          valueHint="waiting to grade"
-          onOpen={open('workload')}
+          value={actionCount}
+          valueHint="needing you"
+          valueColor={actionCount > 0 ? actionColor : 'primary.main'}
+          onOpen={canExpandWorkload ? open('workload') : undefined}
+          hoverTooltip="Expired drafts = red · expiring soon = orange · exams opening = green · drafts = blue."
         >
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
+          ) : actionPreview.length > 0 ? (
+            <InsightListPreview items={actionPreview} emptyLabel={ACTIONS_EMPTY} />
           ) : (
             <PieChart
               height={110}
@@ -135,7 +220,9 @@ export default function InstructorDashboardHome({
                   data: workload.map((item, index) => ({
                     id: item.id,
                     value: item.value,
-                    color: sliceColors[index % sliceColors.length],
+                    color:
+                      workloadColors[index] ??
+                      sliceColors[index % sliceColors.length],
                   })),
                   innerRadius: 24,
                   outerRadius: 44,
@@ -153,12 +240,50 @@ export default function InstructorDashboardHome({
           title={INSIGHT_TITLES.atRisk}
           value={atRisk.length}
           valueHint="trainees"
-          onOpen={open('atRisk')}
+          valueColor={atRisk.length > 0 ? atRiskColor : 'primary.main'}
+          onOpen={canExpandAtRisk ? open('atRisk') : undefined}
+          hoverTooltip="Inactive or overdue trainees who need a nudge."
         >
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
             <InsightListPreview items={atRiskPreview} emptyLabel={AT_RISK_EMPTY} />
+          )}
+        </InsightSummaryCard>
+
+        <InsightSummaryCard
+          title={INSIGHT_TITLES.heavyLoad}
+          value={heavyLoadCount}
+          valueHint="under pressure"
+          valueColor={heavyLoadCount > 0 ? heavyLoadColor : 'primary.main'}
+          onOpen={canExpandHeavyLoad ? open('heavyLoad') : undefined}
+          hoverTooltip="Open assessments due in a tight 7-day cluster across their classes (threshold: 4+)."
+        >
+          {isLoading ? (
+            <Skeleton variant="rounded" height="100%" />
+          ) : (
+            <InsightListPreview
+              items={heavyPreview}
+              emptyLabel={HEAVY_LOAD_EMPTY}
+            />
+          )}
+        </InsightSummaryCard>
+
+        <InsightSummaryCard
+          title={INSIGHT_TITLES.unassigned}
+          value={unassignedCount}
+          valueHint="no class yet"
+          valueColor={unassignedCount > 0 ? unassignedColor : 'primary.main'}
+          onOpen={canExpandUnassigned ? open('unassigned') : undefined}
+          hoverTooltip="Institution students with zero classroom enrollments."
+        >
+          {isLoading ? (
+            <Skeleton variant="rounded" height="100%" />
+          ) : (
+            <InsightListPreview
+              items={unassignedPreview}
+              emptyLabel={UNASSIGNED_EMPTY}
+            />
           )}
         </InsightSummaryCard>
       </RoleHomeShell>

@@ -22,6 +22,17 @@ export type PendingGradeItemDto = {
   submittedAt?: string | null;
 };
 
+export type TeacherModuleActionDto = {
+  homeworkId?: string;
+  title?: string | null;
+  classroomId?: string | null;
+  classroomName?: string | null;
+  /** Draft | ExpiredDraft | ScheduledExam | ExpiringSoon */
+  status?: string | null;
+  relevantAt?: string | null;
+  isExam?: boolean;
+};
+
 export type UpcomingModuleDto = {
   homeworkId?: string;
   title?: string | null;
@@ -83,18 +94,44 @@ export type AdminModulesInsightDto = {
 
 export type InstructorSubmissionInsightDto = {
   mySubmissionRate?: number;
-  pendingToGradeCount?: number;
+  activeTraineesLast7Days?: number;
   dailySubmissions?: DailyCountDto[] | null;
   contentEventMix?: NamedCountDto[] | null;
 };
 
 export type InstructorWorkloadInsightDto = {
-  pendingGradeQueue?: PendingGradeItemDto[] | null;
-  upcomingDue?: UpcomingModuleDto[] | null;
+  drafts?: TeacherModuleActionDto[] | null;
+  expiredDrafts?: TeacherModuleActionDto[] | null;
+  scheduledExams?: TeacherModuleActionDto[] | null;
+  expiringSoon?: TeacherModuleActionDto[] | null;
 };
 
 export type InstructorAtRiskInsightDto = {
   atRiskTrainees?: FollowUpUserDetailDto[] | null;
+};
+
+export type InstructorUnassignedInsightDto = {
+  students?: Array<{
+    userId?: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+    lastSeenAt?: string | null;
+  }> | null;
+};
+
+export type InstructorHeavyLoadInsightDto = {
+  students?: Array<{
+    userId?: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+    peakDueCount?: number;
+    classCount?: number;
+    peakWindowStart?: string | null;
+    peakWindowEnd?: string | null;
+    reason?: string | null;
+  }> | null;
 };
 
 export type TraineeProgressInsightDto = {
@@ -195,7 +232,11 @@ export type AdminInsightId =
   | 'followUps'
   | 'modules';
 
-export type InstructorInsightId = 'submission' | 'workload' | 'atRisk';
+export type InstructorInsightId =
+  | 'workload'
+  | 'atRisk'
+  | 'unassigned'
+  | 'heavyLoad';
 
 export type TraineeInsightId =
   | 'progress'
