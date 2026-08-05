@@ -1,2 +1,2 @@
 export { NotesPanel } from './NotesPanel';
-export type { NotesPanelProps } from './interfaces';
+export type { NotesPanelProps } from './types';

@@ -3,7 +3,7 @@
 import { hashFile } from '../common/functions';
 import type { UploadResult } from '../interfaces/types';
 
-interface StorageUploadResponse {
+type StorageUploadResponse = {
   key: string;
   proxyDownload: string;
   presignedGet: string;

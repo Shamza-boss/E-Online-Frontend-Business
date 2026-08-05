@@ -8,14 +8,14 @@ import {
   Typography,
 } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { FileDto } from '@/app/_lib/interfaces/types';
+import { type FileDto } from '@/app/_lib/interfaces/types';
 import {
   extractTextbookName,
   getFileSizeBytes,
 } from '@/app/_lib/utils/textbook';
-import { getPdfSizeChipStyle } from '@/app/dashboard/library/_components/libraryChipStyles';
+import { getPdfSizeChipStyle } from '@/app/dashboard/library/_components/LibraryChips';
 
-interface TextbookListRowProps {
+type TextbookListRowProps = {
   file: FileDto;
   selected?: boolean;
   disabled?: boolean;

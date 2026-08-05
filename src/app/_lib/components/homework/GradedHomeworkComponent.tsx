@@ -17,7 +17,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded';
 import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import { GradedHomework, Question } from '../../interfaces/types';
+import { type GradedHomework, type Question } from '../../interfaces/types';
 import {
   computeQuestionTotals,
   calculateHomeworkTotals,
@@ -25,7 +25,7 @@ import {
 import { MathJaxContext } from 'better-react-mathjax';
 import QuestionTreeRenderer from '../question/QuestionTreeRenderer';
 import { sortQuestionTreeByDisplayOrder } from '../../utils/questionOrder';
-import PDFViewer from '../PDFViewer/PDFViewer';
+import PDFViewer from '../PDFViewer';
 import { StepPill } from '@/app/dashboard/courses/_components/Homework/HomeworkView';
 
 const mathJaxConfig = {
@@ -103,7 +103,7 @@ const DotStepper = styled(Box)(({ theme }) => ({
 
 /* ── Component ── */
 
-interface GradedHomeworkProps {
+type GradedHomeworkProps = {
   gradedHomework: GradedHomework;
   onBack?: () => void;
 }

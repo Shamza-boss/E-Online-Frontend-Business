@@ -7,7 +7,7 @@ import { LineChart, BarChart } from '@mui/x-charts';
 import type { SettingsStatsDto, StatsGraphDto } from '@/app/_lib/interfaces/types';
 import type { RoleTheme } from '../types';
 
-interface InsightsPanelProps {
+type InsightsPanelProps = {
     stats: SettingsStatsDto;
     roleTheme: RoleTheme;
     roleLabel: string;

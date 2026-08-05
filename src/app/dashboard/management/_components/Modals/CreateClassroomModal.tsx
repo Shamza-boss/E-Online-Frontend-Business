@@ -4,9 +4,9 @@ import React from 'react';
 import { NextPage } from 'next';
 import { Close } from '@mui/icons-material';
 import { Dialog, DialogTitle, IconButton } from '@mui/material';
-import ClassroomCreationForm from '../Forms/classroomCreationForm';
+import ClassroomCreationForm from '../ClassroomCreationForm';
 
-interface CreateClassroomModalProps {
+type CreateClassroomModalProps = {
   open: boolean;
   handleClose: () => void;
 }

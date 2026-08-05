@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { NextPage } from 'next';
+import { type NextPage } from 'next';
 import { Close } from '@mui/icons-material';
 import {
   Dialog,
@@ -12,10 +12,10 @@ import {
   Button,
 } from '@mui/material';
 import CreateAcademicsForm from '../Forms/createAcademicsForm';
-import { AcademicLevelDto } from '@/app/_lib/interfaces/types';
+import { type AcademicLevelDto } from '@/app/_lib/interfaces/types';
 import { ProcessingButton } from '../Forms/ProcessingButton';
 
-interface CreateAcademicsModalProps {
+type CreateAcademicsModalProps = {
   open: boolean;
   handleClose: () => void;
   onCreated?: (level: AcademicLevelDto) => void;

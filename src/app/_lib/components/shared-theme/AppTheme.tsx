@@ -16,7 +16,7 @@ import {
   surfacesCustomizations,
 } from './customizations';
 
-interface AppThemeProps {
+type AppThemeProps = {
   children: React.ReactNode;
   /**
    * This is for the docs site. You can ignore it or remove it.
@@ -35,9 +35,9 @@ const palette: ThemeOptions['palette'] = {
     contrastText: '#fff',
   },
   secondary: {
-    main: 'hsl(280, 70%, 55%)',
-    light: 'hsl(280, 65%, 72%)',
-    dark: 'hsl(280, 75%, 40%)',
+    main: 'hsl(210, 14%, 38%)',
+    light: 'hsl(210, 12%, 55%)',
+    dark: 'hsl(210, 16%, 28%)',
     contrastText: '#fff',
   },
   background: {
@@ -73,7 +73,7 @@ const typography: ThemeOptions['typography'] = {
 };
 
 const shape: ThemeOptions['shape'] = {
-  borderRadius: 14,
+  borderRadius: 8,
 };
 
 const shadows = [

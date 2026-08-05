@@ -7,9 +7,10 @@ import { useActionState } from 'react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { academicsSchema } from '@/app/_lib/schemas/management';
 import { SubmitAcademics } from './submitAcademics';
-import { AcademicLevelDto } from '@/app/_lib/interfaces/types';
+import { type AcademicLevelDto } from '@/app/_lib/interfaces/types';
+import { isFormActionSuccess } from '@/app/_lib/types/actionState';
 
-interface CreateAcademicsFormProps {
+type CreateAcademicsFormProps = {
   formId?: string;
   onPendingChange?: (pending: boolean) => void;
   onSuccess?: (level: AcademicLevelDto) => void;
@@ -21,7 +22,7 @@ export default function CreateAcademicsForm({
   onSuccess,
 }: CreateAcademicsFormProps) {
   const { showAlert } = useAlert();
-  const [lastResult, action, pending] = useActionState(SubmitAcademics, false);
+  const [lastResult, action, pending] = useActionState(SubmitAcademics, null);
   const [form, { name, country, educationSystem }] = useForm({
     id: formId,
     lastResult,
@@ -38,8 +39,8 @@ export default function CreateAcademicsForm({
   }, [pending, onPendingChange]);
 
   React.useEffect(() => {
-    if (lastResult && (lastResult as AcademicLevelDto)?.name) {
-      const created = lastResult as AcademicLevelDto;
+    if (isFormActionSuccess(lastResult)) {
+      const created = lastResult.data;
       showAlert('success', `The ${created.name} academic level was successfully created 🚀!`);
       onSuccess?.(created);
     }

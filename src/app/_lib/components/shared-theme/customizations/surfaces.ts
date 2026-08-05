@@ -1,4 +1,4 @@
-import { alpha, Theme, Components } from '@mui/material/styles';
+import { alpha, type Theme, type Components } from '@mui/material/styles';
 import { gray, brand } from '../themePrimitives';
 
 export const surfacesCustomizations: Components<Theme> = {
@@ -35,7 +35,7 @@ export const surfacesCustomizations: Components<Theme> = {
     styleOverrides: {
       root: ({ theme }) => ({
         border: 'none',
-        borderRadius: 12,
+        borderRadius: theme.shape.borderRadius,
         transition: 'background-color 200ms ease-out',
         '&:hover': { backgroundColor: alpha(gray[100], 0.6) },
         '&:focus-visible': { backgroundColor: 'transparent' },

@@ -9,15 +9,15 @@ import {
     Stack,
     TextField,
 } from '@mui/material';
-import Paper, { PaperProps } from '@mui/material/Paper';
+import Paper, { type PaperProps } from '@mui/material/Paper';
 import Draggable from 'react-draggable';
 
-export interface BookmarkDialogPayload {
+export type BookmarkDialogPayload = {
     title: string;
     color: string;
 }
 
-interface BookmarkDialogProps {
+type BookmarkDialogProps = {
     open: boolean;
     mode: 'create' | 'edit';
     suggestedTitle: string;

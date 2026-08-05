@@ -7,9 +7,10 @@ import { useActionState } from 'react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { subjectsSchema } from '@/app/_lib/schemas/management';
 import { SubmitSubject } from './submitSubjects';
-import { SubjectDto } from '@/app/_lib/interfaces/types';
+import { type SubjectDto } from '@/app/_lib/interfaces/types';
+import { isFormActionSuccess } from '@/app/_lib/types/actionState';
 
-interface CreateSubjectsFormProps {
+type CreateSubjectsFormProps = {
   formId?: string;
   onPendingChange?: (pending: boolean) => void;
   onSuccess?: (subject: SubjectDto) => void;
@@ -22,7 +23,7 @@ export default function CreateSubjectsForm({
 }: CreateSubjectsFormProps) {
   const { showAlert } = useAlert();
 
-  const [lastResult, action, pending] = useActionState(SubmitSubject, false);
+  const [lastResult, action, pending] = useActionState(SubmitSubject, null);
   const [form, { name, group, subjectCode, category }] = useForm({
     lastResult,
     onValidate({ formData }) {
@@ -38,8 +39,8 @@ export default function CreateSubjectsForm({
   }, [pending, onPendingChange]);
 
   React.useEffect(() => {
-    if (lastResult && (lastResult as SubjectDto)?.name) {
-      const created = lastResult as SubjectDto;
+    if (isFormActionSuccess(lastResult)) {
+      const created = lastResult.data;
       showAlert('success', `The ${created.name} subject was successfully created 🚀!`);
       onSuccess?.(created);
     }

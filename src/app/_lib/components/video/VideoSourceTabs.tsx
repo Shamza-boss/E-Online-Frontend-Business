@@ -1,6 +1,6 @@
 'use client';
 
-import { RefObject } from 'react';
+import { type RefObject } from 'react';
 import {
   Box,
   LinearProgress,
@@ -10,12 +10,12 @@ import {
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
-import { VideoLibraryItem } from '@/app/_lib/interfaces/types';
+import { type VideoLibraryItem } from '@/app/_lib/interfaces/types';
 import LibraryVideoSelector from './LibraryVideoSelector';
 
 export type VideoSource = 'upload' | 'library';
 
-interface VideoSourceTabsProps {
+type VideoSourceTabsProps = {
   source: VideoSource;
   onSourceChange: (source: VideoSource) => void;
   fileInputRef: RefObject<HTMLInputElement | null>;

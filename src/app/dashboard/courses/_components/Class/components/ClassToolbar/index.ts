@@ -1,2 +1,2 @@
 export { ClassToolbar } from './ClassToolbar';
-export type { ClassToolbarProps } from './interfaces';
+export type { ClassToolbarProps } from './types';

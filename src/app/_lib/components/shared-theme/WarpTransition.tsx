@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Box, alpha } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-interface WarpContextType {
+type WarpContextType = {
   warpTo: (href: string, opts?: { direction?: 'right' | 'default' }) => void;
   isWarping: boolean;
 }
@@ -238,7 +238,7 @@ export function WarpTransitionProvider({ children }: { children: React.ReactNode
 }
 
 // WarpLink component for easy use
-interface WarpLinkProps {
+type WarpLinkProps = {
   href: string;
   children: React.ReactNode;
   className?: string;

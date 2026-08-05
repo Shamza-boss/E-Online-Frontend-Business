@@ -1,4 +1,5 @@
-import { UserRole } from '../Enums/UserRole';
+import type { JsonValue } from '@/lib/api/json';
+import { type UserRole } from '../Enums/UserRole';
 
 export type SubscriptionPlan = 'Standard' | 'Enterprise';
 
@@ -9,23 +10,23 @@ export enum SubscriptionFeatureFlag {
   Creator = 4,
 }
 
-export interface InstitutionSubscriptionPayload {
+export type InstitutionSubscriptionPayload = {
   plan: SubscriptionFeatureFlag;
   creatorEnabled: boolean;
 }
 
-export interface BillingRateDto {
+export type BillingRateDto = {
   creatorEnabled: boolean;
 }
 
-export interface SubscriptionInfoDto {
+export type SubscriptionInfoDto = {
   subscription: string;
   activeUsers: number;
   allowedUsers: number;
   overageUsers: number;
 }
 
-export interface BillingSummaryDto {
+export type BillingSummaryDto = {
   institutionName: string;
   year: number;
   month: number;
@@ -36,7 +37,7 @@ export interface BillingSummaryDto {
   totalPrice: number;
 }
 
-export interface BillingUsageSummary {
+export type BillingUsageSummary = {
   userCount: number;
   storedVideoMinutes: number;
   deliveredVideoMinutes: number;
@@ -49,7 +50,7 @@ export interface BillingUsageSummary {
   objectStorageGbMonthFraction: number;
 }
 
-export interface BillingCostSummary {
+export type BillingCostSummary = {
   cloudflareStoredUsd: number;
   cloudflareDeliveredUsd: number;
   railwayCpuUsd: number;
@@ -60,7 +61,7 @@ export interface BillingCostSummary {
   totalUsd: number;
 }
 
-export interface BillingProjectionDto {
+export type BillingProjectionDto = {
   year: number;
   month: number;
   usage: BillingUsageSummary;
@@ -75,7 +76,7 @@ export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid' | 'Overdue' | 'Cancelled';
 
 export type InvoiceLineType = 'BaseRate' | 'CreatorAddon';
 
-export interface InvoiceLineItemDto {
+export type InvoiceLineItemDto = {
   id: string;
   description: string;
   quantity: number;
@@ -84,7 +85,7 @@ export interface InvoiceLineItemDto {
   lineType: InvoiceLineType;
 }
 
-export interface InvoiceDto {
+export type InvoiceDto = {
   id: string;
   institutionId: string;
   institutionName: string;
@@ -112,16 +113,16 @@ export interface InvoiceDto {
   updatedAt: string;
 }
 
-export interface SendInvoiceDto {
+export type SendInvoiceDto = {
   recipientEmail?: string;
 }
 
-export interface MarkInvoicePaidDto {
+export type MarkInvoicePaidDto = {
   paymentReference?: string;
   notes?: string;
 }
 
-export interface InvoiceSummaryDto {
+export type InvoiceSummaryDto = {
   totalInvoices: number;
   paidCount: number;
   unpaidCount: number;
@@ -131,7 +132,7 @@ export interface InvoiceSummaryDto {
   totalOutstandingZar: number;
 }
 
-export interface InvoiceStatusSummaryDto {
+export type InvoiceStatusSummaryDto = {
   institutionId: string;
   institutionName: string;
   currentMonthInvoiced: boolean;
@@ -142,7 +143,7 @@ export interface InvoiceStatusSummaryDto {
 }
 
 //Homework
-export interface VideoMeta {
+export type VideoMeta = {
   provider: string;
   uid: string;
   playbackId?: string;
@@ -152,7 +153,7 @@ export interface VideoMeta {
   sizeBytes?: number;
 }
 
-export interface VideoLibraryItem {
+export type VideoLibraryItem = {
   id: string;
   uid: string;
   provider: string;
@@ -165,7 +166,7 @@ export interface VideoLibraryItem {
   usedInModuleCount: number;
 }
 
-export interface PdfMeta {
+export type PdfMeta = {
   provider: string;
   key: string;
   url: string;
@@ -174,7 +175,7 @@ export interface PdfMeta {
   title?: string | null;
 }
 
-export interface FileDto {
+export type FileDto = {
   id: string;
   fileKey: string;
   url: string;
@@ -192,7 +193,7 @@ export interface FileDto {
   uploadedByUserId?: string | null;
 }
 
-export interface LinkedClassroomDto {
+export type LinkedClassroomDto = {
   id: string;
   name: string;
   academicLevelName?: string | null;
@@ -200,30 +201,30 @@ export interface LinkedClassroomDto {
   subjectName?: string | null;
 }
 
-export interface LibraryFileDto extends FileDto {
+export type LibraryFileDto = FileDto & {
   linkedClassrooms: LinkedClassroomDto[];
   linkedClassroomCount: number;
 }
 
-export interface VideoUploadResponse {
+export type VideoUploadResponse = {
   uploadURL: string;
   uid: string;
   posterProbeUrl?: string;
 }
 
-export interface VideoMetaResponse {
+export type VideoMetaResponse = {
   status: string;
   posterUrl?: string;
   durationSeconds?: number;
   playbackId?: string;
 }
 
-export interface CreateUploadDto {
+export type CreateUploadDto = {
   filename?: string;
   size?: number;
 }
 
-export interface Question {
+export type Question = {
   id: string;
   questionText: string;
   type:
@@ -244,14 +245,14 @@ export interface Question {
   correctAnswers?: string[]; // For multi-select questions
 }
 
-export interface UploadResult {
+export type UploadResult = {
   key: string;
   proxyDownload: string; // your own `/api/storage/download/...` link
   presignedGet: string; // the R2 presigned GET URL
   hash: string; // client-computed SHA-256
 }
 
-export interface Homework {
+export type Homework = {
   id?: string;
   homeworkId?: string;
   classroomId?: string;
@@ -270,6 +271,8 @@ export interface Homework {
   isExam?: boolean;
   scheduledAt?: string | null; // ISO 8601 DateTimeOffset — when the exam becomes accessible
   allowReset?: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
   questions: Question[];
 }
 
@@ -286,7 +289,7 @@ export type HomeworkPayload = Pick<
   | 'questions'
 >;
 
-export interface HomeworkSummaryDto {
+export type HomeworkSummaryDto = {
   homeworkId: string;
   title: string;
   description: string;
@@ -304,7 +307,7 @@ export interface HomeworkSummaryDto {
   questions?: Question[];
 }
 
-export interface HomeworkAssignmentDto {
+export type HomeworkAssignmentDto = {
   assignmentId: string;
   homeworkId: string;
   homeworkTitle: string;
@@ -331,34 +334,34 @@ export interface HomeworkAssignmentDto {
   };
 }
 
-export interface SubmitHomeworkDto {
+export type SubmitHomeworkDto = {
   assignmentId: string; // This is crucial for linking the submission to the specific assignment
   submittedAt: string; // ISO timestamp of when the student submitted
-  answers: { [questionId: string]: any }; // Map of question IDs to submitted answers
+  answers: { [questionId: string]: JsonValue }; // Map of question IDs to submitted answers
 }
 
-export interface SubmittedHomework {
+export type SubmittedHomework = {
   homework: Homework;
-  answers: { [questionId: string]: any };
+  answers: { [questionId: string]: JsonValue };
 }
 
-export interface GradeHomeworkDto {
+export type GradeHomeworkDto = {
   assignmentId: string;
-  answers: { [questionId: string]: any };
+  answers: { [questionId: string]: JsonValue };
   grading: { [questionId: string]: { grade: number; comment: string } };
   overallComment?: string;
   gradePublishDate: string;
 }
 
-export interface GradedHomework {
+export type GradedHomework = {
   homework: Homework;
-  answers: { [questionId: string]: any };
+  answers: { [questionId: string]: JsonValue };
   grading: { [questionId: string]: { grade: number; comment: string } };
   overallComment?: string;
 }
 
 //Academic Level
-export interface AcademicLevelDto {
+export type AcademicLevelDto = {
   id?: string;
   name: string;
   country: string;
@@ -366,7 +369,7 @@ export interface AcademicLevelDto {
   institutionId?: string;
 }
 
-export interface ClassDto {
+export type ClassDto = {
   id?: string;
   name: string;
   teacherId: string;
@@ -382,7 +385,7 @@ export interface ClassDto {
   textbookUploadedByUserId?: string | null;
 }
 
-export interface ClassroomDetailsDto {
+export type ClassroomDetailsDto = {
   classroomId: string;
   classroomName: string;
   teacherId?: string | null;
@@ -397,7 +400,7 @@ export interface ClassroomDetailsDto {
   textbookUrl: string;
 }
 
-export interface UpdateClassroomDto {
+export type UpdateClassroomDto = {
   id: string;
   name: string;
   teacherId?: string | null;
@@ -413,12 +416,12 @@ export interface UpdateClassroomDto {
   textbookUploadedByUserId?: string;
 }
 
-export interface EnrollStudentsDto {
+export type EnrollStudentsDto = {
   classroomId: string;
   studentIds: string[];
 }
 
-export interface NoteDto {
+export type NoteDto = {
   id: string;
   title: string;
   content: string;
@@ -429,7 +432,7 @@ export interface NoteDto {
   userId: string;
 }
 
-export interface SubjectDto {
+export type SubjectDto = {
   id?: string;
   name: string;
   group: string;
@@ -437,7 +440,7 @@ export interface SubjectDto {
   category: string;
 }
 
-export interface UserDto {
+export type UserDto = {
   userId?: string;
   institutionId: string;
   inststitutionName?: string;
@@ -449,23 +452,26 @@ export interface UserDto {
   subscriptionLabel?: string | null;
   subscriptionPlan?: SubscriptionPlan | null;
   creatorEnabled?: boolean;
+  firstLoginAt?: string | null;
+  lastSeenAt?: string | null;
+  loginCountLast30Days?: number;
 }
 
-export interface AssignmentDetailsDto {
+export type AssignmentDetailsDto = {
   assignmentId: string;
   status: 'pending' | 'submitted' | 'graded';
   homework: Homework;
-  answers: { [questionId: string]: any };
+  answers: { [questionId: string]: JsonValue };
   grading?: { [questionId: string]: { grade: number; comment: string } };
   overallComment?: string;
 }
 
-export interface GradeDetailDto {
+export type GradeDetailDto = {
   grade: number | null; // update if you're pulling raw backend shape
   comment: string;
 }
 
-export interface InstitutionAdminDto extends NewAdminDto {
+export type InstitutionAdminDto = NewAdminDto & {
   userId?: string;
   institutionId?: string;
   role?: UserRole | null;
@@ -474,12 +480,12 @@ export interface InstitutionAdminDto extends NewAdminDto {
   updatedAt?: string;
 }
 
-export interface InstitutionWithAdminDto {
+export type InstitutionWithAdminDto = {
   institution: InstitutionDto;
   admin: InstitutionAdminDto | null;
 }
 
-export interface InstitutionDto {
+export type InstitutionDto = {
   id: string;
   name: string;
   adminEmail?: string | null;
@@ -488,155 +494,48 @@ export interface InstitutionDto {
   isActive: boolean;
   plan: SubscriptionFeatureFlag;
   creatorEnabled: boolean;
+  lastActiveAt?: string | null;
   billingStatus?: string | null;
   lastPaymentDate?: string | null;
   nextInvoiceDate?: string | null;
   currentInvoiceTotal?: number | null;
 }
 
-export interface NewAdminDto {
+export type NewAdminDto = {
   firstName: string;
   lastName: string;
   email: string;
 }
 
-export interface HourlyLoginStat {
-  hour: number; // 0–23
-  count: number; // login count
-}
-
-export interface TrendMetricDto {
-  total: number;
-  trend: string;
-  dataPoints: number[];
-}
-
-export interface SystemAdminDashboardDto {
-  totalInstitutions: number;
-  activeInstitutions: number;
-  totalUsers: number;
-  teachers: number;
-  students: number;
-  notesCreated: number;
-  homeworkCreated: number;
-  totalClassrooms: number;
-  peakUsageHours: HourlyLoginStat[]; // may be empty if untracked
-}
-
-// Platform Owner Dashboard DTOs
-export interface PlatformOwnerDashboardDto {
-  // Sparkline trend cards (30 daily data points, same shape as InstitutionTrendsDashboardDto)
-  institutions: TrendMetricDto;
-  users: TrendMetricDto;
-  modules: TrendMetricDto;
-  totalCost: TrendMetricDto;
-  averageProfit: TrendMetricDto;
-
-  // Top 3 most active institutions (same series format as MostActiveClassSubjectSeriesDto)
-  mostActiveInstitutions: MostActiveInstitutionSeriesDto;
-
-  // Profit margin buckets (same format as gradePerformance: 6-month bars)
-  profitMarginPerformance: GradePerfomanceDto[];
-  profitMarginMonths: string[];
-  profitMarginTrends: GradePerformanceLableTrendDto;
-}
-
-export interface MostActiveInstitutionSeriesDto {
-  labels: string[];
-  series: InstitutionActivitySeries[];
-}
-
-export interface InstitutionActivitySeries {
-  id: string;
-  label: string;
-  data: number[];
-}
-
-export interface InstitutionBillingDashboardDto {
-  institutionId: string;
-  institutionName: string;
-  userCount: number;
-  ratePerUserZar: number;
-  monthlyRevenueZar: number;
-  usageMetrics: BillingUsageMetricsDto;
-  totalCostZar: number;
-  costPerUserZar: number;
-  projectedMonthlyCostZar: number;
-  profitZar: number;
-  profitMarginPercent: number;
-}
-
-export interface BillingUsageMetricsDto {
-  storedVideoMinutes: number;
-  deliveredVideoMinutes: number;
-  pdfStorageGb: number;
-  pdfDownloads: number;
-  cpuSeconds: number;
-  memoryGbSeconds: number;
-  egressGb: number;
-  cloudflareCostUsd: number;
-  railwayCostUsd: number;
-  totalCostUsd: number;
-}
-
-export interface EngagementStatDto {
-  submissionRate: number; // e.g., 0.91 → 91%
-  avgNotePerStudent: number;
-  avgHomeworkAssigned: number;
-}
-
-export interface GradePerfomanceDto {
-  label: string;
-  data: number[];
-}
-
-export interface GradePerformanceLableTrendDto {
-  average: number;
-  color: 'success' | 'error' | 'default';
-}
-
-export interface SubjectSeries {
-  id: string;
-  label: string;
-  data: number[];
-}
-
-export interface MostActiveClassSubjectSeriesDto {
-  labels: string[];
-  series: SubjectSeries[];
-}
-
-export interface RecentHomeworkStatDto {
-  classroomName: string;
-  subjectCode: string;
-  homeworkTitle: string;
-  dueDate: string; // ISO date string
-  studentsAssigned: number;
-  submissions: number;
-  submissionRate: number; // e.g., 0.85 → 85%
-  averageGrade: number; // null if not graded yet
-}
-
-export interface InstitutionTrendsDashboardDto {
-  id: string;
-  teachers: TrendMetricDto;
-  students: TrendMetricDto;
-  notesCreated: TrendMetricDto;
-  homeworkCreated: TrendMetricDto;
-  gradePerformance: GradePerfomanceDto[];
-  gradePerformanceMonths: string[]; // e.g., ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
-  gradePerformanceTrends: GradePerformanceLableTrendDto;
-  mostActiveSubjects: MostActiveClassSubjectSeriesDto;
-  recentHomeworkStats: RecentHomeworkStatDto[];
-}
+// Dashboard / billing DTOs — sourced from OpenAPI (`_lib/api/schemas.ts`)
+export type {
+  BillingUsageMetricsDto,
+  EngagementStatDto,
+  GradePerfomanceDto,
+  GradePerformanceDto,
+  GradePerformanceLableTrendDto,
+  HourlyLoginStat,
+  InactiveUserSummaryDto,
+  InstitutionActivitySeries,
+  InstitutionBillingDashboardDto,
+  InstitutionTrendDashboardDto,
+  InstitutionTrendsDashboardDto,
+  MostActiveClassSubjectSeriesDto,
+  MostActiveInstitutionSeriesDto,
+  PlatformOwnerDashboardDto,
+  RecentHomeworkStatDto,
+  SubjectSeries,
+  SystemAdminDashboardDto,
+  TrendMetricDto,
+} from '../api/schemas';
 
 // Settings / Profile insights
-export interface SettingsResponseDto {
+export type SettingsResponseDto = {
   user: SettingsUserDto;
   stats: SettingsStatsDto;
 }
 
-export interface SettingsUserDto {
+export type SettingsUserDto = {
   userId: string;
   email: string;
   firstName: string | null;
@@ -657,15 +556,15 @@ export interface SettingsUserDto {
   creatorEnabled?: boolean;
 }
 
-export interface SettingsStatsDto {
+export type SettingsStatsDto = {
   explanation: string;
   rating?: string | null;
   kpis: Record<string, number>;
   graphs: StatsGraphDto[];
-  extra: Record<string, unknown>;
+  extra: Record<string, JsonValue>;
 }
 
-export interface StatsGraphDto {
+export type StatsGraphDto = {
   id: string;
   title: string;
   x: string[];
@@ -673,7 +572,7 @@ export interface StatsGraphDto {
   description?: string | null;
 }
 
-export interface StatsGraphSeriesDto {
+export type StatsGraphSeriesDto = {
   name: string;
   values: number[];
 }

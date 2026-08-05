@@ -2,16 +2,17 @@
 
 import useSWR from 'swr';
 import { useCallback, useMemo } from 'react';
-import { VideoLibraryItem } from '@/app/_lib/interfaces/types';
+import { type VideoLibraryItem } from '@/app/_lib/interfaces/types';
 import {
   getInstitutionVideos,
   type InstitutionVideosParams,
 } from '@/app/_lib/actions/stream';
-import { PagedResult } from '@/app/_lib/interfaces/pagination';
+import { type PagedResult } from '@/app/_lib/interfaces/pagination';
+import { swrKeys } from '@/app/_lib/config/swrKeys';
 
-export interface UseInstitutionVideosParams extends InstitutionVideosParams {
+export type UseInstitutionVideosParams = {
   enabled?: boolean;
-}
+} & InstitutionVideosParams;
 
 export const useInstitutionVideos = (params: UseInstitutionVideosParams = {}) => {
   const {
@@ -24,9 +25,9 @@ export const useInstitutionVideos = (params: UseInstitutionVideosParams = {}) =>
   const swrKey = useMemo(
     () =>
       enabled
-        ? ['institution-videos', pageNumber, pageSize, searchTerm ?? '']
+        ? swrKeys.institutionVideos(pageNumber, pageSize, searchTerm ?? '')
         : null,
-    [enabled, pageNumber, pageSize, searchTerm]
+    [enabled, pageNumber, pageSize, searchTerm],
   );
 
   const fetcher = useCallback(

@@ -16,10 +16,11 @@ import { useActionState, useEffect, useRef } from 'react';
 import { roleOptions } from '@/app/_lib/common/functions';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { editUserSchema } from '@/app/_lib/schemas/management';
-import { UserDto } from '@/app/_lib/interfaces/types';
+import { type UserDto } from '@/app/_lib/interfaces/types';
 import { UpdateUserAction } from './updateUserAction';
+import { isFormActionSuccess } from '@/app/_lib/types/actionState';
 
-interface EditUserFormProps {
+type EditUserFormProps = {
   user: UserDto | null;
   isAdmin: boolean;
   handleClose: () => void;
@@ -32,7 +33,7 @@ export default function EditUserForm({ user, isAdmin, handleClose, onSuccess }: 
   }
   
   const { showAlert } = useAlert();
-  const [lastResult, action, pending] = useActionState(UpdateUserAction, false);
+  const [lastResult, action, pending] = useActionState(UpdateUserAction, null);
   const isMountedRef = useRef(true);
   
   const formId = `edit-user-${user.userId}`;
@@ -60,10 +61,11 @@ export default function EditUserForm({ user, isAdmin, handleClose, onSuccess }: 
   }, []);
 
   useEffect(() => {
-    if (lastResult && isMountedRef.current) {
+    if (isFormActionSuccess(lastResult) && isMountedRef.current) {
+      const user = lastResult.data;
       showAlert(
         'success',
-        `${lastResult.firstName} ${lastResult.lastName} updated successfully🚀!`
+        `${user.firstName} ${user.lastName} updated successfully🚀!`,
       );
       
       // Call onSuccess to refresh data
@@ -80,6 +82,7 @@ export default function EditUserForm({ user, isAdmin, handleClose, onSuccess }: 
       
       return () => clearTimeout(timer);
     }
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResult]);
 

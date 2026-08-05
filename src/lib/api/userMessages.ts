@@ -9,7 +9,7 @@
 
 import { ErrorCode, type ErrorCodeType } from '@/lib/api';
 
-export interface UserFriendlyError {
+export type UserFriendlyError = {
   /** Short title for the error */
   title: string;
   /** Longer description with context */

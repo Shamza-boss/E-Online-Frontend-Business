@@ -6,7 +6,7 @@ export const FlexColumnContainer = styled(Box)({
     minHeight: 0,
     display: 'flex',
     flexDirection: 'column',
-    overflow: 'auto',
+    overflow: 'hidden',
 });
 
 export const FlexColumnHiddenContainer = styled(Box)({

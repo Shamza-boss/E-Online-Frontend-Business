@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 
-interface ConditionalTabPanelProps {
+type ConditionalTabPanelProps = {
   value: string;
   index: string;
   children: React.ReactNode;

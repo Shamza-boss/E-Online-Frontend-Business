@@ -1,6 +1,5 @@
-import PDFViewer, {
-    type PdfNoteLinkOptions,
-} from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer from '@/app/_lib/components/PDFViewer';
+import type { PdfNoteLinkOptions } from '@/app/_lib/components/PDFViewer/types';
 import {
     Dialog,
     AppBar,
@@ -18,12 +17,12 @@ import TabList from '@mui/lab/TabList';
 import Tab from '@mui/material/Tab';
 import SeeAssignmentsAndPreview from '../../Homework/SeeAssignmentsAndPreview';
 import React from 'react';
-import { TransitionProps } from '@mui/material/transitions';
+import { type TransitionProps } from '@mui/material/transitions';
 import Editor, {
     type EditorHandle,
 } from '@/app/_lib/components/TipTapEditor/Editor';
 import ConditionalTabPanel from '@/app/_lib/components/conditionalTabPanel';
-import type { FullScreenClassroomModalProps } from './interfaces';
+import type { FullScreenClassroomModalProps } from './types';
 import {
     ContentArea,
     FlexOutlinedWrapper,

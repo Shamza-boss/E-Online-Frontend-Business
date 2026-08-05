@@ -18,7 +18,7 @@ import {
     DialogActions,
 } from '@mui/material';
 import useSWR from 'swr';
-import { GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
+import { type GridColDef, type GridRowSelectionModel } from '@mui/x-data-grid';
 import EDataGrid from '../../../../_components/EDataGrid';
 import {
     getAllStudents,
@@ -28,7 +28,7 @@ import {
 import type { UserDto, ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
-import type { StudentManagementTableProps } from './interfaces';
+import type { StudentManagementTableProps } from './types';
 import { StyledGridOverlay } from './elements';
 import {
     normalizeSelectionModel,
@@ -324,6 +324,7 @@ const StudentManagementTable: React.FC<StudentManagementTableProps> = ({
                     initialState={{ pagination: { paginationModel: { pageSize: 20 } } }}
                     loading={studentsLoading}
                     slotProps={dataGridSlotProps}
+                    mobileHiddenFields={['email']}
                     slots={{
                         noResultsOverlay: CustomNoResultsOverlay,
                     }}

@@ -37,7 +37,7 @@ export function computePercentageSeries(
 
   return normalizedSeries.map((currentSeries) => ({
     ...currentSeries,
-    data: currentSeries.data.map((value, index) => {
+    data: (currentSeries.data ?? []).map((value, index) => {
       const denominator = globalTotal ?? totalsPerMonth[index] ?? 0;
 
       if (!denominator) {

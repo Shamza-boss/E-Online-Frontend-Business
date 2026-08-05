@@ -4,7 +4,7 @@ import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useTheme } from '@mui/material/styles';
-import type { PageViewsBarChartProps } from './interfaces';
+import type { PageViewsBarChartProps } from './types';
 import {
   CHART_MAX_VALUE,
   CHART_HEIGHT,
@@ -27,6 +27,7 @@ import {
   SkeletonDescriptionBox,
   SkeletonChartArea,
 } from './elements';
+import { ChartScrollArea } from '../RoleHomeShell/ChartPanel';
 
 export default function PageViewsBarChart({
   title = DEFAULT_TITLE,
@@ -98,43 +99,45 @@ export default function PageViewsBarChart({
           <CaptionText variant="caption">{description}</CaptionText>
         </HeaderStack>
 
-        <BarChart
-          borderRadius={BORDER_RADIUS}
-          colors={colorPalette}
-          xAxis={[
-            {
-              categoryGapRatio: CATEGORY_GAP_RATIO,
-              data: months,
-            },
-          ]}
-          yAxis={[
-            {
-              label: yAxisLabel,
-              min: 0,
-              max: CHART_MAX_VALUE,
-              tickInterval: yAxisTicks,
-              valueFormatter: (value: number): string => `${value}%`,
-            },
-          ]}
-          series={percentageSeries.map((s, index) => ({
-            id: `series-${index}` as const,
-            label: s.label,
-            data: s.data,
-            stack: 'total',
-            valueFormatter: (value: number | null, context) => {
-              if (value == null) {
-                return null;
-              }
+        <ChartScrollArea minWidthPx={720}>
+          <BarChart
+            borderRadius={BORDER_RADIUS}
+            colors={colorPalette}
+            xAxis={[
+              {
+                categoryGapRatio: CATEGORY_GAP_RATIO,
+                data: months,
+              },
+            ]}
+            yAxis={[
+              {
+                label: yAxisLabel,
+                min: 0,
+                max: CHART_MAX_VALUE,
+                tickInterval: yAxisTicks,
+                valueFormatter: (value: number): string => `${value}%`,
+              },
+            ]}
+            series={percentageSeries.map((s, index) => ({
+              id: `series-${index}` as const,
+              label: s.label,
+              data: s.data,
+              stack: 'total',
+              valueFormatter: (value: number | null, context) => {
+                if (value == null) {
+                  return null;
+                }
 
-              const dataIndex = context?.dataIndex ?? 0;
-              const rawValue = normalizedSeries[index]?.data?.[dataIndex] ?? 0;
+                const dataIndex = context?.dataIndex ?? 0;
+                const rawValue = normalizedSeries[index]?.data?.[dataIndex] ?? 0;
 
-              return `${rawValue} ${valueLabel} (${value.toFixed(1)}%)`;
-            },
-          }))}
-          height={CHART_HEIGHT}
-          grid={{ horizontal: true }}
-        />
+                return `${rawValue} ${valueLabel} (${value.toFixed(1)}%)`;
+              },
+            }))}
+            height={CHART_HEIGHT}
+            grid={{ horizontal: true }}
+          />
+        </ChartScrollArea>
       </CardContent>
     </ChartCard>
   );

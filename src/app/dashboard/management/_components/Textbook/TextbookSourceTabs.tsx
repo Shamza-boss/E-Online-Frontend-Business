@@ -1,6 +1,6 @@
 'use client';
 
-import { RefObject } from 'react';
+import { type RefObject } from 'react';
 import {
   Box,
   LinearProgress,
@@ -10,12 +10,12 @@ import {
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
-import { FileDto } from '@/app/_lib/interfaces/types';
+import { type FileDto } from '@/app/_lib/interfaces/types';
 import LibraryTextbookSelector from './LibraryTextbookSelector';
 
 export type TextbookSource = 'upload' | 'library';
 
-interface TextbookSourceTabsProps {
+type TextbookSourceTabsProps = {
   source: TextbookSource;
   onSourceChange: (source: TextbookSource) => void;
   fileInputRef: RefObject<HTMLInputElement | null>;

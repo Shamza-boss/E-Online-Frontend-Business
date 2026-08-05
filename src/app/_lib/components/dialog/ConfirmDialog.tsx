@@ -3,7 +3,7 @@
 import React from 'react';
 import {
   Button,
-  ButtonProps,
+  type ButtonProps,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@mui/material';
 
-interface ConfirmDialogProps {
+type ConfirmDialogProps = {
   open: boolean;
   title: React.ReactNode;
   description?: React.ReactNode;

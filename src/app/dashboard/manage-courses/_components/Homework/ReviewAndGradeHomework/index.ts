@@ -1,2 +1,2 @@
 export { default } from './ReviewAndGradeHomework';
-export type { ReviewAndGradeHomeworkProps } from './interfaces';
+export type { ReviewAndGradeHomeworkProps } from './types';

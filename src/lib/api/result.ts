@@ -5,6 +5,8 @@
  * without throwing exceptions for expected errors.
  */
 
+import { getErrorMessage } from './errors';
+
 export type Result<T, E = Error> =
   | { ok: true; data: T; error?: never }
   | { ok: false; data?: never; error: E };
@@ -29,13 +31,15 @@ export const Result = {
    */
   async fromPromise<T, E = Error>(
     promise: Promise<T>,
-    mapError?: (e: unknown) => E
+    mapError?: (e: Error) => E,
   ): Promise<Result<T, E>> {
     try {
       const data = await promise;
       return Result.ok(data);
-    } catch (e) {
-      const error = mapError ? mapError(e) : (e as E);
+    } catch (e: unknown) {
+      const normalized =
+        e instanceof Error ? e : new Error(getErrorMessage(e));
+      const error = mapError ? mapError(normalized) : (normalized as E);
       return Result.err(error);
     }
   },

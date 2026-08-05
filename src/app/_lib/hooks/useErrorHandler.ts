@@ -26,7 +26,7 @@ import {
   shouldShowFullPage,
 } from '@/lib/api/userMessages';
 
-interface ErrorHandlerOptions {
+type ErrorHandlerOptions = {
   /** Override the default behavior for full page vs alert */
   forceAlert?: boolean;
   /** Override the default behavior for full page vs alert */
@@ -38,9 +38,9 @@ interface ErrorHandlerOptions {
   };
   /** Callback after error is handled */
   onHandled?: () => void;
-}
+};
 
-interface ErrorHandlerResult {
+type ErrorHandlerResult = {
   /** Handle any error type */
   handleError: (error: unknown, options?: ErrorHandlerOptions) => void;
   /** Handle an error with a specific code */
@@ -51,7 +51,7 @@ interface ErrorHandlerResult {
   ) => void;
   /** Show a generic error message */
   showGenericError: (message?: string) => void;
-}
+};
 
 export function useErrorHandler(): ErrorHandlerResult {
   const router = useRouter();
@@ -82,7 +82,7 @@ export function useErrorHandler(): ErrorHandlerResult {
 
         const page = errorPages[code] || '/error/server-error';
         const url = trackingId ? `${page}?ref=${trackingId}` : page;
-        router.push(url as any);
+        (router.push as (href: string) => void)(url);
       } else {
         // Show alert
         alert.showAlert({

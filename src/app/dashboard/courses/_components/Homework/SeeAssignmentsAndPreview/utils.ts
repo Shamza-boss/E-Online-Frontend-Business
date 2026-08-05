@@ -1,4 +1,4 @@
-import type { StatusAndTab } from './interfaces';
+import type { StatusAndTab } from './types';
 import type {
   AssignmentDetailsDto,
   SubmittedHomework,

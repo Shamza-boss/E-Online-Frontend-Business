@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-export interface PdfViewState {
+export type PdfViewState = {
   currentPage: number;
   zoom: number;
   outline: boolean;
@@ -9,12 +9,12 @@ export interface PdfViewState {
   onOutlineChange: (show: boolean) => void;
 }
 
-interface UseClassroomLayoutOptions {
+type UseClassroomLayoutOptions = {
   initialSplitSizes?: [number, number];
   pdfPersistKey?: string;
 }
 
-interface PersistedPdfState {
+type PersistedPdfState = {
   page: number;
   zoom: number;
   outline: boolean;

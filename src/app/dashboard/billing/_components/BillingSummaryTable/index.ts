@@ -1,2 +1,2 @@
 export { default } from './BillingSummaryTable';
-export type { BillingSummaryTableProps } from './interfaces';
+export type { BillingSummaryTableProps } from './types';

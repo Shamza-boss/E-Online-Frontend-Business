@@ -17,7 +17,7 @@ import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card);
 
-interface HighlightItem {
+type HighlightItem = {
   icon: React.ReactNode;
   title: string;
   description: string;

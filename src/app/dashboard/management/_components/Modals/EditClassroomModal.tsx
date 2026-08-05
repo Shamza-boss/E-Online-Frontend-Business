@@ -6,10 +6,10 @@ import {
   DialogTitle,
   IconButton,
 } from '@mui/material';
-import { ClassDto } from '@/app/_lib/interfaces/types';
-import ClassroomCreationForm from '../Forms/classroomCreationForm';
+import { type ClassDto } from '@/app/_lib/interfaces/types';
+import ClassroomCreationForm from '../ClassroomCreationForm';
 
-interface EditClassroomModalProps {
+type EditClassroomModalProps = {
   open: boolean;
   classroom: ClassDto | null;
   isAdmin: boolean;

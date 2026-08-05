@@ -1,4 +1,4 @@
-import { SubscriptionFeatureFlag, SubscriptionPlan } from '../interfaces/types';
+import { SubscriptionFeatureFlag, type SubscriptionPlan } from '../interfaces/types';
 
 export function planToFeatureFlag(
   plan?: SubscriptionPlan | null

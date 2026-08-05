@@ -1,2 +1,2 @@
 export { DesktopContent } from './DesktopContent';
-export type { DesktopContentProps } from './interfaces';
+export type { DesktopContentProps } from './types';

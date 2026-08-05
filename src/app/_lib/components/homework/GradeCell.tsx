@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Typography } from '@mui/material';
 import type { HomeworkAssignmentDto, Homework } from '../../interfaces/types';
 
-interface GradeCellProps {
+type GradeCellProps = {
   assignment: HomeworkAssignmentDto;
 }
 

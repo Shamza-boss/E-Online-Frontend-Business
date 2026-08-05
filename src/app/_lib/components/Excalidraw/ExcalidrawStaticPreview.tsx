@@ -11,7 +11,7 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ExcalidrawModal from './ExcaliDrawModal.client';
 import { sanitizeExcalidrawElements } from './sanitizeElements';
-import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 
 const normalizeSvgElement = (svgEl: SVGSVGElement) => {
   const viewBox = svgEl.getAttribute('viewBox');
@@ -33,7 +33,7 @@ const normalizeSvgElement = (svgEl: SVGSVGElement) => {
   svgEl.style.overflow = 'hidden';
 };
 
-interface ExcalidrawStaticPreviewProps {
+type ExcalidrawStaticPreviewProps = {
   data?: string | null;
   height?: number;
   showModalTrigger?: boolean;

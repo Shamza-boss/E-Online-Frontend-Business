@@ -1,4 +1,4 @@
-import { Question } from '../interfaces/types';
+import { type Question } from '../interfaces/types';
 
 /**
  * Utility functions for calculating homework grades and percentages

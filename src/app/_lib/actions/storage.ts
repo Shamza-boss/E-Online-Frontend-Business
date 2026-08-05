@@ -1,10 +1,10 @@
 'use server';
 
-import { serverFetch } from '../serverFetch';
-import { FileDto, LibraryFileDto } from '../interfaces/types';
-import { PagedResult, PaginationParams } from '../interfaces/pagination';
+import { serverFetch } from '../serverFetch.server';
+import { type FileDto, type LibraryFileDto } from '../interfaces/types';
+import { type PagedResult, type PaginationParams } from '../interfaces/pagination';
 
-export interface RegisterRepositoryFilePayload {
+export type RegisterRepositoryFilePayload = {
   fileKey: string;
   url: string;
   hash: string;
@@ -14,12 +14,12 @@ export interface RegisterRepositoryFilePayload {
   fileSizeBytes?: number;
 }
 
-export interface LibraryQueryParams extends PaginationParams {
+export type LibraryQueryParams = {
   academicLevelId?: string;
   classroomId?: string;
   isPublic?: boolean;
   unlinkedOnly?: boolean;
-}
+} & PaginationParams
 
 function buildLibraryQueryString(params: LibraryQueryParams): string {
   const query = new URLSearchParams();

@@ -3,7 +3,7 @@ import { Chip } from '@mui/material';
 import type { HomeworkAssignmentDto } from '../../interfaces/types';
 import { getPercentageColor } from '../../utils/gradeCalculator';
 
-interface PercentageCellProps {
+type PercentageCellProps = {
   assignment: HomeworkAssignmentDto;
 }
 

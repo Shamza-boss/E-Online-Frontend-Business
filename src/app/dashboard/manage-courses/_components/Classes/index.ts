@@ -1,2 +1,2 @@
 export { default } from './Classes';
-export type { StudentClassesCardsProps } from './interfaces';
+export type { StudentClassesCardsProps } from './types';

@@ -2,20 +2,24 @@
 
 import useSWR from 'swr';
 import { useCallback, useMemo } from 'react';
-import { FileDto, LibraryFileDto } from '@/app/_lib/interfaces/types';
+import { type FileDto, type LibraryFileDto } from '@/app/_lib/interfaces/types';
 import {
   getRepositoryFiles,
   getRepositoryFilesPaged,
   toggleRepositoryFileVisibility,
   type LibraryQueryParams,
 } from '@/app/_lib/actions/storage';
-import { PagedResult } from '@/app/_lib/interfaces/pagination';
+import { type PagedResult } from '@/app/_lib/interfaces/pagination';
+import { swrKeys } from '@/app/_lib/config/swrKeys';
 
-export const useLibraryFiles = () => {
+export const useLibraryFiles = (enabled = true) => {
   const { data, isLoading, isValidating, mutate } = useSWR<FileDto[]>(
-    'repository-files',
+    enabled ? swrKeys.repositoryFiles : null,
     getRepositoryFiles,
-    { revalidateOnMount: true }
+    {
+      revalidateOnMount: true,
+      errorRetryCount: 1,
+    },
   );
 
   const files = data ?? [];
@@ -28,9 +32,9 @@ export const useLibraryFiles = () => {
   };
 };
 
-export interface UseLibraryFilesPagedParams extends LibraryQueryParams {
+export type UseLibraryFilesPagedParams = {
   enabled?: boolean;
-}
+} & LibraryQueryParams;
 
 export const useLibraryFilesPaged = (params: UseLibraryFilesPagedParams) => {
   const {
@@ -49,7 +53,7 @@ export const useLibraryFilesPaged = (params: UseLibraryFilesPagedParams) => {
   const swrKey = useMemo(
     () =>
       enabled
-        ? [
+        ? ([
             'repository-files-paged',
             pageNumber,
             pageSize,
@@ -60,7 +64,7 @@ export const useLibraryFilesPaged = (params: UseLibraryFilesPagedParams) => {
             classroomId ?? '',
             isPublic,
             unlinkedOnly ?? false,
-          ]
+          ] as const)
         : null,
     [
       enabled,
@@ -73,7 +77,7 @@ export const useLibraryFilesPaged = (params: UseLibraryFilesPagedParams) => {
       classroomId,
       isPublic,
       unlinkedOnly,
-    ]
+    ],
   );
 
   const fetcher = useCallback(
@@ -99,14 +103,18 @@ export const useLibraryFilesPaged = (params: UseLibraryFilesPagedParams) => {
       classroomId,
       isPublic,
       unlinkedOnly,
-    ]
+    ],
   );
 
-  const { data, isLoading, isValidating, mutate } = useSWR<PagedResult<LibraryFileDto>>(
-    swrKey,
-    fetcher,
-    { keepPreviousData: true }
-  );
+  const { data, isLoading, isValidating, mutate } = useSWR<
+    PagedResult<LibraryFileDto>
+  >(swrKey, fetcher, {
+    keepPreviousData: true,
+    // Rapid filter changes must not stack retries on top of in-flight list calls.
+    errorRetryCount: 1,
+    dedupingInterval: 500,
+    revalidateOnFocus: false,
+  });
 
   return {
     result: data,

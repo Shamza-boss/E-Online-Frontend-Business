@@ -12,7 +12,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const MotionBox = motion.create(Box);
 
-interface FAQItem {
+type FAQItem = {
   question: string;
   answer: string;
 }

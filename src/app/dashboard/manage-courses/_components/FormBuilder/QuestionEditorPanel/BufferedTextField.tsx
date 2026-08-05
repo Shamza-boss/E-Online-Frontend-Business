@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { TextField } from '@mui/material';
-import type { BufferedTextFieldProps } from './interfaces';
+import type { BufferedTextFieldProps } from './types';
 
 const BufferedTextField: React.FC<BufferedTextFieldProps> = ({
     value,

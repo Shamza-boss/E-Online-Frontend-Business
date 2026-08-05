@@ -13,7 +13,7 @@ import {
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 import EDataGrid from '../../../_components/EDataGrid';
-import type { ModulesPanelProps } from './interfaces';
+import type { ModulesPanelProps } from './types';
 import { NoRowsContainer } from './elements';
 import {
     resolveModuleId,
@@ -147,6 +147,7 @@ const ModulesDataGrid: React.FC<ModulesPanelProps> = ({
                 }
                 loading={isLoading}
                 onRowClick={handleRowClick}
+                mobileHiddenFields={['description', 'expiryDate', 'completions']}
                 sx={{
                     '& .MuiDataGrid-row': {
                         cursor: 'pointer',

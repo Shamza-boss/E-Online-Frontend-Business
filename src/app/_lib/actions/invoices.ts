@@ -7,7 +7,7 @@ import type {
   SendInvoiceDto,
   MarkInvoicePaidDto,
 } from '../interfaces/types';
-import { serverFetch } from '../serverFetch';
+import { serverFetch } from '../serverFetch.server';
 
 const INVOICE_BASE = '/invoices';
 

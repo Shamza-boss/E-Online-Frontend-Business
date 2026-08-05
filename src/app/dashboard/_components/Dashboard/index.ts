@@ -1,2 +1,2 @@
 export { default } from './Dashboard';
-export type { DashboardComponentProps } from './interfaces';
+export type { DashboardComponentProps } from './types';

@@ -10,7 +10,7 @@ import {
     Typography,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import type { SendInvoiceDialogProps } from './interfaces';
+import type { SendInvoiceDialogProps } from './types';
 import { CURRENCY_ZAR } from './constants';
 import { ContentStack, InvoiceSummaryStack, StyledDialogActions } from './elements';
 

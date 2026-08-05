@@ -5,7 +5,7 @@ import {
   StyledCardContent,
 } from '@/app/_lib/components/website/components/styled/StyledComponents';
 
-interface StudentClassCardSkeletonProps {
+type StudentClassCardSkeletonProps = {
   count?: number;
 }
 

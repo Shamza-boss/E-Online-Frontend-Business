@@ -1,10 +1,10 @@
 'use client';
 
 import Chip from '@mui/material/Chip';
-import { UserRole } from '../../Enums/UserRole';
+import { type UserRole } from '../../Enums/UserRole';
 import { getRoleChipConfig } from '../../common/functions';
 
-interface RoleChipProps {
+type RoleChipProps = {
   role: UserRole;
 }
 

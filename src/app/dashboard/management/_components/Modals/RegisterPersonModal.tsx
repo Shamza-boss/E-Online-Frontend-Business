@@ -1,5 +1,5 @@
 import React from 'react';
-import { NextPage } from 'next';
+import { type NextPage } from 'next';
 import { Close } from '@mui/icons-material';
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import UserRegistrationForm from '../Forms/userRegistrationForm';
 
-interface RegisterPersonModalProps {
+type RegisterPersonModalProps = {
   open: boolean;
   handleClose: () => void;
 }

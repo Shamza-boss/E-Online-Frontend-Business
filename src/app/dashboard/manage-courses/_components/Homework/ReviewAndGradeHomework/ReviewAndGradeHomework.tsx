@@ -21,8 +21,8 @@ import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 import type { Question, GradedHomework } from '@/app/_lib/interfaces/types';
 import dynamic from 'next/dynamic';
 import { MathJaxContext } from 'better-react-mathjax';
-import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
-import type { ReviewAndGradeHomeworkProps, GradingData, GradingEntry } from './interfaces';
+import PDFViewer from '@/app/_lib/components/PDFViewer';
+import type { ReviewAndGradeHomeworkProps, GradingData, GradingEntry } from './types';
 import {
     ContentPaper,
     PdfPreviewBox,
@@ -178,7 +178,9 @@ const ReviewAndGradeHomework: React.FC<ReviewAndGradeHomeworkProps> = ({
                                                         <Checkbox
                                                             disabled
                                                             checked={
-                                                                answer ? answer.includes(option) : false
+                                                                Array.isArray(answer)
+                                                                    ? answer.includes(option)
+                                                                    : false
                                                             }
                                                         />
                                                     }

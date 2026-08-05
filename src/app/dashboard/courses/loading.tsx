@@ -1,5 +1,5 @@
-import StudentClassCardSkeleton from '../_components/_skeletonLoaders/StudentClassCardSkeleton';
+import CoursesPageSkeleton from '../_components/_skeletonLoaders/CoursesPageSkeleton';
 
 export default function CoursesLoading() {
-    return <StudentClassCardSkeleton count={12} />;
+  return <CoursesPageSkeleton />;
 }

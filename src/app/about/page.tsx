@@ -31,7 +31,7 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 const MotionBox = motion.create(Box);
 const MotionPaper = motion.create(Paper);
 
-interface TechDecision {
+type TechDecision = {
   name: string;
   category: string;
   icon: React.ReactNode;

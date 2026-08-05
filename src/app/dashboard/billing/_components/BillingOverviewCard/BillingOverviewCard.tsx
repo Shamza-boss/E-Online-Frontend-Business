@@ -7,7 +7,7 @@ import {
     Stack,
     Typography,
 } from '@mui/material';
-import type { BillingOverviewCardProps } from './interfaces';
+import type { BillingOverviewCardProps } from './types';
 import { CURRENCY_ZAR } from './constants';
 import { formatMonth, getMarginColor } from './utils';
 import { RoundedPaper, CenteredLoadingStack, ResponsiveGrid4, ResponsiveGrid5 } from './elements';

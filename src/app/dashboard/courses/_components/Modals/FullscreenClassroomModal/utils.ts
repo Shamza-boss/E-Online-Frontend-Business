@@ -1,4 +1,4 @@
-import type { FullScreenClassroomModalProps } from './interfaces';
+import type { FullScreenClassroomModalProps } from './types';
 
 export const handleTabChange = (
   onTabChange: FullScreenClassroomModalProps['onTabChange'],

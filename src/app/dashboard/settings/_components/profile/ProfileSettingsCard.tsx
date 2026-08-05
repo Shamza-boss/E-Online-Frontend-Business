@@ -9,16 +9,17 @@ import {
     Card,
     CardContent,
     Divider,
+    Grid,
     Stack,
     TextField,
     Typography,
 } from '@mui/material';
-import { Theme, alpha } from '@mui/material/styles';
+import { type Theme, alpha } from '@mui/material/styles';
 import { useSession } from 'next-auth/react';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { updateProfileAction } from '../../actions';
 
-export interface ProfileSettingsUser {
+export type ProfileSettingsUser = {
     userId: string;
     email: string;
     firstName: string | null;
@@ -27,7 +28,7 @@ export interface ProfileSettingsUser {
     institutionName: string | null;
 }
 
-interface ProfileSettingsCardProps {
+type ProfileSettingsCardProps = {
     user: ProfileSettingsUser;
 }
 
@@ -137,16 +138,15 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
         <Card
             variant="outlined"
             sx={(theme) => ({
-                borderRadius: 4,
-                border: `1.5px solid ${alpha(theme.palette.divider, 0.12)}`,
+                borderRadius: 2,
+                border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
                 backgroundImage: cardBg(theme),
                 boxShadow: 'none',
-                backdropFilter: 'blur(14px)',
             })}
         >
-            <CardContent>
-                <Stack spacing={4}>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="center">
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                <Stack spacing={3}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'center', sm: 'flex-start' }}>
                         <Avatar
                             sx={(theme) => ({
                                 bgcolor: alpha(theme.palette.primary.main, 0.18),
@@ -170,14 +170,20 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
                         </Box>
                     </Stack>
 
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                        <DetailBlock label="Email" value={user.email || 'Unavailable'} />
-                        <DetailBlock label="Role" value={user.role ? formatRoleLabel(user.role) : 'Not assigned'} />
-                        <DetailBlock
-                            label="Institution"
-                            value={user.institutionName ?? 'Not linked yet'}
-                        />
-                    </Stack>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <DetailBlock label="Email" value={user.email || 'Unavailable'} />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <DetailBlock label="Role" value={user.role ? formatRoleLabel(user.role) : 'Not assigned'} />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <DetailBlock
+                                label="Institution"
+                                value={user.institutionName ?? 'Not linked yet'}
+                            />
+                        </Grid>
+                    </Grid>
 
                     <Alert severity="info" sx={{ borderRadius: 3 }}>
                         Profile deletion and email changes are disabled to prevent accidentally locking yourself out.
@@ -211,7 +217,7 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
                                 helperText="Your email address is protected. Contact an admin if it needs to change."
                             />
                         </Stack>
-                        <Divider sx={{ my: 4 }} />
+                        <Divider sx={{ my: 3 }} />
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="flex-end">
                             <Button
                                 type="button"
@@ -238,7 +244,7 @@ export default function ProfileSettingsCard({ user }: ProfileSettingsCardProps) 
     );
 }
 
-interface DetailBlockProps {
+type DetailBlockProps = {
     label: string;
     value: string;
 }
@@ -247,18 +253,19 @@ function DetailBlock({ label, value }: DetailBlockProps) {
     return (
         <Box
             sx={(theme) => ({
-                flex: 1,
-                borderRadius: 3,
+                height: '100%',
+                borderRadius: 2,
                 border: `1px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
                 padding: 2,
-                minHeight: 92,
+                minHeight: 88,
                 backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                minWidth: 0,
             })}
         >
             <Typography variant="caption" textTransform="uppercase" color="text.secondary">
                 {label}
             </Typography>
-            <Typography variant="body1" fontWeight={600} sx={{ mt: 0.5 }}>
+            <Typography variant="body1" fontWeight={600} sx={{ mt: 0.5, wordBreak: 'break-word' }}>
                 {value}
             </Typography>
         </Box>

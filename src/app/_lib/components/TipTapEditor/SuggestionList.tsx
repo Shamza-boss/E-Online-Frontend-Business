@@ -19,7 +19,7 @@ export type SuggestionListRef = {
 // https://github.com/ueberdosis/tiptap/blob/a27c35ac8f1afc9d51f235271814702bc72f1e01/packages/extension-mention/src/mention.ts#L73-L103.
 // TODO(Steven DeMartini): Use the Tiptap exported MentionNodeAttrs interface
 // once https://github.com/ueberdosis/tiptap/pull/4136 is merged.
-interface MentionNodeAttrs {
+type MentionNodeAttrs = {
   id: string | null;
   label?: string | null;
 }
@@ -39,14 +39,10 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
       }
 
       const suggestion = props.items[index];
+      if (!suggestion) {
+        return;
+      }
 
-      // Set all of the attributes of our Mention node based on the suggestion
-      // data. The fields of `suggestion` will depend on whatever data you
-      // return from your `items` function in your "suggestion" options handler.
-      // Our suggestion handler returns `MentionSuggestion`s (which we've
-      // indicated via SuggestionProps<MentionSuggestion>). We are passing an
-      // object of the `MentionNodeAttrs` shape when calling `command` (utilized
-      // by the Mention extension to create a Mention Node).
       const mentionItem: MentionNodeAttrs = {
         id: suggestion.id,
         label: suggestion.mentionLabel,

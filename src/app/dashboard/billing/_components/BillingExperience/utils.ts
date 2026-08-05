@@ -1,6 +1,6 @@
-import { UserRole } from '@/app/_lib/Enums/UserRole';
+import { type UserRole } from '@/app/_lib/Enums/UserRole';
 import type { InstitutionWithAdminDto } from '@/app/_lib/interfaces/types';
-import type { InstitutionOption } from './interfaces';
+import type { InstitutionOption } from './types';
 
 export function normalizeRole(raw: unknown): UserRole | undefined {
   if (typeof raw === 'string') return parseInt(raw, 10) as UserRole;

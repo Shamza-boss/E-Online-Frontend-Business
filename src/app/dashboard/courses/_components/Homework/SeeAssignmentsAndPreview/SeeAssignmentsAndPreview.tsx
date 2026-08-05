@@ -11,9 +11,9 @@ import {
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import EDataGrid from '../../../../_components/EDataGrid';
 import {
-    HomeworkAssignmentDto,
-    AssignmentDetailsDto,
-    SubmittedHomework,
+    type HomeworkAssignmentDto,
+    type AssignmentDetailsDto,
+    type SubmittedHomework,
 } from '../../../../../_lib/interfaces/types';
 import { getStudentAssignments, resetAssignment } from '../../../../../_lib/actions';
 import HomeworkView from '../HomeworkView';
@@ -23,7 +23,8 @@ import { useSession } from 'next-auth/react';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
-import type { SeeAssignmentsAndPreviewProps } from './interfaces';
+import { formatSaDateTime } from '@/app/_lib/utils/datetime';
+import type { SeeAssignmentsAndPreviewProps } from './types';
 import { buildColumns } from './constants';
 import {
     handleRowClick as handleRowClickUtil,
@@ -219,7 +220,7 @@ export default function SeeAssignmentsAndPreview({
                         </Typography>
                         <Typography variant="body2">
                             This exam is scheduled for{' '}
-                            <strong>{new Date(examScheduledAt!).toLocaleString()}</strong>.
+                            <strong>{formatSaDateTime(examScheduledAt!)}</strong>.
                         </Typography>
                         {countdown && (
                             <Typography variant="h5" fontWeight={700} sx={{ mt: 1 }}>

@@ -1,11 +1,13 @@
-import { createTheme, alpha, PaletteMode, Shadows } from '@mui/material/styles';
+import { createTheme, alpha, type PaletteMode, type Shadows } from '@mui/material/styles';
 
 declare module '@mui/material/Paper' {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- module augmentation requires interface
   interface PaperPropsVariantOverrides {
     highlighted: true;
   }
 }
 declare module '@mui/material/styles' {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- module augmentation requires interface
   interface ColorRange {
     50: string;
     100: string;
@@ -19,8 +21,10 @@ declare module '@mui/material/styles' {
     900: string;
   }
 
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- module augmentation requires interface
   interface PaletteColor extends ColorRange {}
 
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- module augmentation requires interface
   interface Palette {
     baseShadow: string;
   }
@@ -312,7 +316,7 @@ export const typography = {
   caption: { fontSize: defaultTheme.typography.pxToRem(12), fontWeight: 400 },
 };
 
-export const shape = { borderRadius: 14 };
+export const shape = { borderRadius: 8 };
 
 // @ts-ignore
 const defaultShadows: Shadows = [

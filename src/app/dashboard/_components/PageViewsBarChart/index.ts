@@ -1,2 +1,2 @@
 export { default } from './PageViewsBarChart';
-export type { PageViewsBarChartProps } from './interfaces';
+export type { PageViewsBarChartProps } from './types';

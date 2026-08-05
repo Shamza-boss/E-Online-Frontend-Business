@@ -10,7 +10,7 @@ import {
     Typography,
 } from '@mui/material';
 import PaidIcon from '@mui/icons-material/Paid';
-import type { MarkPaidDialogProps } from './interfaces';
+import type { MarkPaidDialogProps } from './types';
 import { CURRENCY_ZAR } from './constants';
 import { ContentStack, InvoiceSummaryStack, StyledDialogActions } from './elements';
 

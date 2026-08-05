@@ -11,7 +11,7 @@ import {
     Typography,
     Button,
 } from '@mui/material';
-import { GridColDef } from '@mui/x-data-grid';
+import { type GridColDef } from '@mui/x-data-grid';
 import { Close } from '@mui/icons-material';
 import useSWR, { mutate } from 'swr';
 import { format } from 'date-fns';
@@ -28,7 +28,7 @@ import EDataGrid from '../../../../_components/EDataGrid';
 import ReviewAndGradeHomework from '../ReviewAndGradeHomework';
 import { getStatusChipConfig } from '@/app/_lib/common/functions';
 import HomeworkReview from '@/app/dashboard/courses/_components/Homework/HomeworkReview';
-import type { ManageStudentHomeworkProps } from './interfaces';
+import type { ManageStudentHomeworkProps } from './types';
 import { TabContentBox } from './elements';
 import { getStatusAndTab, buildFetchAssignments, submitGradedHomework } from './utils';
 
@@ -137,8 +137,16 @@ const ManageStudentHomework: React.FC<ManageStudentHomeworkProps> = ({
     ];
 
     return (
-        <>
-            <AppBar position="static">
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+            }}
+        >
+            <AppBar position="static" sx={{ flexShrink: 0 }}>
                 <Toolbar>
                     <Typography sx={{ flex: 1 }} variant="h6">
                         {selectedAssignment
@@ -173,12 +181,20 @@ const ManageStudentHomework: React.FC<ManageStudentHomeworkProps> = ({
                     }}
                 />
             ) : (
-                <Box>
+                <Box
+                    sx={{
+                        flex: 1,
+                        minHeight: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                    }}
+                >
                     <Tabs
                         value={activeTab}
                         onChange={handleTabChange}
                         variant="fullWidth"
-                        sx={{ borderBottom: 1, borderColor: 'divider' }}
+                        sx={{ borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}
                     >
                         <Tab label="Submitted work" />
                         <Tab
@@ -219,7 +235,7 @@ const ManageStudentHomework: React.FC<ManageStudentHomeworkProps> = ({
                     </TabContentBox>
                 </Box>
             )}
-        </>
+        </Box>
     );
 };
 

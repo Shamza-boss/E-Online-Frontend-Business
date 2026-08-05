@@ -8,6 +8,9 @@
 // Academics
 export * from './academics';
 
+// Activity / presence
+export * from './activity';
+
 // Classrooms
 export {
   createClassroom,

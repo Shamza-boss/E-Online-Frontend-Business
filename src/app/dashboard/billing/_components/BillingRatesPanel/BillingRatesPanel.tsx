@@ -7,7 +7,7 @@ import {
     Switch,
     Typography,
 } from '@mui/material';
-import type { BillingRatesPanelProps } from './interfaces';
+import type { BillingRatesPanelProps } from './types';
 import { RoundedPaper, CenteredLoadingBox, CreatorToggleStack } from './elements';
 
 export default function BillingRatesPanel({
@@ -42,18 +42,11 @@ export default function BillingRatesPanel({
     return (
         <RoundedPaper>
             <Stack spacing={2}>
-                <Box>
-                    <Typography variant="h6">Creator Add-on</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Enable or disable the Creator add-on for {institutionName ?? 'the selected institution'}.
-                        When enabled, an additional R20 per user is applied to the monthly invoice.
-                    </Typography>
-                </Box>
-
                 <Alert severity="info" variant="outlined">
                     <Typography variant="body2">
                         <strong>Pricing tiers (per user):</strong> 0–99 users = R99 · 100–399 users = R69 · 400+ users = R49.
-                        Creator add-on adds R20/user on top of the base rate.
+                        Creator add-on adds R20/user on top of the base rate
+                        {institutionName ? ` for ${institutionName}` : ''}.
                     </Typography>
                 </Alert>
 

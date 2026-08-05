@@ -17,10 +17,11 @@ import { useActionState, useEffect } from 'react';
 import { roleOptions } from '@/app/_lib/common/functions';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
 import { registrationSchema } from '@/app/_lib/schemas/management';
+import { isFormActionSuccess } from '@/app/_lib/types/actionState';
 
 export default function UserRegistrationForm() {
   const { showAlert } = useAlert();
-  const [lastResult, action, pending] = useActionState(SubmitForm, false);
+  const [lastResult, action, pending] = useActionState(SubmitForm, null);
   const [form, { firstName, lastName, email, role }] = useForm({
     lastResult,
     onValidate({ formData }) {
@@ -31,10 +32,11 @@ export default function UserRegistrationForm() {
   });
 
   useEffect(() => {
-    if (lastResult) {
+    if (isFormActionSuccess(lastResult)) {
+      const user = lastResult.data;
       showAlert(
         'success',
-        `${lastResult.firstName} ${lastResult.lastName} registered successfully🚀!`
+        `${user.firstName} ${user.lastName} registered successfully🚀!`,
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

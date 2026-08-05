@@ -12,13 +12,13 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import VideocamIcon from '@mui/icons-material/Videocam';
-import { VideoLibraryItem } from '@/app/_lib/interfaces/types';
+import { type VideoLibraryItem } from '@/app/_lib/interfaces/types';
 import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
 import { useInstitutionVideos } from '@/app/_lib/hooks/useInstitutionVideos';
 import { extractVideoTitle } from '@/app/_lib/utils/media';
 import VideoListRow from './VideoListRow';
 
-interface LibraryVideoSelectorProps {
+type LibraryVideoSelectorProps = {
   selectedVideoId: string | null;
   onSelect: (video: VideoLibraryItem) => void;
   disabled?: boolean;

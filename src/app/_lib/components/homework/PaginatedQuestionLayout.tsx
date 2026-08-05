@@ -6,9 +6,9 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { Question } from '../../interfaces/types';
+import { type Question } from '../../interfaces/types';
 
-interface PaginatedQuestionLayoutProps {
+type PaginatedQuestionLayoutProps = {
   questions: Question[];
   currentIndex: number;
   onIndexChange: (index: number) => void;
@@ -58,6 +58,8 @@ const PaginatedQuestionLayout: React.FC<PaginatedQuestionLayoutProps> = ({
     </Typography>
   );
 
+  const currentQuestion = questions[safeIndex];
+
   return (
     <Box sx={{ mt: topSpacing }}>
       <Stack
@@ -79,7 +81,9 @@ const PaginatedQuestionLayout: React.FC<PaginatedQuestionLayoutProps> = ({
           )}
         />
       </Stack>
-      {renderQuestion(questions[safeIndex], numbering, safeIndex)}
+      {currentQuestion
+        ? renderQuestion(currentQuestion, numbering, safeIndex)
+        : null}
     </Box>
   );
 };

@@ -1,0 +1,102 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\shammah.nhlabathi\AppD ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+src/app/_lib/components/alert/AlertProvider.tsx(382,18): error TS2345: Argument of type 'AlertMessage | undefined' is not assignable to parameter of type 'SetStateAction<AlertMessage | null>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<AlertMessage | null>'.
+src/app/_lib/components/Excalidraw/ExcaliDrawModal.client.tsx(74,13): error TS7030: Not all code paths return a value.
+src/app/_lib/components/Excalidraw/ExcaliDrawModal.client.tsx(91,13): error TS7030: Not all code paths return a value.
+src/app/_lib/components/homework/PaginatedQuestionLayout.tsx(82,23): error TS2345: Argument of type 'Question | undefined' is not assignable to parameter of type 'Question'.
+  Type 'undefined' is not assignable to type 'Question'.
+src/app/_lib/components/PDFViewer/PDFViewer.tsx(365,32): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/PDFViewer/PDFViewer.tsx(367,13): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/app/_lib/components/PDFViewer/PDFViewer.tsx(495,11): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/_lib/components/TipTapEditor/SuggestionList.tsx(51,13): error TS18048: 'suggestion' is possibly 'undefined'.
+src/app/_lib/components/TipTapEditor/SuggestionList.tsx(52,16): error TS18048: 'suggestion' is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(250,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(259,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(262,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(269,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(272,30): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(286,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(292,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(295,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(302,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(305,30): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(320,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(328,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(331,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(338,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(341,30): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(371,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(374,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(381,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(385,32): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(405,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(408,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(415,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(419,32): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(435,22): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(443,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(446,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(453,18): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/components/website/components/MainContent.tsx(456,30): error TS2532: Object is possibly 'undefined'.
+src/app/_lib/hooks/useNavigationLoading.ts(26,13): error TS7030: Not all code paths return a value.
+src/app/_lib/hooks/useNavigationLoading.ts(65,13): error TS7030: Not all code paths return a value.
+src/app/_lib/utils/textbook.ts(53,19): error TS18048: 'c' is possibly 'undefined'.
+src/app/_lib/utils/textbook.ts(53,44): error TS18048: 'c' is possibly 'undefined'.
+src/app/_lib/utils/textbook.ts(54,23): error TS18048: 'c' is possibly 'undefined'.
+src/app/_lib/utils/textbook.ts(75,35): error TS2532: Object is possibly 'undefined'.
+src/app/auth/error/page.tsx(137,13): error TS18048: 'cfg' is possibly 'undefined'.
+src/app/auth/error/page.tsx(138,14): error TS18048: 'cfg' is possibly 'undefined'.
+src/app/auth/error/page.tsx(139,20): error TS18048: 'cfg' is possibly 'undefined'.
+src/app/auth/error/page.tsx(140,20): error TS18048: 'cfg' is possibly 'undefined'.
+src/app/auth/error/page.tsx(141,19): error TS18048: 'cfg' is possibly 'undefined'.
+src/app/auth/error/page.tsx(142,13): error TS18048: 'cfg' is possibly 'undefined'.
+src/app/dashboard/_components/ActiveSubjectsChart/ActiveSubjectsChart.tsx(146,15): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/dashboard/_components/NavbarBreadcrumbs/utils.ts(12,12): error TS18048: 'namePart' is possibly 'undefined'.
+src/app/dashboard/_components/PlatformOwnerDashboard/utils.ts(19,33): error TS2538: Type 'undefined' cannot be used as an index type.
+src/app/dashboard/billing/_components/BillingExperience/BillingExperience.tsx(102,38): error TS2532: Object is possibly 'undefined'.
+src/app/dashboard/billing/_components/OverdueInvoicesBanner/OverdueInvoicesBanner.tsx(99,38): error TS2532: Object is possibly 'undefined'.
+src/app/dashboard/courses/_components/Homework/HomeworkView/components/HomeworkFooter/HomeworkFooter.tsx(66,47): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'HomeworkAnswersMap'.
+  'string' index signatures are incompatible.
+    Type 'unknown' is not assignable to type 'HomeworkAnswerValue'.
+src/app/dashboard/manage-courses/_components/Class/Class.tsx(66,75): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/dashboard/manage-courses/_components/Class/Class.tsx(151,37): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/dashboard/manage-courses/_components/Class/Class.tsx(176,17): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/dashboard/manage-courses/_components/DraftModulesDatagrid/DraftModulesDatagrid.tsx(53,56): error TS2345: Argument of type '(teacherId: string, homeworkId: string) => Promise<unknown>' is not assignable to parameter of type '(teacherId: string, homeworkId: string) => Promise<void>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+src/app/dashboard/manage-courses/_components/DraftModulesDatagrid/DraftModulesDatagrid.tsx(59,58): error TS2345: Argument of type '(teacherId: string, homeworkId: string) => Promise<unknown>' is not assignable to parameter of type '(teacherId: string, homeworkId: string) => Promise<void>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+src/app/dashboard/manage-courses/_components/DraftModulesDatagrid/DraftModulesDatagrid.tsx(83,13): error TS2345: Argument of type '(teacherId: string, homeworkId: string) => Promise<unknown>' is not assignable to parameter of type '(teacherId: string, homeworkId: string) => Promise<void>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+src/app/dashboard/manage-courses/_components/Homework/ReviewAndGradeHomework/ReviewAndGradeHomework.tsx(181,81): error TS2339: Property 'includes' does not exist on type 'string | number | true | JsonValue[] | { [key: string]: JsonValue; }'.
+  Property 'includes' does not exist on type 'number'.
+src/app/dashboard/manage-courses/_components/Modals/FormBuilderModal/FormBuilderModal.tsx(371,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/dashboard/manage-courses/_components/Modals/FormBuilderModal/questionTreeHandlers.ts(284,31): error TS2345: Argument of type 'Question | undefined' is not assignable to parameter of type 'Question'.
+  Type 'undefined' is not assignable to type 'Question'.
+src/app/dashboard/manage-courses/_components/Modals/FormBuilderModal/utils.ts(6,3): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/dashboard/manage-courses/_components/Modals/FormBuilderModal/utils.ts(11,3): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/lib/validation/homeworkQuestions.ts(15,36): error TS2345: Argument of type 'Question | undefined' is not assignable to parameter of type 'Question'.
+  Type 'undefined' is not assignable to type 'Question'.
+src/lib/validation/homeworkQuestions.ts(35,43): error TS2345: Argument of type 'Question | undefined' is not assignable to parameter of type 'Question'.
+  Type 'undefined' is not assignable to type 'Question'.
+src/lib/validation/homeworkQuestions.ts(52,13): error TS18048: 'sub' is possibly 'undefined'.
+src/lib/validation/homeworkQuestions.ts(52,37): error TS18048: 'sub' is possibly 'undefined'.
+src/lib/validation/homeworkQuestions.ts(56,43): error TS2345: Argument of type 'Question | undefined' is not assignable to parameter of type 'Question'.
+  Type 'undefined' is not assignable to type 'Question'.

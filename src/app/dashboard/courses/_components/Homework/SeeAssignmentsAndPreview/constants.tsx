@@ -1,4 +1,4 @@
-import { GridColDef } from '@mui/x-data-grid';
+import { type GridColDef } from '@mui/x-data-grid';
 import { format } from 'date-fns';
 import { getStatusChipConfig } from '@/app/_lib/common/functions';
 import { GradeCell, PercentageCell } from '@/app/_lib/homework';

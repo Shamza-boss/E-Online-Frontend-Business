@@ -1,5 +1,5 @@
-import StudentClassCardSkeleton from '../_components/_skeletonLoaders/StudentClassCardSkeleton';
+import LibraryPageSkeleton from '../_components/_skeletonLoaders/LibraryPageSkeleton';
 
 export default function LibraryLoading() {
-    return <StudentClassCardSkeleton count={12} />;
+  return <LibraryPageSkeleton />;
 }

@@ -1,2 +1,2 @@
 export { default } from './InvoiceDetailPanel';
-export type { InvoiceDetailPanelProps } from './interfaces';
+export type { InvoiceDetailPanelProps } from './types';

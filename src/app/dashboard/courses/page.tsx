@@ -1,20 +1,40 @@
 export const dynamic = 'force-dynamic';
 import React, { Suspense } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
-import StudentClassCardSkeleton from '../_components/_skeletonLoaders/StudentClassCardSkeleton';
+import { Box } from '@mui/material';
+import {
+  dashboardPageRootSx,
+  dashboardSectionSpacing,
+} from '@/app/_lib/layout/dashboardPageLayout';
+import CoursesPageSkeleton from '../_components/_skeletonLoaders/CoursesPageSkeleton';
 import ClassroomClasses from './_components/Classes';
+import CoursesPageIntro from './_components/CoursesPageIntro';
 
 export default function ClassroomPage() {
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Stack spacing={2}>
-        <Suspense fallback={<StudentClassCardSkeleton count={12} />}>
-          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 'max-content' }}>
-            Select a course below to complete assessments, or capture notes in relation to provided training resources.
-          </Typography>
+    <Box
+      sx={{
+        ...dashboardPageRootSx,
+        gap: dashboardSectionSpacing,
+      }}
+    >
+      <Box sx={{ flexShrink: 0, width: '100%', minWidth: 0 }}>
+        <CoursesPageIntro />
+      </Box>
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
+        <Suspense fallback={<CoursesPageSkeleton includeShell={false} />}>
           <ClassroomClasses />
         </Suspense>
-      </Stack>
+      </Box>
     </Box>
   );
 }

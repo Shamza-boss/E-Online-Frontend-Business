@@ -18,7 +18,7 @@ import {
     Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import type { InvoiceDetailPanelProps } from './interfaces';
+import type { InvoiceDetailPanelProps } from './types';
 import { CURRENCY_ZAR, statusColors } from './constants';
 import { formatDate, formatBillingPeriod } from './utils';
 import {

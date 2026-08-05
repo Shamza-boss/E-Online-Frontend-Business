@@ -1,2 +1,2 @@
 export { MobileContent } from './MobileContent';
-export type { MobileContentProps } from './interfaces';
+export type { MobileContentProps } from './types';

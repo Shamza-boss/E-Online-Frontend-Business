@@ -4,7 +4,7 @@ import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { pdfjs } from 'react-pdf';
 import NextImage from '@/app/_lib/components/shared-theme/NextImage';
 
-interface PDFThumbnailsProps {
+type PDFThumbnailsProps = {
     pdfDocument: any;
     numPages: number;
     currentPage: number;

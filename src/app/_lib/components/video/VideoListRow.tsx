@@ -9,14 +9,14 @@ import {
   Typography,
 } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
-import { VideoLibraryItem } from '@/app/_lib/interfaces/types';
+import { type VideoLibraryItem } from '@/app/_lib/interfaces/types';
 import {
   extractVideoTitle,
   formatVideoDuration,
 } from '@/app/_lib/utils/media';
 import { formatTextbookFileSize } from '@/app/_lib/utils/textbook';
 
-interface VideoListRowProps {
+type VideoListRowProps = {
   video: VideoLibraryItem;
   selected?: boolean;
   disabled?: boolean;

@@ -1,4 +1,4 @@
-import { useTheme, Theme } from '@mui/material/styles';
+import { useTheme, type Theme } from '@mui/material/styles';
 import { GlobalStyles } from '@mui/material';
 
 export const GutterStyles = () => {

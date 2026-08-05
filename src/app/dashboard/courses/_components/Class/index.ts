@@ -1,2 +1,2 @@
 export { ClassComponent } from './ClassComponent';
-export type { ClassComponentProps } from './interfaces';
+export type { ClassComponentProps } from './types';

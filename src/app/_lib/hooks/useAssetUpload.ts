@@ -7,12 +7,12 @@ import { generatePdfThumbnail } from '../utils/pdfThumbnail';
 
 export type UploadStage = 'idle' | 'preview' | 'uploading';
 
-export interface AssetUploadMetadata extends UploadResult {
+export type AssetUploadMetadata = {
   name: string;
   size: number;
-}
+} & UploadResult
 
-export interface UseAssetUploadOptions {
+export type UseAssetUploadOptions = {
   accept?: string[];
   maxSizeMb?: number;
   autoUpload?: boolean;
@@ -22,7 +22,7 @@ export interface UseAssetUploadOptions {
   onError?: (error: Error) => void;
 }
 
-export interface AssetUploadController {
+export type AssetUploadController = {
   file: File | null;
   asset: AssetUploadMetadata | null;
   preview: string | null;

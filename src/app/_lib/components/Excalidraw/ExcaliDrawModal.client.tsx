@@ -18,9 +18,10 @@ import {
 } from '@mui/material';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import SaveIcon from '@mui/icons-material/Save';
-import { TransitionProps } from '@mui/material/transitions';
-import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
-import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
+import { type TransitionProps } from '@mui/material/transitions';
+import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+import { type ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
+import '@excalidraw/excalidraw/index.css';
 
 const Excalidraw = dynamic(
   () => import('@excalidraw/excalidraw').then((m) => m.Excalidraw),
@@ -49,7 +50,7 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export interface ExcalidrawModalProps {
+export type ExcalidrawModalProps = {
   open: boolean;
   onClose: () => void;
   initialElements: ExcalidrawElement[];
@@ -85,6 +86,7 @@ export default function ExcalidrawModal({
     } else {
       setShouldRender(false);
     }
+    return undefined;
   }, [open]);
 
   // Fire resize event to recalculate Excalidraw canvas dimensions
@@ -96,6 +98,7 @@ export default function ExcalidrawModal({
 
       return () => clearTimeout(resizeTimer);
     }
+    return undefined;
   }, [shouldRender]);
 
   const handleSave = useCallback(() => {

@@ -1,2 +1,2 @@
 export { default } from './StudentDatagridTable';
-export type { ManagementDataGridProps } from './interfaces';
+export type { ManagementDataGridProps } from './types';

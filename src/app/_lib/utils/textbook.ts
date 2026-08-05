@@ -1,6 +1,6 @@
-import { FileDto, LibraryFileDto } from '../interfaces/types';
+import { type FileDto, type LibraryFileDto } from '../interfaces/types';
 
-export interface TextbookSelection {
+export type TextbookSelection = {
   key: string;
   hash: string;
   url: string;
@@ -50,6 +50,7 @@ export function formatLinkedCoursesSummary(
   if (linked.length === 0) return 'Not linked to a course';
   if (linked.length === 1) {
     const c = linked[0];
+    if (!c) return 'Not linked to a course';
     const grade = c.academicLevelName ? `${c.academicLevelName} · ` : '';
     return `${grade}${c.name}`;
   }
@@ -72,6 +73,9 @@ export function formatLinkedCoursesTooltip(file: LibraryFileDto): string {
 export function formatLinkedCoursesDisplay(file: LibraryFileDto): string {
   const linked = file.linkedClassrooms ?? [];
   if (linked.length === 0) return 'Not linked';
-  if (linked.length === 1) return linked[0].name;
+  if (linked.length === 1) {
+    const classroom = linked[0];
+    return classroom?.name ?? 'Not linked';
+  }
   return `${linked.length} courses`;
 }

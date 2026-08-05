@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
   forwardRef,
-  RefObject,
+  type RefObject,
   memo,
 } from 'react';
 import { useEditor } from '@tiptap/react';
@@ -44,15 +44,18 @@ import {
   removeNoteDraft,
   setNoteDraft,
 } from '@/app/_lib/utils/noteDraftStore';
+import type { JsonObject } from '@/lib/api/json';
+import type { DebouncedFunction } from 'es-toolkit';
 
-export interface EditorProps {
+export type EditorProps = {
   note?: NoteDto;
   loading: boolean;
   onSave: (content: string) => void | Promise<void>;
   onContentChange?: (html: string) => void;
   onPdfLinkClick?: (link: PdfNoteLinkSummary) => void;
-}
-export interface EditorHandle {
+};
+
+export type EditorHandle = {
   insertHtml: (html: string) => void;
   getHtml: () => string;
   insertPdfLink?: (attrs: PdfNoteLinkNodeAttributes) => boolean;
@@ -61,12 +64,12 @@ export interface EditorHandle {
     updates: {
       chipLabel?: string;
       chipColor?: string;
-    }
+    },
   ) => boolean;
   getRootElement?: () => HTMLElement | null;
-}
+};
 
-const serializePdfPayload = (payload: Record<string, unknown>) => {
+const serializePdfPayload = (payload: JsonObject) => {
   const payloadJson = JSON.stringify(payload);
   return {
     encoded: base64Encode(payloadJson),
@@ -108,19 +111,15 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
           updatedAt: Date.now(),
           noteUpdatedAt,
         });
-      }, LOCAL_DRAFT_WRITE_MS) as unknown as {
-        (content: string, key: string, noteUpdatedAt?: string): void;
-        cancel: () => void;
-      }
+      }, LOCAL_DRAFT_WRITE_MS) as DebouncedFunction<
+        (content: string, key: string, noteUpdatedAt?: string) => void
+      >,
     );
 
     const emitContentChangeRef = useRef(
       debounce((content: string) => {
         onContentChange?.(content);
-      }, CONTENT_CHANGE_EMIT_MS) as unknown as {
-        (content: string): void;
-        cancel: () => void;
-      }
+      }, CONTENT_CHANGE_EMIT_MS) as DebouncedFunction<(content: string) => void>,
     );
 
     const saveLatestContentRef = useRef<(content: string) => void>(() => {});
@@ -128,10 +127,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
     const debouncedSaveRef = useRef(
       debounce((content: string) => {
         saveLatestContentRef.current(content);
-      }, AUTOSAVE_IDLE_MS) as unknown as {
-        (content: string): void;
-        cancel: () => void;
-      }
+      }, AUTOSAVE_IDLE_MS) as DebouncedFunction<(content: string) => void>,
     );
 
     const editor = useEditor({
@@ -195,6 +191,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
         event.preventDefault();
         return true;
       }
+      return false;
     }, []);
 
     const handlePdfLinkActivation = useCallback(
@@ -436,10 +433,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>(
       if (!AUTOSAVE_ENABLED) return;
       emitContentChangeRef.current = debounce((content: string) => {
         onContentChange?.(content);
-      }, CONTENT_CHANGE_EMIT_MS) as unknown as {
-        (content: string): void;
-        cancel: () => void;
-      };
+      }, CONTENT_CHANGE_EMIT_MS) as DebouncedFunction<(content: string) => void>;
 
       return () => {
         emitContentChangeRef.current.cancel();

@@ -6,7 +6,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import type { PdfNoteLinkSummary } from '@/app/_lib/utils/pdfNoteLinks';
 import { Bookmark } from '@mui/icons-material';
 
-interface PDFNoteLinksProps {
+type PDFNoteLinksProps = {
     links: PdfNoteLinkSummary[];
     onSelect?: (link: PdfNoteLinkSummary) => void;
     onOpenNote?: (link: PdfNoteLinkSummary) => void;

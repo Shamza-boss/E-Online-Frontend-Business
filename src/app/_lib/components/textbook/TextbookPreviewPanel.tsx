@@ -12,7 +12,7 @@ import { alpha } from '@mui/material/styles';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ReplayIcon from '@mui/icons-material/Replay';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import { FileDto } from '@/app/_lib/interfaces/types';
+import { type FileDto } from '@/app/_lib/interfaces/types';
 import { useLazyCardThumbnail } from '@/app/dashboard/library/_components/hooks/useLazyCardThumbnail';
 import {
   extractTextbookName,
@@ -22,7 +22,7 @@ import {
 
 const previewAccent = '#3B82F6';
 
-export interface TextbookPreviewPanelProps {
+export type TextbookPreviewPanelProps = {
   file?: FileDto | null;
   title?: string;
   fileSizeBytes?: number;

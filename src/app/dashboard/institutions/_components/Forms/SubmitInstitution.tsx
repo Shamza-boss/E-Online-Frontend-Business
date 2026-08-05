@@ -2,25 +2,30 @@
 
 import { createInstitution } from '@/app/_lib/actions/institutions';
 import {
-  InstitutionWithAdminDto,
-  SubscriptionFeatureFlag,
-  SubscriptionPlan,
+  type InstitutionWithAdminDto,
+  type SubscriptionFeatureFlag,
+  type SubscriptionPlan,
 } from '@/app/_lib/interfaces/types';
 import { institutionSchema } from '@/app/_lib/schemas/management';
-import { parseWithZod } from '@conform-to/zod';
+import {
+  type InstitutionSubmitResult,
+} from '@/app/_lib/types/actionState';
 import { planToFeatureFlag } from '@/app/_lib/utils/subscriptions';
+import { getErrorMessage } from '@/lib/api';
+import { parseWithZod } from '@conform-to/zod';
 
 export async function SubmitInstitution(
-  prevState: unknown,
-  formData: FormData
-) {
+  _prev: InstitutionSubmitResult | null,
+  formData: FormData,
+): Promise<InstitutionSubmitResult> {
   const submission = parseWithZod(formData, { schema: institutionSchema });
 
   if (submission.status !== 'success') {
     return submission.reply();
   }
 
-  const rawPlan = (formData.get('subscriptionPlan') as SubscriptionPlan) ?? 'Standard';
+  const rawPlan =
+    (formData.get('subscriptionPlan') as SubscriptionPlan) ?? 'Standard';
   const normalizedPlan: SubscriptionPlan =
     rawPlan === 'Enterprise' ? 'Enterprise' : 'Standard';
 
@@ -30,9 +35,8 @@ export async function SubmitInstitution(
     creatorEnabledValue === 'true' ||
     creatorEnabledValue === '1';
 
-  const normalizedFeatures: SubscriptionFeatureFlag = planToFeatureFlag(
-    normalizedPlan
-  );
+  const normalizedFeatures: SubscriptionFeatureFlag =
+    planToFeatureFlag(normalizedPlan);
 
   const newInstitution = {
     institution: {
@@ -55,13 +59,13 @@ export async function SubmitInstitution(
       success: true,
       institution: newInstitution.institution.name,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Institution creation error:', error);
     }
     return {
       success: false,
-      error: error.message || 'Failed to create institution',
+      error: getErrorMessage(error),
     };
   }
 }

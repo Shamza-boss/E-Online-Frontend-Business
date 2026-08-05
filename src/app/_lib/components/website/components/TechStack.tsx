@@ -12,7 +12,7 @@ import Link from 'next/link';
 const MotionBox = motion.create(Box);
 const MotionPaper = motion.create(Paper);
 
-interface TechItem {
+type TechItem = {
   name: string;
   logo: React.ReactNode;
   description: string;

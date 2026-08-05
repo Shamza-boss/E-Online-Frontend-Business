@@ -12,8 +12,9 @@ import type {
   UserDto,
 } from '@/app/_lib/interfaces/types';
 import type { PagedResult } from '@/app/_lib/interfaces/pagination';
+import { swrKeys } from '@/app/_lib/config/swrKeys';
 
-interface ClassroomLookups {
+type ClassroomLookups = {
   subjectOptions: SubjectDto[];
   subjectsLoading: boolean;
   upsertSubject: (subject: SubjectDto) => void;
@@ -26,28 +27,45 @@ interface ClassroomLookups {
   usersLoading: boolean;
 }
 
-export function useClassroomLookups(): ClassroomLookups {
+type ClassroomLookupsOptions = {
+  initialAcademics?: AcademicLevelDto[];
+  initialSubjects?: SubjectDto[];
+}
+
+export function useClassroomLookups(
+  options: ClassroomLookupsOptions = {},
+): ClassroomLookups {
+  const { initialAcademics, initialSubjects } = options;
+
   const {
     data: subjectData,
     isLoading: subjectsLoading,
     mutate: mutateSubjects,
-  } = useSWR<SubjectDto[]>('subjects', getAllSubjects);
+  } = useSWR<SubjectDto[]>(swrKeys.subjects, getAllSubjects, {
+    fallbackData: initialSubjects,
+    revalidateOnMount: !initialSubjects,
+    revalidateOnFocus: false,
+  });
 
   const {
     data: academicData,
     isLoading: academicsLoading,
     mutate: mutateAcademics,
-  } = useSWR<AcademicLevelDto[]>('academics', getAllAcademics);
+  } = useSWR<AcademicLevelDto[]>(swrKeys.academics, getAllAcademics, {
+    fallbackData: initialAcademics,
+    revalidateOnMount: !initialAcademics,
+    revalidateOnFocus: false,
+  });
 
   const { data: usersData, isLoading: usersLoading } = useSWR<
     PagedResult<UserDto>
-  >('users-instructors', () =>
+  >(swrKeys.usersInstructors, () =>
     getUsers({
       pageNumber: 1,
       pageSize: 100,
       sortBy: 'lastName',
       sortDirection: 'asc',
-    })
+    }),
   );
 
   const instructors = useMemo(

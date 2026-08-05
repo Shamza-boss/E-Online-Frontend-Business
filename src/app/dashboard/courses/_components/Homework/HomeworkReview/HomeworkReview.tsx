@@ -22,13 +22,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import type { Question } from '../../../../../_lib/interfaces/types';
 import { format } from 'date-fns';
-import PDFViewer from '@/app/_lib/components/PDFViewer/PDFViewer';
+import PDFViewer from '@/app/_lib/components/PDFViewer';
 import QuestionTextDisplay from '@/app/_lib/components/TipTapEditor/QuestionTextDisplay';
 import PaginatedQuestionLayout from '@/app/_lib/components/homework/PaginatedQuestionLayout';
 import { sortQuestionTreeByDisplayOrder } from '@/app/_lib/utils/questionOrder';
 import { VideoPlayer } from '@/app/_lib/components/video/VideoPlayer';
 import { extractPlainText } from '@/app/_lib/utils/textUtils';
-import type { HomeworkReviewProps, PdfPreviewState } from './interfaces';
+import type { HomeworkReviewProps, PdfPreviewState } from './types';
 import { formatFileSize, computeTotalWeight, buildPdfPreview } from './utils';
 import {
     FlexWrapRow,

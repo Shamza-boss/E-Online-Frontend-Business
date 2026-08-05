@@ -15,7 +15,7 @@ import DragDropFormBuilderModal from '../Modals/FormBuilderModal';
 import StudentDatagridTable from '../Tables/StudentDatagridTable';
 import ModulesDataGrid from '../DraftModulesDatagrid';
 import StudentAssignmentsModal from '../Modals/StudentAssignmentsModal';
-import type { StudentManagementComponentProps } from './interfaces';
+import type { StudentManagementComponentProps } from './types';
 import {
     PageShell,
     ToolbarArea,
@@ -40,7 +40,7 @@ export default function StudentManagementComponent({
     const slug = params.slug as string;
 
     const decodedSlug = decodeURIComponent(slug);
-    const [, classroomId] = decodedSlug.split('~');
+    const classroomId = decodedSlug.split('~')[1] ?? '';
 
     const [builderOpen, setBuilderOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<UserDto | null>(null);

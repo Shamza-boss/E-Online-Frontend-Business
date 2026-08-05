@@ -1,10 +1,10 @@
 import React from 'react';
-import { NextPage } from 'next';
+import { type NextPage } from 'next';
 import { Close } from '@mui/icons-material';
 import { Dialog, DialogTitle, IconButton, DialogContent } from '@mui/material';
 import EnrollInstitutionForm from '../Forms/EnrollInstitutionForm';
 
-interface EnrollInstitutionProps {
+type EnrollInstitutionProps = {
   open: boolean;
   handleClose: () => void;
 }

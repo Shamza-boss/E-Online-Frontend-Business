@@ -3,11 +3,11 @@
 import React from 'react';
 import { Typography, Box } from '@mui/material';
 import { RichTextAnswer } from './RichTextAnswer';
-import { Question } from '../../interfaces/types';
+import { type Question } from '../../interfaces/types';
 import { VideoPlayer } from '../video/VideoPlayer';
-import PDFViewer from '../PDFViewer/PDFViewer';
+import PDFViewer from '../PDFViewer';
 
-interface RenderAnswerProps {
+type RenderAnswerProps = {
   question: Question;
   answer: any;
 }

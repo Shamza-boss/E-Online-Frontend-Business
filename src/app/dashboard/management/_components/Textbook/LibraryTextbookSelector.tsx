@@ -12,13 +12,13 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
-import { FileDto } from '@/app/_lib/interfaces/types';
+import { type FileDto } from '@/app/_lib/interfaces/types';
 import { OutlinedWrapper } from '@/app/_lib/components/shared-theme/customizations/OutlinedWrapper';
 import TextbookListRow from '@/app/_lib/components/textbook/TextbookListRow';
 import { useLibraryFiles } from '@/app/dashboard/library/_components/hooks/useLibraryFiles';
 import { extractTextbookName } from '@/app/_lib/utils/textbook';
 
-interface LibraryTextbookSelectorProps {
+type LibraryTextbookSelectorProps = {
   selectedFileId: string | null;
   onSelect: (file: FileDto) => void;
   disabled?: boolean;
