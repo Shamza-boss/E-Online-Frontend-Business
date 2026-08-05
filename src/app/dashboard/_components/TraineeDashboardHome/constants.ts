@@ -2,7 +2,7 @@ import type { TraineeInsightId } from '@/app/_lib/types/dashboardInsights';
 
 export const TITLE = 'My learning';
 export const DESCRIPTION =
-  'Tap a tile for progress history, due lists, and exam detail.';
+  'A snapshot of your grades, workload, and upcoming work.';
 
 export const INSIGHT_TITLES: Record<TraineeInsightId, string> = {
   progress: 'Your progress',

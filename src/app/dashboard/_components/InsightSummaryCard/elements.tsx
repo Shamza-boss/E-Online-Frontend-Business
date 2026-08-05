@@ -10,7 +10,7 @@ export const SummaryCardRoot = styled(Paper)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   padding: theme.spacing(1.5, 1.75),
-  borderRadius: Number(theme.shape.borderRadius) * 1.5,
+  borderRadius: theme.shape.borderRadius,
   cursor: 'pointer',
   transition: theme.transitions.create(['border-color', 'box-shadow', 'transform'], {
     duration: theme.transitions.duration.shorter,
@@ -43,6 +43,9 @@ export const ChartSlot = styled(Box)({
   flexDirection: 'column',
   justifyContent: 'center',
   pointerEvents: 'none',
+  '& .insight-list-preview': {
+    pointerEvents: 'auto',
+  },
   '& svg': {
     pointerEvents: 'none',
   },

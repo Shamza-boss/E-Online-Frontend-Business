@@ -23,6 +23,13 @@ import type {
 } from '../types/dashboardHome';
 import type { DashboardInsightRole } from '../types/dashboardInsights';
 import { swrKeys } from '../config/swrKeys';
+import {
+  ACTIVE_TRAINEE_HOME_DASHBOARD,
+  BUSY_INSTRUCTOR_HOME_DASHBOARD,
+  HEALTHY_PLATFORM_OWNER_DASHBOARD,
+  HIGH_PERFORMING_INSTITUTION_DASHBOARD,
+  isMockDashboardEnabled,
+} from '../mocks';
 
 export function useSystemDashboard() {
   return useSWR<SystemAdminDashboardDto>(
@@ -34,12 +41,15 @@ export function useSystemDashboard() {
 export function useInstitutionDashboard(
   fallbackData?: InstitutionTrendsDashboardDto,
 ) {
+  const mock = isMockDashboardEnabled();
   return useSWR<InstitutionTrendsDashboardDto>(
-    swrKeys.dashboardInstitution,
-    getInstitutionDashboard,
+    mock ? 'dashboard:institution:mock' : swrKeys.dashboardInstitution,
+    mock
+      ? async () => HIGH_PERFORMING_INSTITUTION_DASHBOARD
+      : getInstitutionDashboard,
     {
-      fallbackData,
-      revalidateOnMount: !fallbackData,
+      fallbackData: mock ? HIGH_PERFORMING_INSTITUTION_DASHBOARD : fallbackData,
+      revalidateOnMount: mock ? false : !fallbackData,
       revalidateOnFocus: false,
       dedupingInterval: 60_000,
     },
@@ -49,12 +59,13 @@ export function useInstitutionDashboard(
 export function useInstructorHomeDashboard(
   fallbackData?: InstructorHomeDashboardDto,
 ) {
+  const mock = isMockDashboardEnabled();
   return useSWR<InstructorHomeDashboardDto>(
-    swrKeys.dashboardInstructorHome,
-    getInstructorHomeDashboard,
+    mock ? 'dashboard:instructor:mock' : swrKeys.dashboardInstructorHome,
+    mock ? async () => BUSY_INSTRUCTOR_HOME_DASHBOARD : getInstructorHomeDashboard,
     {
-      fallbackData,
-      revalidateOnMount: !fallbackData,
+      fallbackData: mock ? BUSY_INSTRUCTOR_HOME_DASHBOARD : fallbackData,
+      revalidateOnMount: mock ? false : !fallbackData,
       revalidateOnFocus: false,
       dedupingInterval: 60_000,
     },
@@ -62,12 +73,13 @@ export function useInstructorHomeDashboard(
 }
 
 export function useTraineeHomeDashboard(fallbackData?: TraineeHomeDashboardDto) {
+  const mock = isMockDashboardEnabled();
   return useSWR<TraineeHomeDashboardDto>(
-    swrKeys.dashboardTraineeHome,
-    getTraineeHomeDashboard,
+    mock ? 'dashboard:trainee:mock' : swrKeys.dashboardTraineeHome,
+    mock ? async () => ACTIVE_TRAINEE_HOME_DASHBOARD : getTraineeHomeDashboard,
     {
-      fallbackData,
-      revalidateOnMount: !fallbackData,
+      fallbackData: mock ? ACTIVE_TRAINEE_HOME_DASHBOARD : fallbackData,
+      revalidateOnMount: mock ? false : !fallbackData,
       revalidateOnFocus: false,
       dedupingInterval: 60_000,
     },
@@ -77,12 +89,15 @@ export function useTraineeHomeDashboard(fallbackData?: TraineeHomeDashboardDto) 
 export function usePlatformOwnerDashboard(
   fallbackData?: PlatformOwnerDashboardDto,
 ) {
+  const mock = isMockDashboardEnabled();
   return useSWR<PlatformOwnerDashboardDto>(
-    swrKeys.dashboardPlatformOwner,
-    getPlatformOwnerDashboard,
+    mock ? 'dashboard:platform:mock' : swrKeys.dashboardPlatformOwner,
+    mock
+      ? async () => HEALTHY_PLATFORM_OWNER_DASHBOARD
+      : getPlatformOwnerDashboard,
     {
-      fallbackData,
-      revalidateOnMount: !fallbackData,
+      fallbackData: mock ? HEALTHY_PLATFORM_OWNER_DASHBOARD : fallbackData,
+      revalidateOnMount: mock ? false : !fallbackData,
       revalidateOnFocus: false,
       dedupingInterval: 60_000,
     },

@@ -316,7 +316,7 @@ export const typography = {
   caption: { fontSize: defaultTheme.typography.pxToRem(12), fontWeight: 400 },
 };
 
-export const shape = { borderRadius: 14 };
+export const shape = { borderRadius: 8 };
 
 // @ts-ignore
 const defaultShadows: Shadows = [

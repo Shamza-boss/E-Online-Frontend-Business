@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -8,7 +9,9 @@ import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { RadarChart } from '@mui/x-charts/RadarChart';
+import type { GridColDef } from '@mui/x-data-grid';
 import ActiveSubjectsChart from '../../ActiveSubjectsChart';
+import InsightDataGrid from '../../InsightDataGrid';
 import PageViewsBarChart from '../../PageViewsBarChart';
 import { ChartPanel, ChartRow } from '../../RoleHomeShell';
 import {
@@ -19,7 +22,12 @@ import {
   formatTrendAverage,
   normalizeGradeTrendColor,
 } from '../../MainGrid/utils';
-import type { InstitutionTrendsDashboardDto } from '@/app/_lib/interfaces/types';
+import { RoleChip } from '@/app/_lib/components/role/roleChip';
+import { UserRole } from '@/app/_lib/Enums/UserRole';
+import type {
+  InactiveUserSummaryDto,
+  InstitutionTrendsDashboardDto,
+} from '@/app/_lib/interfaces/types';
 import type { AdminInsightId } from '@/app/_lib/types/dashboardInsights';
 import type {
   AdminContentInsightDto,
@@ -32,7 +40,6 @@ import {
   buildModuleActivityBars,
   buildModuleRateBars,
   buildPresenceBars,
-  formatInactiveRole,
   formatPercent,
   formatPresence,
   getRecentModules,
@@ -44,6 +51,74 @@ type AdminInsightDetailProps = {
   detail: unknown;
   homeData?: InstitutionTrendsDashboardDto;
 };
+
+function FollowUpsDataGrid({
+  users,
+}: {
+  users: InactiveUserSummaryDto[];
+}) {
+  const rows = useMemo(
+    () =>
+      users.map((user, index) => ({
+        ...user,
+        id: user.userId ?? `inactive-${index}`,
+      })),
+    [users],
+  );
+
+  const columns = useMemo<GridColDef<(typeof rows)[number]>[]>(
+    () => [
+      {
+        field: 'firstName',
+        headerName: 'First name',
+        flex: 1,
+        minWidth: 120,
+      },
+      {
+        field: 'lastName',
+        headerName: 'Last name',
+        flex: 1,
+        minWidth: 120,
+      },
+      {
+        field: 'email',
+        headerName: 'Email',
+        flex: 1.2,
+        minWidth: 200,
+      },
+      {
+        field: 'role',
+        headerName: 'Role',
+        flex: 0.8,
+        minWidth: 120,
+        renderCell: (params) => {
+          const role = params.row.role;
+          if (role == null) return '—';
+          return <RoleChip role={role as UserRole} />;
+        },
+      },
+      {
+        field: 'lastSeenAt',
+        headerName: 'Last seen',
+        flex: 0.9,
+        minWidth: 140,
+        valueGetter: (_value, row) => row.lastSeenAt ?? '',
+        renderCell: (params) => formatPresence(params.row.lastSeenAt),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <InsightDataGrid
+      rows={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      emptyMessage={FOLLOW_UP_EMPTY}
+      mobileHiddenFields={['email']}
+    />
+  );
+}
 
 function dailyLabels(rows: Array<{ date?: string | null; count?: number }> | null | undefined) {
   return (rows ?? []).map((row) => {
@@ -269,44 +344,7 @@ export default function AdminInsightDetail({
   }
 
   if (insight === 'followUps') {
-    const users = homeData?.inactiveUsers ?? [];
-    return (
-      <ChartPanel elevation={0} variant="outlined">
-        {users.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            {FOLLOW_UP_EMPTY}
-          </Typography>
-        ) : (
-          <Stack spacing={1.25}>
-            {users.map((user) => (
-              <Stack
-                key={user.userId}
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1}
-                justifyContent="space-between"
-                alignItems={{ sm: 'center' }}
-              >
-                <Typography variant="body2" noWrap sx={{ minWidth: 0 }}>
-                  {user.firstName} {user.lastName}
-                  <Typography component="span" variant="body2" color="text.secondary">
-                    {' '}
-                    · {user.email}
-                  </Typography>
-                </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Chip size="small" label={formatPresence(user.lastSeenAt)} />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={formatInactiveRole(user.role)}
-                  />
-                </Stack>
-              </Stack>
-            ))}
-          </Stack>
-        )}
-      </ChartPanel>
-    );
+    return <FollowUpsDataGrid users={homeData?.inactiveUsers ?? []} />;
   }
 
   const modules = getRecentModules(homeData);

@@ -23,6 +23,8 @@ export type TraineeDueItemDto = {
   dueDate?: string | null;
   isOverdue: boolean;
   isExam: boolean;
+  classroomId?: string | null;
+  classroomName?: string | null;
 };
 
 export type TraineeHomeDashboardDto = {

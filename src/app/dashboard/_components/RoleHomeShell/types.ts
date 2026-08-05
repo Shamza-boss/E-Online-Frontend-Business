@@ -5,6 +5,8 @@ export type RoleHomeHero = {
   value: string;
   hint?: string;
   onOpen?: () => void;
+  /** Colored value accent (theme blue / green / orange / red). */
+  valueColor?: 'primary.main' | 'success.main' | 'warning.main' | 'error.main';
 };
 
 export type RoleHomeShellProps = {

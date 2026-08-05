@@ -32,6 +32,7 @@ import {
   SkeletonDescriptionBox,
   SkeletonChartArea,
 } from './elements';
+import { ChartScrollArea } from '../RoleHomeShell/ChartPanel';
 
 export default function ActiveSubjectsChart({
   labels,
@@ -108,49 +109,54 @@ export default function ActiveSubjectsChart({
           <CaptionText variant="caption">{description}</CaptionText>
         </HeaderStack>
 
-        <LineChart
-          colors={colorPalette}
-          xAxis={[
-            {
-              scaleType: 'point',
-              data: labels,
-              tickInterval: (_index, i) => (i + 1) % TICK_INTERVAL_STEP === 0,
-            },
-          ]}
-          yAxis={[
-            {
-              label: yAxisLabel,
-              min: 0,
-              max: chartMaxValue,
-              tickInterval: yAxisTicks,
-              valueFormatter: (value: number) => `${value}`,
-            },
-          ]}
-          series={normalizedSeries.map((s) => ({
-            id: s.id,
-            label: s.label,
-            data: s.data,
-            showMark: false,
-            curve: 'linear' as const,
-            stack: 'total',
-            stackOrder: 'ascending' as const,
-            area: true,
-          }))}
-          height={CHART_HEIGHT}
-          grid={{ horizontal: true }}
-          sx={areaFillStyles}
-        >
-          {normalizedSeries.map((_, idx) => {
-            const color = colorPalette[idx % colorPalette.length] ?? colorPalette[0] ?? '#1976d2';
-            return (
-            <AreaGradient
-              key={`grad-${idx}`}
-              color={color}
-              id={`${AREA_GRADIENT_ID_PREFIX}${idx}`}
-            />
-            );
-          })}
-        </LineChart>
+        <ChartScrollArea minWidthPx={720}>
+          <LineChart
+            colors={colorPalette}
+            xAxis={[
+              {
+                scaleType: 'point',
+                data: labels,
+                tickInterval: (_index, i) => (i + 1) % TICK_INTERVAL_STEP === 0,
+              },
+            ]}
+            yAxis={[
+              {
+                label: yAxisLabel,
+                min: 0,
+                max: chartMaxValue,
+                tickInterval: yAxisTicks,
+                valueFormatter: (value: number) => `${value}`,
+              },
+            ]}
+            series={normalizedSeries.map((s) => ({
+              id: s.id,
+              label: s.label,
+              data: s.data,
+              showMark: false,
+              curve: 'linear' as const,
+              stack: 'total',
+              stackOrder: 'ascending' as const,
+              area: true,
+            }))}
+            height={CHART_HEIGHT}
+            grid={{ horizontal: true }}
+            sx={areaFillStyles}
+          >
+            {normalizedSeries.map((_, idx) => {
+              const color =
+                colorPalette[idx % colorPalette.length] ??
+                colorPalette[0] ??
+                '#1976d2';
+              return (
+                <AreaGradient
+                  key={`grad-${idx}`}
+                  color={color}
+                  id={`${AREA_GRADIENT_ID_PREFIX}${idx}`}
+                />
+              );
+            })}
+          </LineChart>
+        </ChartScrollArea>
       </CardContent>
     </ChartCard>
   );

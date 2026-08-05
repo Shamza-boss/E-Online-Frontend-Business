@@ -20,8 +20,7 @@ export default function HeroMetricSkeleton({
         flex: '1 1 140px',
         minWidth: 0,
         p: 1.75,
-        borderRadius: (theme) =>
-          `${Number(theme.shape.borderRadius) * 1.5}px`,
+        borderRadius: (theme) => `${theme.shape.borderRadius}px`,
       }}
     >
       <Stack

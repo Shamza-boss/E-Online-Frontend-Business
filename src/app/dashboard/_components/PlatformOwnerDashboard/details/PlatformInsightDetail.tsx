@@ -1,17 +1,23 @@
 'use client';
 
+import { useMemo } from 'react';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
+import type { GridColDef } from '@mui/x-data-grid';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { SparkLineChart } from '@mui/x-charts/SparkLineChart';
 import ActiveSubjectsChart from '../../ActiveSubjectsChart';
+import InsightDataGrid from '../../InsightDataGrid';
 import PageViewsBarChart from '../../PageViewsBarChart';
 import { ChartPanel, ChartRow } from '../../RoleHomeShell';
 import { formatTrendAverage, normalizeGradeTrendColor } from '../../MainGrid/utils';
 import type { PlatformOwnerDashboardDto } from '@/app/_lib/interfaces/types';
-import type { PlatformOwnerHealthFields } from '@/app/_lib/types/dashboardHome';
+import type {
+  InstitutionHealthDto,
+  PlatformOwnerHealthFields,
+} from '@/app/_lib/types/dashboardHome';
 import type { PlatformInsightId } from '@/app/_lib/types/dashboardInsights';
 import type { PlatformUsageInsightDto } from '@/app/_lib/types/dashboardInsights';
 import {
@@ -46,6 +52,68 @@ function formatBytes(bytes: number | undefined): string {
 function formatHours(seconds: number | undefined): string {
   if (seconds == null || Number.isNaN(seconds)) return '0 h';
   return `${(seconds / 3600).toFixed(1)} h`;
+}
+
+function HealthWatchlistDataGrid({ rows }: { rows: InstitutionHealthDto[] }) {
+  const gridRows = useMemo(
+    () =>
+      rows.map((row, index) => ({
+        ...row,
+        id: row.institutionId || `org-${index}`,
+      })),
+    [rows],
+  );
+
+  const columns = useMemo<GridColDef<(typeof gridRows)[number]>[]>(
+    () => [
+      {
+        field: 'name',
+        headerName: 'Institution',
+        flex: 1.3,
+        minWidth: 180,
+      },
+      {
+        field: 'lastActiveAt',
+        headerName: 'Last active',
+        flex: 1,
+        minWidth: 140,
+        valueGetter: (_value, row) => row.lastActiveAt ?? '',
+        renderCell: (params) => formatLastActive(params.row.lastActiveAt),
+      },
+      {
+        field: 'activeUserPercent',
+        headerName: 'Active %',
+        flex: 0.8,
+        minWidth: 110,
+        valueGetter: (_value, row) => row.activeUserPercent ?? 0,
+        renderCell: (params) => formatActivePercent(params.row.activeUserPercent),
+      },
+      {
+        field: 'neverActivated',
+        headerName: 'Status',
+        flex: 1,
+        minWidth: 140,
+        sortable: false,
+        renderCell: (params) =>
+          params.row.neverActivated ? (
+            <Chip size="small" color="warning" label="Never activated" />
+          ) : (
+            <Chip size="small" color="success" variant="outlined" label="Active" />
+          ),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <InsightDataGrid
+      rows={gridRows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      emptyMessage={HEALTH_EMPTY}
+      mobileHiddenFields={['neverActivated']}
+    />
+  );
 }
 
 export default function PlatformInsightDetail({
@@ -174,44 +242,12 @@ export default function PlatformInsightDetail({
             />
           )}
         </ChartPanel>
-        <ChartPanel elevation={0} variant="outlined">
+        <Stack spacing={1}>
           <Typography variant="subtitle2" fontWeight={700}>
             Watchlist
           </Typography>
-          {rows.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              {HEALTH_EMPTY}
-            </Typography>
-          ) : (
-            <Stack spacing={1.25}>
-              {rows.map((row) => (
-                <Stack
-                  key={row.institutionId}
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={1}
-                  justifyContent="space-between"
-                  alignItems={{ sm: 'center' }}
-                >
-                  <Typography variant="body2">{row.name}</Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    <Chip
-                      size="small"
-                      label={`Last active ${formatLastActive(row.lastActiveAt)}`}
-                    />
-                    <Chip
-                      size="small"
-                      variant="outlined"
-                      label={`${formatActivePercent(row.activeUserPercent)} active`}
-                    />
-                    {row.neverActivated && (
-                      <Chip size="small" color="warning" label="Never activated" />
-                    )}
-                  </Stack>
-                </Stack>
-              ))}
-            </Stack>
-          )}
-        </ChartPanel>
+          <HealthWatchlistDataGrid rows={rows} />
+        </Stack>
       </Stack>
     );
   }

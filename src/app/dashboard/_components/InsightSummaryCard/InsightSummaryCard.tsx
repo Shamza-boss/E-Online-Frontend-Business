@@ -2,6 +2,7 @@
 
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import type { InsightSummaryCardProps } from './types';
 import { SummaryCardRoot, ChartSlot, OpenCue, ValueBlock } from './elements';
@@ -12,22 +13,42 @@ export default function InsightSummaryCard({
   valueHint,
   subtitle,
   onOpen,
+  hoverTooltip,
+  valueColor = 'primary.main',
   children,
 }: InsightSummaryCardProps) {
-  return (
+  const expandable = typeof onOpen === 'function';
+
+  const card = (
     <SummaryCardRoot
       elevation={0}
       variant="outlined"
-      role="button"
-      tabIndex={0}
-      aria-label={`Open ${title} details`}
-      onClick={onOpen}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onOpen();
-        }
-      }}
+      role={expandable ? 'button' : undefined}
+      tabIndex={expandable ? 0 : undefined}
+      aria-label={expandable ? `Open ${title} details` : undefined}
+      onClick={expandable ? onOpen : undefined}
+      onKeyDown={
+        expandable
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onOpen();
+              }
+            }
+          : undefined
+      }
+      sx={
+        expandable
+          ? undefined
+          : {
+              cursor: 'default',
+              '&:hover, &:focus-visible': {
+                borderColor: 'divider',
+                boxShadow: 'none',
+                transform: 'none',
+              },
+            }
+      }
     >
       <Stack
         direction="row"
@@ -39,9 +60,11 @@ export default function InsightSummaryCard({
         <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ minWidth: 0 }}>
           {title}
         </Typography>
-        <OpenCue>
-          <OpenInFullIcon fontSize="inherit" />
-        </OpenCue>
+        {expandable ? (
+          <OpenCue>
+            <OpenInFullIcon fontSize="inherit" />
+          </OpenCue>
+        ) : null}
       </Stack>
       {subtitle ? (
         <Typography
@@ -58,7 +81,7 @@ export default function InsightSummaryCard({
             variant="h4"
             fontWeight={700}
             lineHeight={1.1}
-            color="primary.main"
+            color={valueColor}
             sx={{ letterSpacing: '-0.02em' }}
           >
             {value}
@@ -72,5 +95,13 @@ export default function InsightSummaryCard({
       ) : null}
       <ChartSlot>{children}</ChartSlot>
     </SummaryCardRoot>
+  );
+
+  if (!hoverTooltip) return card;
+
+  return (
+    <Tooltip title={hoverTooltip} enterDelay={450} placement="top" describeChild>
+      {card}
+    </Tooltip>
   );
 }

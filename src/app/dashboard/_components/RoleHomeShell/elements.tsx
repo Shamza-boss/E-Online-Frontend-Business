@@ -22,22 +22,11 @@ export const HeroMetric = styled(Paper)(({ theme }) => ({
   flex: '1 1 140px',
   minWidth: 0,
   padding: theme.spacing(1.75, 2),
-  borderRadius: Number(theme.shape.borderRadius) * 1.5,
+  borderRadius: theme.shape.borderRadius,
   background:
     theme.palette.mode === 'dark'
       ? 'linear-gradient(160deg, rgba(255,255,255,0.04), transparent)'
       : 'linear-gradient(160deg, rgba(0,0,0,0.02), transparent)',
-}));
-
-export const ChartPanel = styled(Paper)(({ theme }) => ({
-  flex: '1 1 280px',
-  minWidth: 0,
-  width: '100%',
-  padding: theme.spacing(2, 2.25),
-  borderRadius: Number(theme.shape.borderRadius) * 1.5,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.spacing(1),
 }));
 
 export const ChartRow = styled(Stack)(({ theme }) => ({

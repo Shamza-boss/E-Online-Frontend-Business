@@ -24,8 +24,7 @@ export default function InsightSummaryCardSkeleton({
         flexDirection: 'column',
         p: 1.5,
         px: 1.75,
-        borderRadius: (theme) =>
-          `${Number(theme.shape.borderRadius) * 1.5}px`,
+        borderRadius: (theme) => `${theme.shape.borderRadius}px`,
       }}
     >
       <Stack

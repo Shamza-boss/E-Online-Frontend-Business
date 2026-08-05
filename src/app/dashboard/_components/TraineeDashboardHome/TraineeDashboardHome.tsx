@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import { useTheme } from '@mui/material/styles';
 import { Gauge, gaugeClasses } from '@mui/x-charts/Gauge';
@@ -10,18 +9,13 @@ import {
   dashboardChartColor,
   dashboardSeriesColors,
 } from '../RoleHomeShell/chartTheme';
-import InsightSummaryCard from '../InsightSummaryCard';
-import DashboardDetailModal from '../DashboardDetailModal';
-import {
-  useTraineeHomeDashboard,
-  useDashboardInsight,
-} from '@/app/_lib/hooks/useDashboard';
-import type { TraineeInsightId } from '@/app/_lib/types/dashboardInsights';
+import InsightSummaryCard, { InsightListPreview } from '../InsightSummaryCard';
+import { useTraineeHomeDashboard } from '@/app/_lib/hooks/useDashboard';
 import {
   DESCRIPTION,
-  DETAIL_LOAD_ERROR,
-  INSIGHT_SUBTITLES,
+  EXAM_EMPTY,
   INSIGHT_TITLES,
+  NEXT_DUE_EMPTY,
   TITLE,
 } from './constants';
 import {
@@ -31,9 +25,15 @@ import {
   toPercent,
 } from './utils';
 import type { TraineeDashboardHomeProps } from './utils';
-import TraineeInsightDetail from './details/TraineeInsightDetail';
-
-const REMOTE: ReadonlySet<TraineeInsightId> = new Set(['activity']);
+import {
+  canCompleteDueItemNow,
+  courseHrefFromDueItem,
+  formatDueCountdown,
+  urgencyFromDueItem,
+  urgencyFromGrade,
+  urgencyPaletteKey,
+  worstUrgency,
+} from './urgency';
 
 function shortDue(value: string | null | undefined): string {
   if (!value) return '—';
@@ -51,16 +51,7 @@ export default function TraineeDashboardHome({
   initialData,
 }: TraineeDashboardHomeProps) {
   const theme = useTheme();
-  const chartColor = dashboardChartColor(theme);
   const { data, isLoading } = useTraineeHomeDashboard(initialData);
-  const [activeInsight, setActiveInsight] = useState<TraineeInsightId | null>(null);
-  const needsRemote =
-    activeInsight != null && REMOTE.has(activeInsight);
-  const {
-    data: remoteDetail,
-    isLoading: detailLoading,
-  } = useDashboardInsight('trainee', needsRemote ? activeInsight : null);
-  const remoteFailed = needsRemote && !detailLoading && remoteDetail == null;
 
   const nextDue = data?.nextDue ?? [];
   const grade = clampGrade(data?.myAverageGrade);
@@ -70,128 +61,217 @@ export default function TraineeDashboardHome({
   const dueSoonCount = data?.dueSoonCount ?? 0;
   const sliceColors = dashboardSeriesColors(theme, workload.length);
 
-  const open = (id: TraineeInsightId) => () => setActiveInsight(id);
-  const close = () => setActiveInsight(null);
+  const gradeTone = urgencyFromGrade(grade);
+  const gradeColor = urgencyPaletteKey(gradeTone);
+  const overdueColor = urgencyPaletteKey('urgent');
+  const dueSoonColor = urgencyPaletteKey(
+    overdueCount > 0 ? 'calm' : dueSoonCount > 0 ? 'time' : 'calm',
+  );
+
+  // Workload pie: overdue slice red, due-soon green/blue calm when zero overdue
+  const workloadColors = workload.map((item) => {
+    if (item.label === 'Overdue') return theme.palette.error.main;
+    if (item.label === 'Due soon') return theme.palette.success.main;
+    return theme.palette.primary.main;
+  });
+
+  const duePreview = nextDue.slice(0, 4).map((item) => {
+    const tone = urgencyFromDueItem(item);
+    const href = canCompleteDueItemNow(item)
+      ? courseHrefFromDueItem(item)
+      : null;
+    return {
+      id: item.assignmentId,
+      primary: item.title,
+      secondary: item.isOverdue ? 'Overdue' : formatDueCountdown(item.dueDate),
+      tone,
+      href,
+      tooltip: [
+        item.title,
+        item.classroomName ? `Course: ${item.classroomName}` : null,
+        item.isExam ? 'Exam' : 'Module',
+        item.dueDate ? `Due ${shortDue(item.dueDate)}` : null,
+        tone === 'urgent'
+          ? 'Due today or overdue'
+          : tone === 'soon'
+            ? 'Due tomorrow'
+            : tone === 'time'
+              ? 'Smart to do soon'
+              : 'Still further out — calm',
+        href ? 'Click to open the course' : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    };
+  });
+
+  const examPreview = data?.nextExamTitle
+    ? [
+        {
+          id: 'next-exam',
+          primary: data.nextExamTitle,
+          secondary: formatDueCountdown(data.nextExamScheduledAt),
+          tone: urgencyFromDueItem({
+            isOverdue: false,
+            dueDate: data.nextExamScheduledAt,
+          }),
+          tooltip: [
+            data.nextExamTitle,
+            `Scheduled ${shortDue(data.nextExamScheduledAt)}`,
+            'Prepare in the related course when this exam opens',
+          ].join(' · '),
+        },
+        {
+          id: 'next-exam-date',
+          primary: 'Scheduled',
+          secondary: shortDue(data.nextExamScheduledAt),
+          tone: 'calm' as const,
+        },
+      ]
+    : [];
+
+  const gaugeColor =
+    gradeTone === 'urgent'
+      ? theme.palette.error.main
+      : gradeTone === 'time'
+        ? theme.palette.success.main
+        : dashboardChartColor(theme);
 
   return (
-    <>
-      <RoleHomeShell
-        title={TITLE}
-        description={DESCRIPTION}
-        columns={2}
-        heroes={[
-          {
-            label: 'Due soon',
-            value: `${dueSoonCount}`,
-            hint: 'Next 7 days',
-            onOpen: open('nextDue'),
-          },
-          {
-            label: 'Overdue',
-            value: `${overdueCount}`,
-            hint: overdueCount > 0 ? 'Handle these first' : 'You are clear',
-            onOpen: open('workload'),
-          },
-          {
-            label: 'Average grade',
-            value: `${grade}`,
-            hint: `Submission ${formatRate(data?.mySubmissionRate)}`,
-            onOpen: open('progress'),
-          },
-        ]}
+    <RoleHomeShell
+      title={TITLE}
+      description={DESCRIPTION}
+      columns={2}
+      heroes={[
+        {
+          label: 'Due soon',
+          value: `${dueSoonCount}`,
+          hint: 'Next 7 days',
+          valueColor: dueSoonColor,
+        },
+        {
+          label: 'Overdue',
+          value: `${overdueCount}`,
+          hint: overdueCount > 0 ? 'Handle these first' : 'You are clear',
+          valueColor: overdueCount > 0 ? overdueColor : 'primary.main',
+        },
+        {
+          label: 'Average grade',
+          value: `${grade}`,
+          hint: `Submission ${formatRate(data?.mySubmissionRate)}`,
+          valueColor: gradeColor,
+        },
+      ]}
+    >
+      <InsightSummaryCard
+        title={INSIGHT_TITLES.progress}
+        value={grade}
+        valueHint={`submit ${submissionPct}%`}
+        valueColor={gradeColor}
+        hoverTooltip={`Average grade ${grade}. Submission rate ${formatRate(data?.mySubmissionRate)}. Blue = solid footing, green = strong progress, red = needs attention.`}
       >
-        <InsightSummaryCard
-          title={INSIGHT_TITLES.progress}
-          value={grade}
-          valueHint={`submit ${submissionPct}%`}
-          onOpen={open('progress')}
-        >
-          {isLoading ? (
-            <Skeleton variant="rounded" height="100%" />
-          ) : (
-            <Gauge
-              value={grade}
-              startAngle={-110}
-              endAngle={110}
-              height={110}
-              cornerRadius="50%"
-              sx={{
-                [`& .${gaugeClasses.valueText}`]: { fontSize: 0 },
-                [`& .${gaugeClasses.valueArc}`]: { fill: chartColor },
-                [`& .${gaugeClasses.referenceArc}`]: {
-                  fill: theme.palette.action.hover,
-                },
-              }}
-              text={() => ''}
-            />
-          )}
-        </InsightSummaryCard>
-
-        <InsightSummaryCard
-          title={INSIGHT_TITLES.workload}
-          value={overdueCount + dueSoonCount}
-          valueHint="open items"
-          onOpen={open('workload')}
-        >
-          {isLoading ? (
-            <Skeleton variant="rounded" height="100%" />
-          ) : (
-            <PieChart
-              height={110}
-              series={[
-                {
-                  data: workload.map((item, index) => ({
-                    id: item.id,
-                    value: item.value,
-                    color: sliceColors[index % sliceColors.length],
-                  })),
-                  innerRadius: 24,
-                  outerRadius: 44,
-                  paddingAngle: 3,
-                  cornerRadius: 4,
-                },
-              ]}
-              margin={{ top: 4, bottom: 4, left: 4, right: 4 }}
-              hideLegend
-            />
-          )}
-        </InsightSummaryCard>
-
-        <InsightSummaryCard
-          title={INSIGHT_TITLES.nextDue}
-          value={nextDue.length}
-          valueHint="coming up"
-          onOpen={open('nextDue')}
-        >
-          {isLoading ? <Skeleton variant="rounded" height="100%" /> : null}
-        </InsightSummaryCard>
-
-        <InsightSummaryCard
-          title={INSIGHT_TITLES.nextExam}
-          value={data?.nextExamTitle ? shortDue(data?.nextExamScheduledAt) : '—'}
-          valueHint={data?.nextExamTitle ?? 'None scheduled'}
-          onOpen={open('nextExam')}
-        >
-          {isLoading ? <Skeleton variant="rounded" height="100%" /> : null}
-        </InsightSummaryCard>
-      </RoleHomeShell>
-
-      <DashboardDetailModal
-        open={activeInsight != null}
-        onClose={close}
-        title={activeInsight ? INSIGHT_TITLES[activeInsight] : ''}
-        subtitle={activeInsight ? INSIGHT_SUBTITLES[activeInsight] : undefined}
-        loading={needsRemote && detailLoading}
-        error={remoteFailed ? DETAIL_LOAD_ERROR : null}
-      >
-        {activeInsight ? (
-          <TraineeInsightDetail
-            insight={activeInsight}
-            detail={needsRemote ? remoteDetail : null}
-            homeData={data}
+        {isLoading ? (
+          <Skeleton variant="rounded" height="100%" />
+        ) : (
+          <Gauge
+            value={grade}
+            startAngle={-110}
+            endAngle={110}
+            height={110}
+            cornerRadius="50%"
+            sx={{
+              [`& .${gaugeClasses.valueText}`]: { fontSize: 0 },
+              [`& .${gaugeClasses.valueArc}`]: { fill: gaugeColor },
+              [`& .${gaugeClasses.referenceArc}`]: {
+                fill: theme.palette.action.hover,
+              },
+            }}
+            text={() => ''}
           />
-        ) : null}
-      </DashboardDetailModal>
-    </>
+        )}
+      </InsightSummaryCard>
+
+      <InsightSummaryCard
+        title={INSIGHT_TITLES.workload}
+        value={overdueCount + dueSoonCount}
+        valueHint="open items"
+        valueColor={
+          overdueCount > 0 ? overdueColor : dueSoonCount > 0 ? dueSoonColor : 'primary.main'
+        }
+        hoverTooltip={`Due soon: ${dueSoonCount}. Overdue: ${overdueCount}. Green means time left; red means overdue; blue means calm.`}
+      >
+        {isLoading ? (
+          <Skeleton variant="rounded" height="100%" />
+        ) : (
+          <PieChart
+            height={110}
+            series={[
+              {
+                data: workload.map((item, index) => ({
+                  id: item.id,
+                  value: item.value,
+                  color:
+                    workloadColors[index] ??
+                    sliceColors[index % sliceColors.length],
+                })),
+                innerRadius: 24,
+                outerRadius: 44,
+                paddingAngle: 3,
+                cornerRadius: 4,
+              },
+            ]}
+            margin={{ top: 4, bottom: 4, left: 4, right: 4 }}
+            hideLegend
+          />
+        )}
+      </InsightSummaryCard>
+
+      <InsightSummaryCard
+        title={INSIGHT_TITLES.nextDue}
+        value={nextDue.length}
+        valueHint="coming up"
+        valueColor={
+          nextDue.length
+            ? urgencyPaletteKey(
+                worstUrgency(nextDue.map((item) => urgencyFromDueItem(item))),
+              )
+            : 'primary.main'
+        }
+        hoverTooltip="Due today = red · tomorrow = orange · next few days = green (smart now) · further out = blue (calm)."
+      >
+        {isLoading ? (
+          <Skeleton variant="rounded" height="100%" />
+        ) : (
+          <InsightListPreview items={duePreview} emptyLabel={NEXT_DUE_EMPTY} />
+        )}
+      </InsightSummaryCard>
+
+      <InsightSummaryCard
+        title={INSIGHT_TITLES.nextExam}
+        value={data?.nextExamTitle ? shortDue(data?.nextExamScheduledAt) : '—'}
+        valueHint={data?.nextExamTitle ?? 'None scheduled'}
+        valueColor={
+          data?.nextExamScheduledAt
+            ? urgencyPaletteKey(
+                urgencyFromDueItem({
+                  isOverdue: false,
+                  dueDate: data.nextExamScheduledAt,
+                }),
+              )
+            : 'primary.main'
+        }
+        hoverTooltip={
+          data?.nextExamTitle
+            ? `${data.nextExamTitle} · ${shortDue(data.nextExamScheduledAt)}. Green means you still have time to prepare.`
+            : EXAM_EMPTY
+        }
+      >
+        {isLoading ? (
+          <Skeleton variant="rounded" height="100%" />
+        ) : (
+          <InsightListPreview items={examPreview} emptyLabel={EXAM_EMPTY} />
+        )}
+      </InsightSummaryCard>
+    </RoleHomeShell>
   );
 }

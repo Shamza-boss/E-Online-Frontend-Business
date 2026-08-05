@@ -1,13 +1,19 @@
 'use client';
 
+import { useMemo } from 'react';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
+import type { GridColDef } from '@mui/x-data-grid';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { ChartPanel, ChartRow } from '../../RoleHomeShell';
-import type { TraineeHomeDashboardDto } from '@/app/_lib/types/dashboardHome';
+import InsightDataGrid from '../../InsightDataGrid';
+import type {
+  TraineeDueItemDto,
+  TraineeHomeDashboardDto,
+} from '@/app/_lib/types/dashboardHome';
 import type { TraineeInsightId } from '@/app/_lib/types/dashboardInsights';
 import type { TraineeActivityInsightDto } from '@/app/_lib/types/dashboardInsights';
 import {
@@ -22,6 +28,66 @@ type TraineeInsightDetailProps = {
   detail: unknown;
   homeData?: TraineeHomeDashboardDto;
 };
+
+function DueItemsDataGrid({ items }: { items: TraineeDueItemDto[] }) {
+  const rows = useMemo(
+    () =>
+      items.map((item, index) => ({
+        ...item,
+        id: item.assignmentId || `due-${index}`,
+      })),
+    [items],
+  );
+
+  const columns = useMemo<GridColDef<(typeof rows)[number]>[]>(
+    () => [
+      {
+        field: 'title',
+        headerName: 'Assignment',
+        flex: 1.4,
+        minWidth: 200,
+      },
+      {
+        field: 'dueDate',
+        headerName: 'Due',
+        flex: 1,
+        minWidth: 160,
+        valueGetter: (_value, row) => row.dueDate ?? '',
+        renderCell: (params) => formatDue(params.row.dueDate),
+      },
+      {
+        field: 'status',
+        headerName: 'Status',
+        flex: 1,
+        minWidth: 160,
+        sortable: false,
+        renderCell: (params) => (
+          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+            {params.row.isOverdue ? (
+              <Chip size="small" color="error" label="Overdue" />
+            ) : (
+              <Chip size="small" color="primary" variant="outlined" label="Due soon" />
+            )}
+            {params.row.isExam ? (
+              <Chip size="small" color="warning" label="Exam" />
+            ) : null}
+          </Stack>
+        ),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <InsightDataGrid
+      rows={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      emptyMessage={NEXT_DUE_EMPTY}
+      mobileHiddenFields={['status']}
+    />
+  );
+}
 
 export default function TraineeInsightDetail({
   insight,
@@ -121,42 +187,12 @@ export default function TraineeInsightDetail({
   }
 
   if (insight === 'workload' || insight === 'nextDue') {
-    const items = homeData?.nextDue ?? [];
     return (
       <Stack spacing={2}>
         <Typography variant="body2" color="text.secondary">
           Due soon {homeData?.dueSoonCount ?? 0} · Overdue {homeData?.overdueCount ?? 0}
         </Typography>
-        <ChartPanel elevation={0} variant="outlined">
-          {items.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              {NEXT_DUE_EMPTY}
-            </Typography>
-          ) : (
-            <Stack spacing={1.25}>
-              {items.map((item) => (
-                <Stack
-                  key={item.assignmentId}
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={1}
-                  justifyContent="space-between"
-                  alignItems={{ sm: 'center' }}
-                >
-                  <Typography variant="body2">{item.title}</Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {item.isOverdue && (
-                      <Chip size="small" color="error" label="Overdue" />
-                    )}
-                    {item.isExam && (
-                      <Chip size="small" color="warning" label="Exam" />
-                    )}
-                    <Chip size="small" label={formatDue(item.dueDate)} />
-                  </Stack>
-                </Stack>
-              ))}
-            </Stack>
-          )}
-        </ChartPanel>
+        <DueItemsDataGrid items={homeData?.nextDue ?? []} />
       </Stack>
     );
   }

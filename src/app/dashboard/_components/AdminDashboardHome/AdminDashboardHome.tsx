@@ -65,7 +65,11 @@ export default function AdminDashboardHome({
     data?.mostActiveSubjects?.series?.[0]?.data ??
     data?.homeworkCreated?.dataPoints ??
     [0];
-  const gradesSpark = data?.gradePerformance?.[0]?.data ?? [0];
+  // Prefer “Above 75%” band for the card spark (order: under / mid / over).
+  const gradesSpark =
+    data?.gradePerformance?.[2]?.data ??
+    data?.gradePerformance?.[0]?.data ??
+    [0];
   const recentModules = getRecentModules(data);
   const modulesCount = recentModules.length;
   const modulesAvgRate = averageModuleSubmissionRate(recentModules);

@@ -1,6 +1,7 @@
 import { styled } from '@mui/material/styles';
 import Stack from '@mui/material/Stack';
 import ListItemButton from '@mui/material/ListItemButton';
+import { interactiveHoverColor } from '@/app/_lib/components/shared-theme/interaction';
 
 export const MenuStack = styled(Stack)({
   flexGrow: 1,
@@ -25,18 +26,18 @@ export const NavListItemButton = styled(ListItemButton)(({ theme }) => ({
   }),
   '&:hover': {
     backgroundColor: 'transparent',
-    color: theme.palette.primary.main,
+    color: interactiveHoverColor(theme),
     '& .MuiListItemIcon-root': {
-      color: theme.palette.primary.main,
+      color: interactiveHoverColor(theme),
     },
   },
   '&.Mui-focusVisible': {
     backgroundColor: 'transparent',
   },
   '&.Mui-selected': {
-    color: theme.palette.primary.main,
+    color: interactiveHoverColor(theme),
     '& .MuiListItemIcon-root': {
-      color: theme.palette.primary.main,
+      color: interactiveHoverColor(theme),
     },
     '&:hover': {
       // Keep the active surface; neighboring items never paint a hover pill.

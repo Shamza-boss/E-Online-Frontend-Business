@@ -1,14 +1,23 @@
 'use client';
 
+import { useMemo } from 'react';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
+import type { GridColDef } from '@mui/x-data-grid';
 import { Gauge, gaugeClasses } from '@mui/x-charts/Gauge';
-import { ChartPanel } from '../../RoleHomeShell';
-import type { InstructorHomeDashboardDto } from '@/app/_lib/types/dashboardHome';
+import InsightDataGrid from '../../InsightDataGrid';
+import type {
+  AtRiskTraineeDto,
+  InstructorHomeDashboardDto,
+} from '@/app/_lib/types/dashboardHome';
 import type { InstructorInsightId } from '@/app/_lib/types/dashboardInsights';
-import type { InstructorWorkloadInsightDto } from '@/app/_lib/types/dashboardInsights';
+import type {
+  InstructorWorkloadInsightDto,
+  PendingGradeItemDto,
+  UpcomingModuleDto,
+} from '@/app/_lib/types/dashboardInsights';
 import { AT_RISK_EMPTY, WORKLOAD_EMPTY } from '../constants';
 import { formatRate, toPercent } from '../utils';
 
@@ -17,6 +26,192 @@ type InstructorInsightDetailProps = {
   detail: unknown;
   homeData?: InstructorHomeDashboardDto;
 };
+
+function formatSubmittedAt(value: string | null | undefined): string {
+  if (!value) return 'Submitted';
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return 'Submitted';
+  }
+}
+
+function formatDate(value: string | null | undefined): string {
+  if (!value) return '—';
+  try {
+    return new Date(value).toLocaleDateString();
+  } catch {
+    return '—';
+  }
+}
+
+function PendingGradeDataGrid({ items }: { items: PendingGradeItemDto[] }) {
+  const rows = useMemo(
+    () =>
+      items.map((item, index) => ({
+        ...item,
+        id: item.assignmentId || `grade-${index}`,
+      })),
+    [items],
+  );
+
+  const columns = useMemo<GridColDef<(typeof rows)[number]>[]>(
+    () => [
+      {
+        field: 'moduleTitle',
+        headerName: 'Module',
+        flex: 1.3,
+        minWidth: 180,
+      },
+      {
+        field: 'traineeName',
+        headerName: 'Trainee',
+        flex: 1,
+        minWidth: 140,
+      },
+      {
+        field: 'submittedAt',
+        headerName: 'Submitted',
+        flex: 1,
+        minWidth: 160,
+        valueGetter: (_value, row) => row.submittedAt ?? '',
+        renderCell: (params) => formatSubmittedAt(params.row.submittedAt),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <InsightDataGrid
+      rows={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      emptyMessage={WORKLOAD_EMPTY}
+      mobileHiddenFields={['submittedAt']}
+      initialPageSize={10}
+    />
+  );
+}
+
+function UpcomingDueDataGrid({ items }: { items: UpcomingModuleDto[] }) {
+  const rows = useMemo(
+    () =>
+      items.map((item, index) => ({
+        ...item,
+        id: item.homeworkId || `upcoming-${index}`,
+      })),
+    [items],
+  );
+
+  const columns = useMemo<GridColDef<(typeof rows)[number]>[]>(
+    () => [
+      {
+        field: 'title',
+        headerName: 'Module',
+        flex: 1.4,
+        minWidth: 180,
+      },
+      {
+        field: 'dueDate',
+        headerName: 'Due',
+        flex: 0.9,
+        minWidth: 120,
+        valueGetter: (_value, row) => row.dueDate ?? '',
+        renderCell: (params) => formatDate(params.row.dueDate),
+      },
+      {
+        field: 'isExam',
+        headerName: 'Type',
+        flex: 0.7,
+        minWidth: 100,
+        renderCell: (params) =>
+          params.row.isExam ? (
+            <Chip size="small" color="warning" label="Exam" />
+          ) : (
+            <Chip size="small" variant="outlined" label="Module" />
+          ),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <InsightDataGrid
+      rows={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      emptyMessage="No upcoming due modules."
+      mobileHiddenFields={['isExam']}
+      initialPageSize={10}
+    />
+  );
+}
+
+function AtRiskDataGrid({ trainees }: { trainees: AtRiskTraineeDto[] }) {
+  const rows = useMemo(
+    () =>
+      trainees.map((trainee, index) => ({
+        ...trainee,
+        id: trainee.userId || `at-risk-${index}`,
+      })),
+    [trainees],
+  );
+
+  const columns = useMemo<GridColDef<(typeof rows)[number]>[]>(
+    () => [
+      {
+        field: 'firstName',
+        headerName: 'First name',
+        flex: 1,
+        minWidth: 110,
+      },
+      {
+        field: 'lastName',
+        headerName: 'Last name',
+        flex: 1,
+        minWidth: 110,
+      },
+      {
+        field: 'email',
+        headerName: 'Email',
+        flex: 1.2,
+        minWidth: 180,
+      },
+      {
+        field: 'lastSeenAt',
+        headerName: 'Last seen',
+        flex: 0.9,
+        minWidth: 120,
+        valueGetter: (_value, row) => row.lastSeenAt ?? '',
+        renderCell: (params) => formatDate(params.row.lastSeenAt),
+      },
+      {
+        field: 'reason',
+        headerName: 'Reason',
+        flex: 1.2,
+        minWidth: 180,
+        renderCell: (params) => (
+          <Chip
+            size="small"
+            color="warning"
+            label={params.row.reason || 'At risk'}
+          />
+        ),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <InsightDataGrid
+      rows={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      emptyMessage={AT_RISK_EMPTY}
+      mobileHiddenFields={['email']}
+    />
+  );
+}
 
 export default function InstructorInsightDetail({
   insight,
@@ -56,124 +251,30 @@ export default function InstructorInsightDetail({
   if (insight === 'workload') {
     const data = (detail ?? {}) as InstructorWorkloadInsightDto;
     const queue = data.pendingGradeQueue ?? [];
+    const upcoming = data.upcomingDue ?? [];
     return (
       <Stack spacing={3}>
         <Typography variant="body2" color="text.secondary">
           {homeData?.pendingToGradeCount ?? 0} to grade ·{' '}
           {homeData?.upcomingDueCount ?? 0} due in 14 days
         </Typography>
-        <ChartPanel elevation={0} variant="outlined">
+        <Stack spacing={1}>
           <Typography variant="subtitle2" fontWeight={700}>
             Pending grade queue
           </Typography>
-          {queue.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              {WORKLOAD_EMPTY}
-            </Typography>
-          ) : (
-            <Stack spacing={1.25}>
-              {queue.map((item) => (
-                <Stack
-                  key={item.assignmentId}
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={1}
-                  justifyContent="space-between"
-                  alignItems={{ sm: 'center' }}
-                >
-                  <Typography variant="body2">
-                    {item.moduleTitle}
-                    <Typography component="span" variant="body2" color="text.secondary">
-                      {' '}
-                      · {item.traineeName}
-                    </Typography>
-                  </Typography>
-                  <Chip
-                    size="small"
-                    label={
-                      item.submittedAt
-                        ? new Date(item.submittedAt).toLocaleString()
-                        : 'Submitted'
-                    }
-                  />
-                </Stack>
-              ))}
-            </Stack>
-          )}
-        </ChartPanel>
-        {(data.upcomingDue?.length ?? 0) > 0 && (
-          <ChartPanel elevation={0} variant="outlined">
+          <PendingGradeDataGrid items={queue} />
+        </Stack>
+        {upcoming.length > 0 ? (
+          <Stack spacing={1}>
             <Typography variant="subtitle2" fontWeight={700}>
               Upcoming due
             </Typography>
-            <Stack spacing={1.25}>
-              {(data.upcomingDue ?? []).map((item) => (
-                <Stack
-                  key={item.homeworkId}
-                  direction="row"
-                  spacing={1}
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Typography variant="body2">{item.title}</Typography>
-                  <Stack direction="row" spacing={1}>
-                    {item.isExam && <Chip size="small" color="warning" label="Exam" />}
-                    <Chip
-                      size="small"
-                      label={
-                        item.dueDate
-                          ? new Date(item.dueDate).toLocaleDateString()
-                          : '—'
-                      }
-                    />
-                  </Stack>
-                </Stack>
-              ))}
-            </Stack>
-          </ChartPanel>
-        )}
+            <UpcomingDueDataGrid items={upcoming} />
+          </Stack>
+        ) : null}
       </Stack>
     );
   }
 
-  const atRisk = homeData?.atRiskTrainees ?? [];
-  return (
-    <ChartPanel elevation={0} variant="outlined">
-      {atRisk.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
-          {AT_RISK_EMPTY}
-        </Typography>
-      ) : (
-        <Stack spacing={1.25}>
-          {atRisk.map((trainee) => (
-            <Stack
-              key={trainee.userId}
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={1}
-              justifyContent="space-between"
-              alignItems={{ sm: 'center' }}
-            >
-              <Typography variant="body2" noWrap sx={{ minWidth: 0 }}>
-                {trainee.firstName} {trainee.lastName}
-                <Typography component="span" variant="body2" color="text.secondary">
-                  {' '}
-                  · {trainee.email}
-                </Typography>
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Chip
-                  size="small"
-                  label={
-                    trainee.lastSeenAt
-                      ? new Date(trainee.lastSeenAt).toLocaleDateString()
-                      : 'Never'
-                  }
-                />
-                <Chip size="small" color="warning" label={trainee.reason ?? 'At risk'} />
-              </Stack>
-            </Stack>
-          ))}
-        </Stack>
-      )}
-    </ChartPanel>
-  );
+  return <AtRiskDataGrid trainees={homeData?.atRiskTrainees ?? []} />;
 }

@@ -111,7 +111,7 @@ export default function RoleHomeShell({
                 <Typography
                   variant="h4"
                   fontWeight={700}
-                  color="primary.main"
+                  color={hero.valueColor ?? 'primary.main'}
                   sx={{ mt: 0.5, lineHeight: 1.1, letterSpacing: '-0.02em' }}
                 >
                   {hero.value}

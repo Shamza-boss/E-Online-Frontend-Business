@@ -73,7 +73,7 @@ const typography: ThemeOptions['typography'] = {
 };
 
 const shape: ThemeOptions['shape'] = {
-  borderRadius: 14,
+  borderRadius: 8,
 };
 
 const shadows = [

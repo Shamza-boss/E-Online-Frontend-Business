@@ -10,7 +10,7 @@ import {
   dashboardChartColor,
   dashboardSeriesColors,
 } from '../RoleHomeShell/chartTheme';
-import InsightSummaryCard from '../InsightSummaryCard';
+import InsightSummaryCard, { InsightListPreview } from '../InsightSummaryCard';
 import DashboardDetailModal from '../DashboardDetailModal';
 import {
   useInstructorHomeDashboard,
@@ -18,6 +18,7 @@ import {
 } from '@/app/_lib/hooks/useDashboard';
 import type { InstructorInsightId } from '@/app/_lib/types/dashboardInsights';
 import {
+  AT_RISK_EMPTY,
   DESCRIPTION,
   DETAIL_LOAD_ERROR,
   INSIGHT_SUBTITLES,
@@ -53,6 +54,13 @@ export default function InstructorDashboardHome({
   const submissionPct = toPercent(data?.mySubmissionRate);
   const pendingToGrade = data?.pendingToGradeCount ?? 0;
   const sliceColors = dashboardSeriesColors(theme, workload.length);
+
+  const atRiskPreview = atRisk.slice(0, 4).map((trainee) => ({
+    id: trainee.userId,
+    primary: `${trainee.firstName} ${trainee.lastName}`.trim() || trainee.email,
+    secondary: trainee.reason || 'At risk',
+    tone: 'warning' as const,
+  }));
 
   const open = (id: InstructorInsightId) => () => setActiveInsight(id);
   const close = () => setActiveInsight(null);
@@ -147,7 +155,11 @@ export default function InstructorDashboardHome({
           valueHint="trainees"
           onOpen={open('atRisk')}
         >
-          {isLoading ? <Skeleton variant="rounded" height="100%" /> : null}
+          {isLoading ? (
+            <Skeleton variant="rounded" height="100%" />
+          ) : (
+            <InsightListPreview items={atRiskPreview} emptyLabel={AT_RISK_EMPTY} />
+          )}
         </InsightSummaryCard>
       </RoleHomeShell>
 

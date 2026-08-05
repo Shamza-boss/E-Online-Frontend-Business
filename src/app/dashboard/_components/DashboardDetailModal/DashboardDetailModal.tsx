@@ -37,8 +37,17 @@ export default function DashboardDetailModal({
       open={open}
       onClose={onClose}
       slots={{ transition: Transition }}
+      slotProps={{
+        paper: {
+          sx: {
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          },
+        },
+      }}
     >
-      <AppBar elevation={0} color="default" position="sticky" sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <AppBar elevation={0} color="default" position="sticky" sx={{ borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
         <Toolbar>
           <Typography variant="h6" fontWeight={700} sx={{ flex: 1 }} noWrap>
             {title}
@@ -58,10 +67,11 @@ export default function DashboardDetailModal({
           overflow: 'auto',
           p: dashboardPagePadding,
           WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
         }}
       >
         {subtitle ? (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, flexShrink: 0 }}>
             {subtitle}
           </Typography>
         ) : null}
