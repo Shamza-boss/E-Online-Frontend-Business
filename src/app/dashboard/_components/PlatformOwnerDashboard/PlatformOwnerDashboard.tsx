@@ -153,7 +153,7 @@ export default function PlatformOwnerDashboard({
           {
             label: 'Peak hour',
             value: topPeakLabel(platformData?.peakUsageHours),
-            hint: 'Last 30 days UTC',
+            hint: 'Last 30 days SAST',
             valueColor: peakColor,
             onOpen: open('peakHours'),
           },
@@ -186,7 +186,7 @@ export default function PlatformOwnerDashboard({
           valueHint={`${peakTopCount} peak events`}
           valueColor={peakColor}
           onOpen={open('peakHours')}
-          hoverTooltip="Peak usage hour (UTC) over the last 30 days."
+          hoverTooltip="Peak usage hour (SAST) over the last 30 days."
         >
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />

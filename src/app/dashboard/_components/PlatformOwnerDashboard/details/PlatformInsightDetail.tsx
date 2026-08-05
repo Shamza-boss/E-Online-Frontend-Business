@@ -180,7 +180,7 @@ export default function PlatformInsightDetail({
     return (
       <ChartPanel elevation={0} variant="outlined">
         <Typography variant="subtitle2" fontWeight={700}>
-          Login / session heat (UTC)
+          Login / session heat (SAST)
         </Typography>
         <BarChart
           height={320}

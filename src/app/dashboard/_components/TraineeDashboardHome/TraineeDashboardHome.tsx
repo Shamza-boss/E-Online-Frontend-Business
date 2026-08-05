@@ -34,17 +34,11 @@ import {
   urgencyPaletteKey,
   worstUrgency,
 } from './urgency';
+import { formatSaDateShort } from '@/app/_lib/utils/datetime';
 
 function shortDue(value: string | null | undefined): string {
   if (!value) return '—';
-  try {
-    return new Date(value).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return '—';
-  }
+  return formatSaDateShort(value, '—');
 }
 
 export default function TraineeDashboardHome({

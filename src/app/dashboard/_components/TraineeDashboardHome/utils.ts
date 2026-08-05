@@ -1,4 +1,5 @@
 import type { TraineeHomeDashboardDto } from '@/app/_lib/types/dashboardHome';
+import { formatSaDateTime } from '@/app/_lib/utils/datetime';
 
 export type TraineeDashboardHomeProps = {
   initialData: TraineeHomeDashboardDto;
@@ -16,11 +17,7 @@ export function toPercent(rate: number | undefined): number {
 
 export function formatDue(value: string | null | undefined): string {
   if (!value) return '—';
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return '—';
-  }
+  return formatSaDateTime(value, '—');
 }
 
 export function buildWorkloadPie(data: TraineeHomeDashboardDto | undefined) {

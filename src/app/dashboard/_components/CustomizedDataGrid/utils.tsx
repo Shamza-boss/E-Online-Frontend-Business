@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { type GridColDef } from '@mui/x-data-grid';
 import { Chip } from '@mui/material';
-import { format } from 'date-fns';
 import { getPercentageColor } from '@/app/_lib/utils/gradeCalculator';
-import { DATE_FORMAT } from './constants';
+import { formatSaDate } from '@/app/_lib/utils/datetime';
 
 export function getRowClassName(indexRelativeToCurrentPage: number): string {
   return indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd';
@@ -49,7 +48,7 @@ export function getColumnDefinitions(): GridColDef[] {
       minWidth: 120,
       renderCell: (params) => {
         if (!params.value) return '';
-        return format(new Date(params.value), DATE_FORMAT);
+        return formatSaDate(params.value, '');
       },
     },
     {

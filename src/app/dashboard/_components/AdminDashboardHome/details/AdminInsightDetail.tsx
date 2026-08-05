@@ -34,6 +34,7 @@ import type {
   AdminPresenceInsightDto,
 } from '@/app/_lib/types/dashboardInsights';
 import { FOLLOW_UP_EMPTY } from '../constants';
+import { formatSaDateShort } from '@/app/_lib/utils/datetime';
 import {
   averageModuleSubmissionRate,
   buildEngagementRadar,
@@ -123,14 +124,7 @@ function FollowUpsDataGrid({
 function dailyLabels(rows: Array<{ date?: string | null; count?: number }> | null | undefined) {
   return (rows ?? []).map((row) => {
     if (!row.date) return '';
-    try {
-      return new Date(row.date).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return row.date;
-    }
+    return formatSaDateShort(row.date, row.date);
   });
 }
 

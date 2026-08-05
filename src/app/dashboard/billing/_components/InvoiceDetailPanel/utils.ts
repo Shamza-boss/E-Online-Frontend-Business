@@ -1,8 +1,9 @@
 import { format } from 'date-fns';
+import { formatSaDateTime } from '@/app/_lib/utils/datetime';
 
 export function formatDate(iso: string | null) {
   if (!iso) return '—';
-  return format(new Date(iso), 'dd MMM yyyy, HH:mm');
+  return formatSaDateTime(iso, '—');
 }
 
 export function formatBillingPeriod(year: number, month: number) {

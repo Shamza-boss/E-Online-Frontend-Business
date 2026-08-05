@@ -3,10 +3,10 @@ import { Chip, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PublishIcon from '@mui/icons-material/Publish';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { format } from 'date-fns';
 import { GridActionsCellItem, type GridColDef } from '@mui/x-data-grid';
 import type { HomeworkRow } from './types';
 import { resolveModuleId } from './utils';
+import { formatSaDate, formatSaDateTime } from '@/app/_lib/utils/datetime';
 
 const ACTION_STYLE = {
     border: 0,
@@ -37,25 +37,21 @@ export const buildColumns = (
         headerName: 'Due date',
         width: 140,
         renderCell: ({ row }) =>
-            row.dueDate ? `${format(new Date(row.dueDate), 'MMM d, yyyy')}` : '—',
+            row.dueDate ? formatSaDate(row.dueDate, '—') : '—',
     },
     {
         field: 'createdAt',
         headerName: 'Created',
         width: 140,
         renderCell: ({ row }) =>
-            row.createdAt
-                ? `${format(new Date(row.createdAt), 'MMM d, yyyy HH:mm')}`
-                : '—',
+            row.createdAt ? formatSaDateTime(row.createdAt, '—') : '—',
     },
     {
         field: 'updatedAt',
         headerName: 'Updated',
         width: 140,
         renderCell: ({ row }) =>
-            row.updatedAt
-                ? `${format(new Date(row.updatedAt), 'MMM d, yyyy HH:mm')}`
-                : '—',
+            row.updatedAt ? formatSaDateTime(row.updatedAt, '—') : '—',
     },
     {
         field: 'expiryDate',
@@ -65,7 +61,7 @@ export const buildColumns = (
             row.hasExpiry && row.expiryDate ? (
                 <Chip
                     size="small"
-                    label={format(new Date(row.expiryDate), 'MMM d, yyyy')}
+                    label={formatSaDate(row.expiryDate, '—')}
                     color="warning"
                 />
             ) : (

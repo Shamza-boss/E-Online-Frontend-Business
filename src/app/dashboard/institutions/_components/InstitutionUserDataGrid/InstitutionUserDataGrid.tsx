@@ -22,7 +22,7 @@ import {
   deactivateInstitution,
   getInstitutions,
 } from '@/app/_lib/actions/institutions';
-import { format } from 'date-fns';
+import { formatSaDate, formatSaDateTime } from '@/app/_lib/utils/datetime';
 import { Chip, FormControlLabel } from '@mui/material';
 import ManageInstitutionModal from '../Modals/ManageInstitutionModal';
 import {
@@ -338,11 +338,7 @@ export default function InstitutionUserDataGrid({
       renderCell: (params) => {
         const value = params.row.lastActiveAt;
         if (!value) return '—';
-        try {
-          return format(new Date(value), 'MMM d, yyyy HH:mm');
-        } catch {
-          return '—';
-        }
+        return formatSaDateTime(value, '—');
       },
     },
     {
@@ -354,7 +350,7 @@ export default function InstitutionUserDataGrid({
       renderCell: (params) => {
         const value = params.row.updatedAt;
         if (!value) return '';
-        return format(new Date(value), 'MM/dd/yyyy');
+        return formatSaDate(value, '');
       },
     },
     {

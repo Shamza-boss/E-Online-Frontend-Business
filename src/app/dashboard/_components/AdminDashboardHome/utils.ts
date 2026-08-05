@@ -3,6 +3,7 @@ import type {
   RecentHomeworkStatDto,
 } from '@/app/_lib/interfaces/types';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
+import { formatSaDate } from '@/app/_lib/utils/datetime';
 
 export type AdminDashboardHomeProps = {
   initialData: InstitutionTrendsDashboardDto;
@@ -20,11 +21,7 @@ export function toPercentValue(rate: number | undefined): number {
 
 export function formatPresence(value: string | null | undefined): string {
   if (!value) return 'Never';
-  try {
-    return new Date(value).toLocaleDateString();
-  } catch {
-    return '—';
-  }
+  return formatSaDate(value, '—');
 }
 
 export function formatInactiveRole(role: string | number | null | undefined): string {

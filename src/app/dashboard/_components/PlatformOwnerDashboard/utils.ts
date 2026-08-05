@@ -3,6 +3,7 @@ import type {
   InstitutionHealthDto,
   PlatformOwnerHealthFields,
 } from '@/app/_lib/types/dashboardHome';
+import { formatSaDate } from '@/app/_lib/utils/datetime';
 
 export type PlatformOwnerDashboardProps = {
   initialData: PlatformOwnerDashboardDto;
@@ -13,11 +14,7 @@ export type PlatformOwnerDashboardView = PlatformOwnerDashboardDto &
 
 export function formatLastActive(value: string | null | undefined): string {
   if (!value) return 'never';
-  try {
-    return new Date(value).toLocaleDateString();
-  } catch {
-    return '—';
-  }
+  return formatSaDate(value, '—');
 }
 
 export function formatActivePercent(value: number | undefined): string {
@@ -28,6 +25,7 @@ export function formatActivePercent(value: number | undefined): string {
 export function buildPeakHourSeries(
   peakHours: Array<{ hour?: number; count?: number }> | null | undefined,
 ) {
+  // API already buckets by SAST (Africa/Johannesburg).
   const byHour = new Map<number, number>();
   for (const row of peakHours ?? []) {
     if (row.hour == null) continue;
@@ -54,5 +52,5 @@ export function topPeakLabel(
     (a, b) => (b.count ?? 0) - (a.count ?? 0),
   )[0];
   if (top?.hour == null) return 'No login peak yet';
-  return `${String(top.hour).padStart(2, '0')}:00 UTC`;
+  return `${String(top.hour).padStart(2, '0')}:00 SAST`;
 }

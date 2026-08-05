@@ -23,6 +23,7 @@ import { useSession } from 'next-auth/react';
 import { UserRole } from '@/app/_lib/Enums/UserRole';
 import ConfirmDialog from '@/app/_lib/components/dialog/ConfirmDialog';
 import { useAlert } from '@/app/_lib/components/alert/AlertProvider';
+import { formatSaDateTime } from '@/app/_lib/utils/datetime';
 import type { SeeAssignmentsAndPreviewProps } from './types';
 import { buildColumns } from './constants';
 import {
@@ -219,7 +220,7 @@ export default function SeeAssignmentsAndPreview({
                         </Typography>
                         <Typography variant="body2">
                             This exam is scheduled for{' '}
-                            <strong>{new Date(examScheduledAt!).toLocaleString()}</strong>.
+                            <strong>{formatSaDateTime(examScheduledAt!)}</strong>.
                         </Typography>
                         {countdown && (
                             <Typography variant="h5" fontWeight={700} sx={{ mt: 1 }}>

@@ -22,6 +22,7 @@ import {
   NEXT_DUE_EMPTY,
 } from '../constants';
 import { formatDue, formatRate } from '../utils';
+import { formatSaDateShort } from '@/app/_lib/utils/datetime';
 
 type TraineeInsightDetailProps = {
   insight: TraineeInsightId;
@@ -158,14 +159,7 @@ export default function TraineeInsightDetail({
               {
                 data: (data.dailyEvents ?? []).map((row) => {
                   if (!row.date) return '';
-                  try {
-                    return new Date(row.date).toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                    });
-                  } catch {
-                    return row.date;
-                  }
+                  return formatSaDateShort(row.date, row.date);
                 }),
                 scaleType: 'band',
                 tickInterval: (_v, i) => i % 3 === 0,

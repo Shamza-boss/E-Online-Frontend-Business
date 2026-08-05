@@ -27,6 +27,7 @@ import {
 } from '../constants';
 import { actionItemCount } from '../utils';
 import { formatActionWhen, statusLabel } from '../urgency';
+import { formatSaDate } from '@/app/_lib/utils/datetime';
 
 type InstructorInsightDetailProps = {
   insight: InstructorInsightId;
@@ -36,11 +37,7 @@ type InstructorInsightDetailProps = {
 
 function formatDate(value: string | null | undefined): string {
   if (!value) return '—';
-  try {
-    return new Date(value).toLocaleDateString();
-  } catch {
-    return '—';
-  }
+  return formatSaDate(value, '—');
 }
 
 function chipColor(

@@ -30,7 +30,7 @@ export const INSIGHT_TITLES: Record<PlatformInsightId, string> = {
 
 export const INSIGHT_SUBTITLES: Record<PlatformInsightId, string> = {
   growth: 'Institutions, users, modules, margin',
-  peakHours: 'UTC hour distribution (30 days)',
+  peakHours: 'SAST hour distribution (30 days)',
   health: 'Active-user % and watchlist',
   usage: 'Storage, delivery, and cost',
   institutions: 'Top institutions by activity',

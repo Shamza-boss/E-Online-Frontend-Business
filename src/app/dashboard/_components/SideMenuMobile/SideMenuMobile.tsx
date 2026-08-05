@@ -6,8 +6,6 @@ import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
-import MenuButton from '../MenuButton';
 import MenuContent from '../MenuContent';
 import { useSession } from 'next-auth/react';
 import useAuthActions from '@/app/_lib/hooks/useAuthActions';
@@ -36,9 +34,6 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
               {userProfileName}
             </Typography>
           </ProfileInfo>
-          <MenuButton showBadge>
-            <NotificationsRoundedIcon />
-          </MenuButton>
         </ProfileHeader>
         <Divider />
         <Stack sx={{ flexGrow: 1 }}>
