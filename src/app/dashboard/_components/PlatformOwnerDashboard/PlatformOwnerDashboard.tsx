@@ -1,110 +1,272 @@
 'use client';
 
+import { useState } from 'react';
+import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
-import { Grid } from '@mui/material';
-import StatCard from '../StatCard';
-import PageViewsBarChart from '../PageViewsBarChart';
-import ActiveSubjectsChart from '../ActiveSubjectsChart';
-import { usePlatformOwnerDashboard } from '@/app/_lib/hooks/useDashboard';
-import type { PlatformOwnerDashboardDto } from '@/app/_lib/interfaces/types';
-import { formatTrendAverage, normalizeGradeTrendColor, normalizeTrend } from '../MainGrid/utils';
-import { DashboardGrid, HeaderBox, DescriptionText } from '../MainGrid/elements';
+import { useTheme } from '@mui/material/styles';
+import { BarChart } from '@mui/x-charts/BarChart';
+import { SparkLineChart } from '@mui/x-charts/SparkLineChart';
+import RoleHomeShell from '../RoleHomeShell';
+import { miniChartMargin, miniChartSx } from '../RoleHomeShell/miniChart';
 import {
-  DASHBOARD_TITLE,
+  dashboardChartColor,
+  seriesAverage,
+  seriesLatest,
+  seriesTotal,
+} from '../RoleHomeShell/chartTheme';
+import InsightSummaryCard from '../InsightSummaryCard';
+import DashboardDetailModal from '../DashboardDetailModal';
+import {
+  usePlatformOwnerDashboard,
+  useDashboardInsight,
+} from '@/app/_lib/hooks/useDashboard';
+import type { PlatformOwnerHealthFields } from '@/app/_lib/types/dashboardHome';
+import type { PlatformInsightId } from '@/app/_lib/types/dashboardInsights';
+import {
   DASHBOARD_DESCRIPTION,
-  STAT_INTERVAL,
-  CHIP_LABEL,
-  ACTIVE_INSTITUTIONS_CHART,
-  PROFIT_MARGIN_CHART,
-  AVERAGE_PROFIT_TITLE,
+  DASHBOARD_TITLE,
+  DETAIL_LOAD_ERROR,
+  INSIGHT_SUBTITLES,
+  INSIGHT_TITLES,
 } from './constants';
-import { buildPlatformStats } from './utils';
+import {
+  buildHealthBars,
+  buildPeakHourSeries,
+  topPeakLabel,
+} from './utils';
+import type {
+  PlatformOwnerDashboardProps,
+  PlatformOwnerDashboardView,
+} from './utils';
+import PlatformInsightDetail from './details/PlatformInsightDetail';
 
-export type PlatformOwnerDashboardProps = {
-  initialData: PlatformOwnerDashboardDto;
-}
+export type { PlatformOwnerDashboardProps } from './utils';
+
+/** Usage rollup is the only panel not fully on the home payload. */
+const REMOTE: ReadonlySet<PlatformInsightId> = new Set(['usage']);
 
 export default function PlatformOwnerDashboard({
   initialData,
 }: PlatformOwnerDashboardProps) {
+  const theme = useTheme();
+  const chartColor = dashboardChartColor(theme);
   const { data: platformData, isLoading } = usePlatformOwnerDashboard(initialData);
+  const [activeInsight, setActiveInsight] = useState<PlatformInsightId | null>(null);
+  const needsRemote =
+    activeInsight != null && REMOTE.has(activeInsight);
+  const {
+    data: remoteDetail,
+    isLoading: detailLoading,
+  } = useDashboardInsight('platform', needsRemote ? activeInsight : null);
+  const remoteFailed = needsRemote && !detailLoading && remoteDetail == null;
 
-  const platformStats = buildPlatformStats(platformData, isLoading);
-  const profitTrend = platformData?.profitMarginTrends;
-  const peakHours = platformData?.peakUsageHours ?? [];
-  const topPeak = [...peakHours].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))[0];
-  const peakHourLabel =
-    topPeak?.hour != null
-      ? `${String(topPeak.hour).padStart(2, '0')}:00 UTC (${topPeak.count ?? 0} events)`
-      : 'No login data yet';
+  const view = platformData as PlatformOwnerDashboardView | undefined;
+  const health = platformData as PlatformOwnerHealthFields | undefined;
+  const peak = buildPeakHourSeries(platformData?.peakUsageHours);
+  const healthRows = buildHealthBars(view?.institutionHealth ?? []);
+  const institutionsSpark =
+    platformData?.mostActiveInstitutions?.series?.[0]?.data ?? [0];
+  const profitSpark = platformData?.profitMarginPerformance?.[0]?.data ?? [0];
+  const costSpark = platformData?.totalCost?.dataPoints ?? [0];
+  const growthSpark = platformData?.users?.dataPoints ?? [0];
+  const peakTopCount = Math.max(...(peak.counts.length ? peak.counts : [0]));
+
+  const open = (id: PlatformInsightId) => () => setActiveInsight(id);
+  const close = () => setActiveInsight(null);
 
   return (
-    <DashboardGrid container spacing={{ xs: 1.5, sm: 2 }} columns={12}>
-      <Grid size={{ xs: 12 }}>
-        <HeaderBox>
-          <Typography variant="h5" fontWeight={600} gutterBottom>
-            {DASHBOARD_TITLE}
-          </Typography>
-          <DescriptionText variant="body2" color="text.secondary">
-            {DASHBOARD_DESCRIPTION}
-          </DescriptionText>
-        </HeaderBox>
-      </Grid>
+    <>
+      <RoleHomeShell
+        title={DASHBOARD_TITLE}
+        description={DASHBOARD_DESCRIPTION}
+        heroes={[
+          {
+            label: 'Active 7d',
+            value: `${health?.activeInstitutionsLast7Days ?? 0}`,
+            hint: 'Institutions with presence',
+            onOpen: open('health'),
+          },
+          {
+            label: 'Active 30d',
+            value: `${health?.activeInstitutionsLast30Days ?? 0}`,
+            hint: 'Rolling month',
+            onOpen: open('health'),
+          },
+          {
+            label: 'Never activated',
+            value: `${health?.neverActivatedInstitutions ?? 0}`,
+            hint: 'Onboarding failures',
+            onOpen: open('health'),
+          },
+          {
+            label: 'Peak hour',
+            value: topPeakLabel(platformData?.peakUsageHours),
+            hint: 'Last 30 days UTC',
+            onOpen: open('peakHours'),
+          },
+        ]}
+      >
+        <InsightSummaryCard
+          title={INSIGHT_TITLES.growth}
+          value={seriesLatest(growthSpark)}
+          valueHint="users (latest)"
+          onOpen={open('growth')}
+        >
+          {isLoading ? (
+            <Skeleton variant="rounded" height="100%" />
+          ) : (
+            <SparkLineChart
+              data={growthSpark.length ? growthSpark : [0]}
+              height={100}
+              color={chartColor}
+              curve="natural"
+              area
+            />
+          )}
+        </InsightSummaryCard>
 
-      {platformStats.map((card) => (
-        <Grid key={card.title} size={{ xs: 12, sm: 6, lg: 3 }}>
-          <StatCard {...card} />
-        </Grid>
-      ))}
+        <InsightSummaryCard
+          title={INSIGHT_TITLES.peakHours}
+          value={topPeakLabel(platformData?.peakUsageHours)}
+          valueHint={`${peakTopCount} peak events`}
+          onOpen={open('peakHours')}
+        >
+          {isLoading ? (
+            <Skeleton variant="rounded" height="100%" />
+          ) : (
+            <BarChart
+              height={100}
+              borderRadius={3}
+              xAxis={[
+                {
+                  data: peak.hours.map((_, i) => i),
+                  scaleType: 'band',
+                },
+              ]}
+              series={[
+                {
+                  data: peak.counts,
+                  color: chartColor,
+                },
+              ]}
+              margin={miniChartMargin}
+              hideLegend
+              sx={miniChartSx}
+            />
+          )}
+        </InsightSummaryCard>
 
-      <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-        <StatCard
-          title="Peak usage hour"
-          value={peakHourLabel}
-          interval="Last 30 days"
-          trend="neutral"
-          data={peakHours.map((h) => h.count ?? 0)}
-          loading={isLoading}
-        />
-      </Grid>
+        <InsightSummaryCard
+          title={INSIGHT_TITLES.health}
+          value={health?.activeInstitutionsLast30Days ?? 0}
+          valueHint="active orgs 30d"
+          onOpen={open('health')}
+        >
+          {isLoading ? (
+            <Skeleton variant="rounded" height="100%" />
+          ) : healthRows.length === 0 ? (
+            <Typography variant="body2" color="text.secondary" textAlign="center">
+              No health data
+            </Typography>
+          ) : (
+            <BarChart
+              height={100}
+              layout="horizontal"
+              borderRadius={4}
+              yAxis={[
+                {
+                  data: healthRows.slice(0, 4).map((_, i) => i),
+                  scaleType: 'band',
+                  width: 8,
+                },
+              ]}
+              series={[
+                {
+                  data: healthRows.slice(0, 4).map((row) => row.activeUserPercent ?? 0),
+                  color: chartColor,
+                },
+              ]}
+              margin={miniChartMargin}
+              hideLegend
+              sx={miniChartSx}
+            />
+          )}
+        </InsightSummaryCard>
 
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ActiveSubjectsChart
-          isLoading={isLoading}
-          labels={platformData?.mostActiveInstitutions?.labels ?? []}
-          series={platformData?.mostActiveInstitutions?.series ?? []}
-          title={ACTIVE_INSTITUTIONS_CHART.title}
-          description={ACTIVE_INSTITUTIONS_CHART.description}
-          yAxisLabel={ACTIVE_INSTITUTIONS_CHART.yAxisLabel}
-          chipLabel={CHIP_LABEL}
-        />
-      </Grid>
+        <InsightSummaryCard
+          title={INSIGHT_TITLES.usage}
+          value={platformData?.totalCost?.total ?? 0}
+          valueHint="total cost"
+          onOpen={open('usage')}
+        >
+          {isLoading ? (
+            <Skeleton variant="rounded" height="100%" />
+          ) : (
+            <SparkLineChart
+              data={costSpark.length ? costSpark : [0]}
+              height={100}
+              color={chartColor}
+              curve="natural"
+              area
+            />
+          )}
+        </InsightSummaryCard>
 
-      <Grid size={{ xs: 12, md: 6 }}>
-        <PageViewsBarChart
-          isLoading={isLoading}
-          months={platformData?.profitMarginMonths ?? []}
-          series={platformData?.profitMarginPerformance ?? []}
-          trend={normalizeGradeTrendColor(profitTrend?.color)}
-          numberOfTrainees={platformData?.users?.total ?? 0}
-          title={PROFIT_MARGIN_CHART.title}
-          description={PROFIT_MARGIN_CHART.description}
-          yAxisLabel={PROFIT_MARGIN_CHART.yAxisLabel}
-          valueLabel={PROFIT_MARGIN_CHART.valueLabel}
-          average={formatTrendAverage(profitTrend?.average)}
-        />
-      </Grid>
+        <InsightSummaryCard
+          title={INSIGHT_TITLES.institutions}
+          value={seriesTotal(institutionsSpark)}
+          valueHint="activity total"
+          onOpen={open('institutions')}
+        >
+          {isLoading ? (
+            <Skeleton variant="rounded" height="100%" />
+          ) : (
+            <SparkLineChart
+              data={institutionsSpark.length ? institutionsSpark : [0]}
+              height={100}
+              color={chartColor}
+              curve="natural"
+              area
+            />
+          )}
+        </InsightSummaryCard>
 
-      <Grid size={{ xs: 12 }}>
-        <StatCard
-          title={AVERAGE_PROFIT_TITLE}
-          value={`${platformData?.averageProfit?.total ?? 0}%`}
-          interval={STAT_INTERVAL}
-          trend={normalizeTrend(platformData?.averageProfit?.trend)}
-          data={platformData?.averageProfit?.dataPoints ?? []}
-          loading={isLoading}
-        />
-      </Grid>
-    </DashboardGrid>
+        <InsightSummaryCard
+          title={INSIGHT_TITLES.profit}
+          value={`${seriesAverage(profitSpark)}%`}
+          valueHint="avg margin"
+          onOpen={open('profit')}
+        >
+          {isLoading ? (
+            <Skeleton variant="rounded" height="100%" />
+          ) : (
+            <SparkLineChart
+              data={profitSpark.length ? profitSpark : [0]}
+              height={100}
+              color={chartColor}
+              curve="natural"
+              area
+            />
+          )}
+        </InsightSummaryCard>
+      </RoleHomeShell>
+
+      <DashboardDetailModal
+        open={activeInsight != null}
+        onClose={close}
+        title={activeInsight ? INSIGHT_TITLES[activeInsight] : ''}
+        subtitle={activeInsight ? INSIGHT_SUBTITLES[activeInsight] : undefined}
+        loading={needsRemote && detailLoading}
+        error={remoteFailed ? DETAIL_LOAD_ERROR : null}
+      >
+        {activeInsight ? (
+          <PlatformInsightDetail
+            insight={activeInsight}
+            detail={needsRemote ? remoteDetail : null}
+            homeData={platformData}
+          />
+        ) : null}
+      </DashboardDetailModal>
+    </>
   );
 }

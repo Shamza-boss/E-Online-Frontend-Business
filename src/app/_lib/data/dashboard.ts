@@ -7,6 +7,10 @@ import type {
   PlatformOwnerDashboardDto,
   SystemAdminDashboardDto,
 } from '../api/schemas';
+import type {
+  InstructorHomeDashboardDto,
+  TraineeHomeDashboardDto,
+} from '../types/dashboardHome';
 import { serverFetch } from '../serverFetch.server';
 import { CACHE_TAGS } from './tags';
 
@@ -22,6 +26,22 @@ export const getInstitutionDashboard = cache(
   async (): Promise<InstitutionTrendsDashboardDto> => {
     return serverFetch<InstitutionTrendsDashboardDto>('/Dashboard/institution', {
       tags: [CACHE_TAGS.dashboard, CACHE_TAGS.dashboardInstitution],
+    });
+  },
+);
+
+export const getInstructorHomeDashboard = cache(
+  async (): Promise<InstructorHomeDashboardDto> => {
+    return serverFetch<InstructorHomeDashboardDto>('/Dashboard/home/instructor', {
+      tags: [CACHE_TAGS.dashboard],
+    });
+  },
+);
+
+export const getTraineeHomeDashboard = cache(
+  async (): Promise<TraineeHomeDashboardDto> => {
+    return serverFetch<TraineeHomeDashboardDto>('/Dashboard/home/trainee', {
+      tags: [CACHE_TAGS.dashboard],
     });
   },
 );

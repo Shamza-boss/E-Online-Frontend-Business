@@ -1,12 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -15,7 +14,7 @@ import { UserRole } from '@/app/_lib/Enums/UserRole';
 import { normalizeRole } from '../MainGrid/utils';
 import { MAIN_ROUTES, SECONDARY_ROUTES } from './constants';
 import { ROUTE_ICONS, getCurrentActiveRoute, hasRouteAccess } from './utils';
-import { MenuStack, ListItemWrapper } from './elements';
+import { MenuStack, ListItemWrapper, NavListItemButton } from './elements';
 
 type MenuItemConfig = {
   route: string;
@@ -28,6 +27,10 @@ export default function MenuContent() {
   const { data: session, status } = useSession();
   const [clickedRoute, setClickedRoute] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setClickedRoute(null);
+  }, [pathname]);
 
   if (status === 'loading') {
     return null;
@@ -48,6 +51,8 @@ export default function MenuContent() {
     const label = item.text || routeLabels[route] || route;
     const isActive = currentActiveRoute === route;
     const isLoading = isPending && clickedRoute === route;
+    // Only one pill at a time — during navigation highlight the destination, not both.
+    const isSelected = isPending ? clickedRoute === route : isActive;
 
     if (!hasRouteAccess(roleValue, route)) {
       return null;
@@ -56,12 +61,11 @@ export default function MenuContent() {
     return (
       <ListItem key={`${route}-${index}`} disablePadding sx={{ display: 'block' }}>
         <ListItemWrapper>
-          <ListItemButton
+          <NavListItemButton
             onClick={() => handleRouteClick(route)}
             title={label}
             aria-label={label}
-            selected={isActive || isLoading}
-            sx={{ borderRadius: 1 }}
+            selected={isSelected}
           >
             <ListItemIcon sx={{ minWidth: 32, mr: 1 }}>
               {isLoading ? <CircularProgress size={20} /> : ROUTE_ICONS[route]}
@@ -75,7 +79,7 @@ export default function MenuContent() {
                 textAlign: 'left',
               }}
             />
-          </ListItemButton>
+          </NavListItemButton>
         </ListItemWrapper>
       </ListItem>
     );

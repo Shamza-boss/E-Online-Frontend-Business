@@ -35,9 +35,9 @@ const palette: ThemeOptions['palette'] = {
     contrastText: '#fff',
   },
   secondary: {
-    main: 'hsl(280, 70%, 55%)',
-    light: 'hsl(280, 65%, 72%)',
-    dark: 'hsl(280, 75%, 40%)',
+    main: 'hsl(210, 14%, 38%)',
+    light: 'hsl(210, 12%, 55%)',
+    dark: 'hsl(210, 16%, 28%)',
     contrastText: '#fff',
   },
   background: {

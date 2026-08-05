@@ -2,45 +2,84 @@
 
 import Box from '@mui/material/Box';
 import Skeleton from '@mui/material/Skeleton';
-import { Grid } from '@mui/material';
-import { DashboardGrid, HeaderBox } from '../MainGrid/elements';
-import StatCardSkeleton from './primitives/StatCardSkeleton';
-import ChartCardSkeleton from './primitives/ChartCardSkeleton';
-import DataGridSkeleton from './primitives/DataGridSkeleton';
+import Stack from '@mui/material/Stack';
+import {
+  dashboardPageRootSx,
+  dashboardSectionSpacing,
+  getDashboardPagePadding,
+} from '@/app/_lib/layout/dashboardPageLayout';
+import HeroMetricSkeleton from './primitives/HeroMetricSkeleton';
+import InsightSummaryCardSkeleton from './primitives/InsightSummaryCardSkeleton';
+
+const INSIGHT_TILE_COUNT = 6;
 
 export default function MainGridSkeleton() {
   return (
-    <DashboardGrid container spacing={{ xs: 1.5, sm: 2 }} columns={12}>
-      <Grid size={{ xs: 12 }}>
-        <HeaderBox>
-          <Skeleton variant="text" width={280} height={36} />
-          <Skeleton variant="text" width={520} height={22} sx={{ mt: 0.5 }} />
-        </HeaderBox>
-      </Grid>
-
-      {Array.from({ length: 4 }).map((_, index) => (
-        <Grid key={`stat-${index}`} size={{ xs: 12, sm: 6, lg: 3 }}>
-          <StatCardSkeleton />
-        </Grid>
-      ))}
-
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ChartCardSkeleton />
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ChartCardSkeleton />
-      </Grid>
-
-      <Grid size={{ xs: 12 }}>
-        <Box sx={{ minHeight: 400 }}>
-          <DataGridSkeleton
-            rows={6}
-            columns={[24, 18, 16, 14, 14, 14]}
-            showToolbar
-            minHeight={400}
+    <Box
+      sx={(theme) => ({
+        ...dashboardPageRootSx,
+        ...getDashboardPagePadding(theme),
+        overflow: 'auto',
+      })}
+    >
+      <Stack
+        spacing={dashboardSectionSpacing}
+        sx={{
+          width: '100%',
+          minWidth: 0,
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <Box sx={{ width: '100%', minWidth: 0, flexShrink: 0 }}>
+          <Skeleton variant="text" width={260} height={36} />
+          <Skeleton
+            variant="text"
+            width="55%"
+            height={22}
+            sx={{ mt: 0.75, maxWidth: 520 }}
           />
         </Box>
-      </Grid>
-    </DashboardGrid>
+
+        <Stack
+          direction="row"
+          flexWrap="wrap"
+          useFlexGap
+          sx={{ width: '100%', minWidth: 0, flexShrink: 0, gap: 1.5 }}
+        >
+          <HeroMetricSkeleton valueWidth="48%" />
+          <HeroMetricSkeleton valueWidth="36%" />
+        </Stack>
+
+        <Box
+          sx={(theme) => ({
+            flex: 1,
+            minHeight: { xs: 'auto', sm: 420 },
+            minWidth: 0,
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(3, minmax(0, 1fr))',
+            },
+            gridTemplateRows: { xs: 'none', md: '1fr 1fr' },
+            gridAutoRows: { xs: 'minmax(160px, auto)', md: undefined },
+            gap: theme.spacing(2),
+            '& > *': {
+              minWidth: 0,
+              minHeight: 0,
+              height: '100%',
+            },
+          })}
+        >
+          {Array.from({ length: INSIGHT_TILE_COUNT }).map((_, index) => (
+            <InsightSummaryCardSkeleton key={`insight-${index}`} />
+          ))}
+        </Box>
+      </Stack>
+    </Box>
   );
 }

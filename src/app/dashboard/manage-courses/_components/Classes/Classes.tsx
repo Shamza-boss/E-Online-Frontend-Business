@@ -5,7 +5,7 @@ import ClassCard from '@/app/_lib/components/shared-theme/customizations/card';
 import { SchoolRounded } from '@mui/icons-material';
 import type { Route } from 'next';
 import ErrorLayout from '../../../_components/ErrorLayout';
-import { ClassesGrid, CardWrapper } from './elements';
+import { ClassesGrid, CardWrapper, ClassesContentPanel, ClassesScrollArea } from './elements';
 import type { StudentClassesCardsProps } from './types';
 
 function courseHref(
@@ -31,19 +31,23 @@ function StudentClassesCards({ classes }: StudentClassesCardsProps) {
   }
 
   return (
-    <ClassesGrid>
-      {classes.map((classItem) => (
-        <CardWrapper key={classItem.classroomId}>
-          <ClassCard
-            href={courseHref(classItem)}
-            className={classItem.classroomName}
-            teacherNameAbb={`${classItem.teacherLastName ?? ''} ${classItem.teacherFirstName?.charAt(0) ?? ''}`.trim()}
-            subjectName={classItem.subjectName}
-            academicLevelName={classItem.academicLevelName}
-          />
-        </CardWrapper>
-      ))}
-    </ClassesGrid>
+    <ClassesContentPanel>
+      <ClassesScrollArea>
+        <ClassesGrid>
+          {classes.map((classItem) => (
+            <CardWrapper key={classItem.classroomId}>
+              <ClassCard
+                href={courseHref(classItem)}
+                className={classItem.classroomName}
+                teacherNameAbb={`${classItem.teacherLastName ?? ''} ${classItem.teacherFirstName?.charAt(0) ?? ''}`.trim()}
+                subjectName={classItem.subjectName}
+                academicLevelName={classItem.academicLevelName}
+              />
+            </CardWrapper>
+          ))}
+        </ClassesGrid>
+      </ClassesScrollArea>
+    </ClassesContentPanel>
   );
 }
 

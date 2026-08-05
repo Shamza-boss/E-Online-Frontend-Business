@@ -1,22 +1,58 @@
-import type { StatCardProps } from '../StatCard';
-import { buildStatCard } from '../MainGrid/utils';
-import { PLATFORM_STAT_LABELS } from './constants';
+import type { PlatformOwnerDashboardDto } from '@/app/_lib/interfaces/types';
+import type {
+  InstitutionHealthDto,
+  PlatformOwnerHealthFields,
+} from '@/app/_lib/types/dashboardHome';
 
-type PlatformDashboardData = {
-  institutions?: { total?: number; trend?: string; dataPoints?: number[] };
-  users?: { total?: number; trend?: string; dataPoints?: number[] };
-  modules?: { total?: number; trend?: string; dataPoints?: number[] };
-  totalCost?: { total?: number; trend?: string; dataPoints?: number[] };
-} | undefined;
+export type PlatformOwnerDashboardProps = {
+  initialData: PlatformOwnerDashboardDto;
+};
 
-const METRIC_KEYS = ['institutions', 'users', 'modules', 'totalCost'] as const;
+export type PlatformOwnerDashboardView = PlatformOwnerDashboardDto &
+  PlatformOwnerHealthFields;
 
-export function buildPlatformStats(
-  data: PlatformDashboardData,
-  isLoading: boolean,
-): StatCardProps[] {
-  return PLATFORM_STAT_LABELS.map((title, index) => {
-    const metricKey = METRIC_KEYS[index];
-    return buildStatCard(title, metricKey ? data?.[metricKey] : undefined, isLoading);
-  });
+export function formatLastActive(value: string | null | undefined): string {
+  if (!value) return 'never';
+  try {
+    return new Date(value).toLocaleDateString();
+  } catch {
+    return '—';
+  }
+}
+
+export function formatActivePercent(value: number | undefined): string {
+  if (value == null || Number.isNaN(value)) return '0%';
+  return `${value.toFixed(0)}%`;
+}
+
+export function buildPeakHourSeries(
+  peakHours: Array<{ hour?: number; count?: number }> | null | undefined,
+) {
+  const byHour = new Map<number, number>();
+  for (const row of peakHours ?? []) {
+    if (row.hour == null) continue;
+    byHour.set(row.hour, row.count ?? 0);
+  }
+  const hours = Array.from({ length: 24 }, (_, hour) => hour);
+  return {
+    hours: hours.map((h) => `${String(h).padStart(2, '0')}`),
+    counts: hours.map((h) => byHour.get(h) ?? 0),
+  };
+}
+
+export function buildHealthBars(rows: InstitutionHealthDto[]) {
+  return rows
+    .slice()
+    .sort((a, b) => (b.activeUserPercent ?? 0) - (a.activeUserPercent ?? 0))
+    .slice(0, 8);
+}
+
+export function topPeakLabel(
+  peakHours: Array<{ hour?: number; count?: number }> | null | undefined,
+): string {
+  const top = [...(peakHours ?? [])].sort(
+    (a, b) => (b.count ?? 0) - (a.count ?? 0),
+  )[0];
+  if (top?.hour == null) return 'No login peak yet';
+  return `${String(top.hour).padStart(2, '0')}:00 UTC`;
 }

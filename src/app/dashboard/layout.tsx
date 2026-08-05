@@ -22,10 +22,16 @@ const layoutStyles = {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
+    minHeight: 0,
+    overflow: 'hidden',
   },
   content: {
     flex: 1,
-    overflowY: 'auto',
+    minHeight: 0,
+    minWidth: 0,
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
   },
 } as const;
 

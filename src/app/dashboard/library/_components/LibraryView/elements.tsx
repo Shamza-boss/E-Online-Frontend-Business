@@ -25,15 +25,18 @@ export const LibraryContentSection = styled(Box)({
   minHeight: 0,
 });
 
-export const LibraryCardsScrollArea = styled(Box)({
+export const LibraryCardsScrollArea = styled(Box)(({ theme }) => ({
   flex: 1,
   minHeight: 0,
   overflow: 'auto',
-});
+  padding: theme.spacing(2),
+  // Keep last cards clear of the scrollbar and pagination separator
+  paddingBottom: theme.spacing(3),
+}));
 
 export const LibraryPaginationBar = styled(Box)(({ theme }) => ({
   flexShrink: 0,
-  marginTop: theme.spacing(2),
-  paddingTop: theme.spacing(2),
+  marginTop: 0,
+  padding: theme.spacing(2),
   borderTop: `1px solid ${theme.palette.divider}`,
 }));

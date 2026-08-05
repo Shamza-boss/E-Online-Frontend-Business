@@ -4,7 +4,7 @@ import { type ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import { SchoolRounded } from '@mui/icons-material';
 import ErrorLayout from '../../../_components/ErrorLayout';
 import type { Route } from 'next';
-import { ClassesGrid, CardWrapper } from './elements';
+import { ClassesGrid, CardWrapper, ClassesContentPanel, ClassesScrollArea } from './elements';
 
 function courseHref(classItem: ClassroomDetailsDto): Route {
   return `/dashboard/courses/${encodeURIComponent(
@@ -46,18 +46,22 @@ export default async function ClassroomClasses() {
   }
 
   return (
-    <ClassesGrid>
-      {classes.map((classItem) => (
-        <CardWrapper key={classItem.classroomId}>
-          <ClassCard
-            href={courseHref(classItem)}
-            className={classItem.classroomName}
-            teacherNameAbb={`${classItem.teacherLastName} ${classItem.teacherFirstName.charAt(0)}`}
-            subjectName={classItem.subjectName}
-            academicLevelName={classItem.academicLevelName}
-          />
-        </CardWrapper>
-      ))}
-    </ClassesGrid>
+    <ClassesContentPanel>
+      <ClassesScrollArea>
+        <ClassesGrid>
+          {classes.map((classItem) => (
+            <CardWrapper key={classItem.classroomId}>
+              <ClassCard
+                href={courseHref(classItem)}
+                className={classItem.classroomName}
+                teacherNameAbb={`${classItem.teacherLastName} ${classItem.teacherFirstName.charAt(0)}`}
+                subjectName={classItem.subjectName}
+                academicLevelName={classItem.academicLevelName}
+              />
+            </CardWrapper>
+          ))}
+        </ClassesGrid>
+      </ClassesScrollArea>
+    </ClassesContentPanel>
   );
 }

@@ -7,6 +7,7 @@ import { type VideoMeta } from '../../interfaces/types';
 import { signPlayback } from '../../actions/stream';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useCreatorAccess } from '@/app/_lib/hooks/useCreatorAccess';
+import { trackActivity } from '@/app/_lib/utils/trackActivity';
 
 type Props = {
   video: VideoMeta;
@@ -46,6 +47,7 @@ export const VideoPlayer: React.FC<Props> = ({ video, title }) => {
       try {
         const data = await signPlayback(video.uid);
         setIframeSrc(data.iframeSrc);
+        trackActivity('VideoPlay', 'video-player', `video:${video.uid}`);
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load video');

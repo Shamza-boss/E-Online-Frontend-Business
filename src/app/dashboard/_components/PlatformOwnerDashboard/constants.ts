@@ -1,8 +1,9 @@
-export const DASHBOARD_TITLE = 'Platform Owner Dashboard';
-export const DASHBOARD_DESCRIPTION =
-  'Platform-wide metrics and activity over the last 30 days.';
+import type { PlatformInsightId } from '@/app/_lib/types/dashboardInsights';
 
-export const STAT_INTERVAL = 'Last 30 days';
+export const DASHBOARD_TITLE = 'Platform pulse';
+export const DASHBOARD_DESCRIPTION =
+  'Tap a tile for growth, health, usage, and margin detail.';
+
 export const CHIP_LABEL = 'Last 30 days';
 
 export const ACTIVE_INSTITUTIONS_CHART = {
@@ -12,17 +13,29 @@ export const ACTIVE_INSTITUTIONS_CHART = {
 } as const;
 
 export const PROFIT_MARGIN_CHART = {
-  title: 'Profit Margin Distribution',
-  description: 'Monthly profit margin breakdown across institutions in the last 6 months',
+  title: 'Profit margin mix',
+  description: 'Monthly profit margin bands across institutions',
   yAxisLabel: 'Profit Margin (%)',
   valueLabel: 'institutions',
 } as const;
 
-export const AVERAGE_PROFIT_TITLE = 'Average Profit Margin';
+export const INSIGHT_TITLES: Record<PlatformInsightId, string> = {
+  growth: 'Growth sparks',
+  peakHours: 'Login heat by hour',
+  health: 'Institution health',
+  usage: 'Platform usage',
+  institutions: 'Most active institutions',
+  profit: 'Profit margin mix',
+};
 
-export const PLATFORM_STAT_LABELS = [
-  'Institutions',
-  'Users',
-  'Modules',
-  'Total Cost (ZAR)',
-] as const;
+export const INSIGHT_SUBTITLES: Record<PlatformInsightId, string> = {
+  growth: 'Institutions, users, modules, margin',
+  peakHours: 'UTC hour distribution (30 days)',
+  health: 'Active-user % and watchlist',
+  usage: 'Storage, delivery, and cost',
+  institutions: 'Top institutions by activity',
+  profit: 'Margin bands over months',
+};
+
+export const HEALTH_EMPTY = 'No institution health data yet.';
+export const DETAIL_LOAD_ERROR = 'Could not load this insight. Try again.';

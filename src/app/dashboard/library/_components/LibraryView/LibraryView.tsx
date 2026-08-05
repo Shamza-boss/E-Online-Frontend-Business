@@ -254,7 +254,16 @@ export default function LibraryView({ initialAcademics }: LibraryViewProps) {
 
       <LibraryContentSection>
         {viewMode === 'cards' ? (
-          <>
+          <OutlinedWrapper
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              width: '100%',
+              overflow: 'hidden',
+              minHeight: 0,
+            }}
+          >
             <LibraryCardsScrollArea>
               <LibraryGrid
                 files={files}
@@ -301,7 +310,7 @@ export default function LibraryView({ initialAcademics }: LibraryViewProps) {
                 </Stack>
               </LibraryPaginationBar>
             ) : null}
-          </>
+          </OutlinedWrapper>
         ) : (
           <OutlinedWrapper
             sx={{

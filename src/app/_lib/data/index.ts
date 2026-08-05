@@ -2,6 +2,8 @@ export { CACHE_TAGS } from './tags';
 export {
   getSystemAdminDashboard,
   getInstitutionDashboard,
+  getInstructorHomeDashboard,
+  getTraineeHomeDashboard,
   getPlatformOwnerDashboard,
   getInstitutionBillingDashboard,
 } from './dashboard';

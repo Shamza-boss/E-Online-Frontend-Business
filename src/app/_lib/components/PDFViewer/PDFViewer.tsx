@@ -32,6 +32,7 @@ import {
   migrateLocalStorageHighlights,
   normalizeStorageKey,
 } from '@/app/_lib/utils/pdfHighlightStore';
+import { trackActivity } from '@/app/_lib/utils/trackActivity';
 
 export type { PdfNoteLinkOptions } from './types';
 
@@ -140,6 +141,11 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   const [sidebarTab, setSidebarTab] = useState<
     'outline' | 'thumbnails' | 'noteLinks'
   >('outline');
+
+  useEffect(() => {
+    if (!fileUrl) return;
+    trackActivity('PdfOpen', 'pdf-viewer', `pdf:${fileUrl}`);
+  }, [fileUrl]);
   const bookmarkColorChoices = useMemo(
     () =>
       [

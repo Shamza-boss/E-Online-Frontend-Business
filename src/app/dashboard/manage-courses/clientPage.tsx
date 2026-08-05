@@ -1,9 +1,11 @@
-// app/dashboard/studentmanagement/StudentClassesManagementClient.tsx
 'use client';
 import React, { useState, useCallback } from 'react';
-import { Box, Button, Stack, Tooltip } from '@mui/material';
+import { Box, Button, Tooltip } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import { dashboardScrollablePageSx, dashboardSectionSpacing } from '@/app/_lib/layout/dashboardPageLayout';
+import {
+  dashboardPageRootSx,
+  dashboardSectionSpacing,
+} from '@/app/_lib/layout/dashboardPageLayout';
 import { type ClassroomDetailsDto } from '@/app/_lib/interfaces/types';
 import PageIntro from '@/app/_lib/components/PageIntro';
 import AssignStudentsToClassModal from './_components/Modals/AssignStudentsToClassModal';
@@ -31,8 +33,13 @@ export default function StudentClassesManagementClient({ fallbackClasses }: Prop
   );
 
   return (
-    <Box sx={dashboardScrollablePageSx}>
-      <Stack spacing={dashboardSectionSpacing}>
+    <Box
+      sx={{
+        ...dashboardPageRootSx,
+        gap: dashboardSectionSpacing,
+      }}
+    >
+      <Box sx={{ flexShrink: 0, width: '100%', minWidth: 0 }}>
         <PageIntro
           description={description}
           infoAriaLabel="About manage courses"
@@ -59,8 +66,20 @@ export default function StudentClassesManagementClient({ fallbackClasses }: Prop
             </Tooltip>
           }
         />
+      </Box>
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
         <StudentClassesCards classes={fallbackClasses} />
-      </Stack>
+      </Box>
       <AssignStudentsToClassModal open={open} handleClose={handleClose} />
     </Box>
   );

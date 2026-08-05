@@ -14,6 +14,12 @@ export const swrKeys = {
   dashboardSystem: 'dashboard-system',
   dashboardInstitution: 'dashboard-institution',
   dashboardPlatformOwner: 'dashboard-platform-owner',
+  dashboardInstructorHome: 'dashboard-instructor-home',
+  dashboardTraineeHome: 'dashboard-trainee-home',
+
+  dashboardInsight: (role: string, insight: string) =>
+    ['dashboard-insight', role, insight] as const,
+
   invoicesOverdue: 'invoices-overdue',
   invoiceStatusSummaries: 'invoice-status-summaries',
   institutions: 'institutions',
