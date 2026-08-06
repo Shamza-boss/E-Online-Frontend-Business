@@ -7,6 +7,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Link from '@mui/material/Link';
 import { styled } from '@mui/material/styles';
 import NextLink from 'next/link';
+import type { Route } from 'next';
 
 const PreviewRoot = styled(Stack)(({ theme }) => ({
   width: '100%',
@@ -92,7 +93,7 @@ export default function InsightListPreview({
         const primaryNode = item.href ? (
           <Link
             component={NextLink}
-            href={item.href}
+            href={item.href as Route}
             underline="hover"
             color="inherit"
             variant="body2"

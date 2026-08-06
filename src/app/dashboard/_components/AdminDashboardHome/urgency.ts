@@ -1,3 +1,4 @@
+import type { Theme } from '@mui/material/styles';
 import {
   urgencyFromGrade,
   urgencyPaletteKey,
@@ -38,10 +39,7 @@ export function urgencyFromActiveShare(
   return 'calm';
 }
 
-export function toneHex(
-  theme: { palette: Record<string, { main: string }> },
-  tone: UrgencyTone,
-): string {
+export function toneHex(theme: Theme, tone: UrgencyTone): string {
   if (tone === 'urgent') return theme.palette.error.main;
   if (tone === 'soon') return theme.palette.warning.main;
   if (tone === 'time') return theme.palette.success.main;

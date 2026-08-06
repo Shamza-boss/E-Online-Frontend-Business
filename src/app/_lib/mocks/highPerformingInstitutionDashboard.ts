@@ -293,15 +293,15 @@ export const HIGH_PERFORMING_INSTITUTION_DASHBOARD: InstitutionTrendsDashboardDt
     },
     inactiveUsers: Array.from({ length: 18 }, (_, i) => {
       const role = i % 5 === 0 ? UserRole.Instructor : UserRole.Trainee;
-      const first = FIRST[i % FIRST.length];
-      const last = LAST[(i * 3) % LAST.length];
+      const first = FIRST[i % FIRST.length] ?? 'User';
+      const last = LAST[(i * 3) % LAST.length] ?? 'Demo';
       return {
         userId: uuid(100 + i),
         firstName: first,
         lastName: last,
         email: `${first.toLowerCase()}.${last.toLowerCase().replace(/\s+/g, '')}@crestview.edu`,
         role,
-        lastSeenAt: i % 4 === 0 ? null : daysAgoIso(35 + i * 2, 8 + (i % 6)),
+        lastSeenAt: i % 4 === 0 ? '' : daysAgoIso(35 + i * 2, 8 + (i % 6)),
       };
     }),
   };

@@ -1,5 +1,9 @@
 /** Insight detail payloads (until OpenAPI regen). */
 
+import type { TeacherModuleActionDto } from './dashboardHome';
+
+export type { TeacherModuleActionDto } from './dashboardHome';
+
 export type NamedCountDto = { label?: string | null; value?: number };
 export type DailyCountDto = { date?: string | null; count?: number };
 
@@ -20,17 +24,6 @@ export type PendingGradeItemDto = {
   moduleTitle?: string | null;
   traineeName?: string | null;
   submittedAt?: string | null;
-};
-
-export type TeacherModuleActionDto = {
-  homeworkId?: string;
-  title?: string | null;
-  classroomId?: string | null;
-  classroomName?: string | null;
-  /** Draft | ExpiredDraft | ScheduledExam | ExpiringSoon */
-  status?: string | null;
-  relevantAt?: string | null;
-  isExam?: boolean;
 };
 
 export type UpcomingModuleDto = {

@@ -43,7 +43,7 @@ export function seriesTotal(points: number[] | null | undefined): number {
 
 export function seriesLatest(points: number[] | null | undefined): number {
   if (!points?.length) return 0;
-  const last = points[points.length - 1];
+  const last = points[points.length - 1] ?? 0;
   return Number.isFinite(last) ? last : 0;
 }
 

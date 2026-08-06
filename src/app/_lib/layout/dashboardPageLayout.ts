@@ -8,8 +8,12 @@
  * - `dashboardPageRootSx` — full-height flex shells with an *internal* scroll region
  *   (management tabs, library table, settings). Do not put unbounded card grids here
  *   without a `dashboardScrollRegionSx` child — overflow will clip.
+ *
+ * Typed as plain style objects (not `SxProps`) so they can be spread into `sx`
+ * without MUI array/function union type errors.
  */
-import type { SxProps, Theme } from '@mui/material/styles';
+import type { Theme } from '@mui/material/styles';
+import type { SystemStyleObject } from '@mui/system';
 
 export const dashboardPagePadding = {
   xs: 1.5,
@@ -30,7 +34,7 @@ export const dashboardGridSpacing = {
 } as const;
 
 /** Outer page shell for full-height flex + internal scroll (datagrids, settings). */
-export const dashboardPageRootSx: SxProps<Theme> = {
+export const dashboardPageRootSx: SystemStyleObject<Theme> = {
   height: '100%',
   width: '100%',
   display: 'flex',
@@ -45,7 +49,7 @@ export const dashboardPageRootSx: SxProps<Theme> = {
  * Page shell for routes whose content grows vertically (card grids, long forms).
  * Lets the dashboard `ChildrenContainer` scroll instead of clipping overflow.
  */
-export const dashboardScrollablePageSx: SxProps<Theme> = {
+export const dashboardScrollablePageSx: SystemStyleObject<Theme> = {
   width: '100%',
   minWidth: 0,
   boxSizing: 'border-box',
@@ -53,7 +57,7 @@ export const dashboardScrollablePageSx: SxProps<Theme> = {
 };
 
 /** Flex child that fills remaining height without forcing overflow. */
-export const dashboardFlexBodySx: SxProps<Theme> = {
+export const dashboardFlexBodySx: SystemStyleObject<Theme> = {
   flex: '1 1 0%',
   display: 'flex',
   flexDirection: 'column',
@@ -64,7 +68,7 @@ export const dashboardFlexBodySx: SxProps<Theme> = {
 };
 
 /** Scrollable tab/content region inside a flex page shell. */
-export const dashboardScrollRegionSx: SxProps<Theme> = {
+export const dashboardScrollRegionSx: SystemStyleObject<Theme> = {
   flex: 1,
   minHeight: 0,
   minWidth: 0,

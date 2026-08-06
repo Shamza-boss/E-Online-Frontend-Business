@@ -6,7 +6,6 @@ import Stack from '@mui/material/Stack';
 import {
   dashboardPageRootSx,
   dashboardSectionSpacing,
-  getDashboardPagePadding,
 } from '@/app/_lib/layout/dashboardPageLayout';
 import HeroMetricSkeleton from './primitives/HeroMetricSkeleton';
 import InsightSummaryCardSkeleton from './primitives/InsightSummaryCardSkeleton';
@@ -15,13 +14,7 @@ const INSIGHT_TILE_COUNT = 6;
 
 export default function MainGridSkeleton() {
   return (
-    <Box
-      sx={(theme) => ({
-        ...dashboardPageRootSx,
-        ...getDashboardPagePadding(theme),
-        overflow: 'auto',
-      })}
-    >
+    <Box sx={{ ...dashboardPageRootSx, overflow: 'auto' }}>
       <Stack
         spacing={dashboardSectionSpacing}
         sx={{
