@@ -24,10 +24,28 @@ async function loadDashboardHome(role: UserRole): Promise<DashboardHomeData> {
   }
 }
 
+function toLoadErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return 'We could not load dashboard data. Please try again.';
+}
+
 export default async function DashboardPage() {
   const session = await auth();
   const role = normalizeRole(session?.user?.role) ?? UserRole.Trainee;
-  const initialData = await loadDashboardHome(role);
 
-  return <DashboardClient role={role} initialData={initialData} />;
+  try {
+    const initialData = await loadDashboardHome(role);
+    return <DashboardClient role={role} initialData={initialData} />;
+  } catch (error) {
+    console.error('[DashboardPage] failed to load home dashboard', error);
+    return (
+      <DashboardClient
+        role={role}
+        initialData={null}
+        loadError={toLoadErrorMessage(error)}
+      />
+    );
+  }
 }

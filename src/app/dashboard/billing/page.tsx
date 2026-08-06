@@ -20,18 +20,24 @@ export default async function BillingPage() {
     return <BillingExperience />;
   }
 
-  const initialInstitutions = await getAllInstitutionsList();
-  // Billing dashboard depends on the first institution id — must stay sequential.
-  const initialInstitutionId = initialInstitutions[0]?.institution?.id;
-  const initialBillingDashboard = initialInstitutionId
-    ? await getInstitutionBillingDashboard(initialInstitutionId)
-    : undefined;
+  try {
+    const initialInstitutions = await getAllInstitutionsList();
+    // Billing dashboard depends on the first institution id — must stay sequential.
+    const initialInstitutionId = initialInstitutions[0]?.institution?.id;
+    const initialBillingDashboard = initialInstitutionId
+      ? await getInstitutionBillingDashboard(initialInstitutionId)
+      : undefined;
 
-  return (
-    <BillingExperience
-      initialInstitutions={initialInstitutions}
-      initialInstitutionId={initialInstitutionId}
-      initialBillingDashboard={initialBillingDashboard}
-    />
-  );
+    return (
+      <BillingExperience
+        initialInstitutions={initialInstitutions}
+        initialInstitutionId={initialInstitutionId}
+        initialBillingDashboard={initialBillingDashboard}
+      />
+    );
+  } catch (error) {
+    console.error('[BillingPage] failed to load billing bootstrap data', error);
+    // Soft-fail: client loads institutions/billing via SWR instead of SSR throw.
+    return <BillingExperience />;
+  }
 }

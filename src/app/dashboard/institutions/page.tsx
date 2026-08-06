@@ -11,9 +11,14 @@ export default async function InstitutionsPage() {
     redirect('/signin');
   }
 
-  const initialInstitutionsPage = await getInstitutionsPage();
-
-  return (
-    <InstitutionsClient initialInstitutionsPage={initialInstitutionsPage} />
-  );
+  try {
+    const initialInstitutionsPage = await getInstitutionsPage();
+    return (
+      <InstitutionsClient initialInstitutionsPage={initialInstitutionsPage} />
+    );
+  } catch (error) {
+    console.error('[InstitutionsPage] failed to load institutions', error);
+    // Soft-fail: client re-fetches via SWR instead of poisoning soft navigation.
+    return <InstitutionsClient />;
+  }
 }
